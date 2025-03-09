@@ -17,6 +17,12 @@ export default function WordConverter() {
     setResult(converted);
   };
 
+  // New function to copy the result to clipboard.
+  const copyToClipboard = () => {
+    const text = JSON.stringify(result, null, 2);
+    navigator.clipboard.writeText(text);
+  };
+
   return (
     <div style={styles.container}>
       <h2>Drop Downs</h2>
@@ -30,9 +36,14 @@ export default function WordConverter() {
         Convert
       </button>
       {result.length > 0 && (
-        <pre style={styles.result}>
-          {JSON.stringify(result, null, 2)}
-        </pre>
+        <>
+          <pre style={styles.result}>
+            {JSON.stringify(result, null, 2)}
+          </pre>
+          <button onClick={copyToClipboard} style={styles.button}>
+            Copy Output
+          </button>
+        </>
       )}
     </div>
   );
@@ -61,7 +72,9 @@ const styles = {
     backgroundColor: '#4A90E2',
     color: 'white',
     border: 'none',
-    borderRadius: '4px'
+    borderRadius: '4px',
+    marginRight: '0.5rem',
+    marginTop: '1rem'
   },
   result: {
     backgroundColor: '#f5f5f5',
