@@ -40,6 +40,16 @@ export default function SideDrawer() {
                 <span style={styles.linkText}>JSON Comparator</span>
               </Link>
             </li>
+            <li style={styles.item}>
+              <Link 
+                to="/converter" 
+                style={styles.link}
+                activeStyle={styles.activeLink}
+              >
+                <span style={styles.icon}>🔤</span>
+                <span style={styles.linkText}>Word Converter</span>
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>
