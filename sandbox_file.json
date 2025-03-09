@@ -1,0 +1,2682 @@
+{
+  "label": "Container",
+  "tableView": false,
+  "key": "Container",
+  "type": "container",
+  "input": true,
+  "components": [
+    {
+      "html": "<h2 style=\"text-align:center;\"><span style=\"background-color:rgba(255,255,255,0.64);color:rgb(9,37,75);\">Family Support Services</span></h2><h3 style=\"text-align:center;\"><span class=\"text-big\" style=\"background-color:rgba(255,255,255,0.64);color:rgb(9,37,75);\"><strong>Resident Service Tracker</strong></span></h3>",
+      "label": "Content",
+      "refreshOnChange": false,
+      "key": "Content",
+      "type": "content",
+      "input": false,
+      "tableView": false
+    },
+    {
+      "title": "Client Information",
+      "collapsible": true,
+      "key": "Client_Information",
+      "type": "panel",
+      "label": "Panel",
+      "input": false,
+      "tableView": false,
+      "components": [
+        {
+          "label": "Columns",
+          "columns": [
+            {
+              "components": [
+                {
+                  "label": "Case",
+                  "widget": "choicesjs",
+                  "tableView": true,
+                  "dataSrc": "url",
+                  "data": {
+                    "url": "https://apisandbox.planstreetinc.com/api/Public/GetProjectCasesNew?clientId=115",
+                    "headers": [
+                      {
+                        "key": "",
+                        "value": ""
+                      }
+                    ]
+                  },
+                  "valueProperty": "value",
+                  "validate": {
+                    "select": false
+                  },
+                  "key": "Case",
+                  "customConditional": "show = false;\r\nif (typeof window.token !== \"undefined\" && window.token !== \"\" && window.location.href.toLowerCase().indexOf(\"publicform\") == -1 && window.location.href.toLowerCase().indexOf(\"clientportal\") == -1) {\r\n  show = true;\r\n}\r\nif(window.location.href.indexOf(\"MobileForm\") > -1 || window.location.href.indexOf(\"MobileFilledFormViewer\") > -1){\r\n  show = true;\r\n}",
+                  "logic": [
+                    {
+                      "name": "LoadCaseData",
+                      "trigger": {
+                        "type": "javascript",
+                        "javascript": "jQuery(document)\r\n  .off(\"change\", \".formio-component-select #LoadCaseDataFromDropdown\")\r\n  .on(\"change\", \".formio-component-select #LoadCaseDataFromDropdown\", function () {\r\n  window.getLoadedCaseFromDropdown = \"\";\r\n  window.getLoadedCaseDataFromDropdown = \"\";\r\n  var url = new URL(window.location);\r\n    let caseId = jQuery(this).val();\r\n   \r\n    if((caseId * 1) > 0){\r\n      if (typeof window.token !== \"undefined\" && window.token !== \"\") {\r\n        window.token;\r\n        jQuery.ajax({\r\n              async: false,\r\n              cache: false,\r\n              beforeSend: function (request) {\r\n                request.setRequestHeader(\"Authorization\", \"Bearer \" + window.token);\r\n              },\r\n              url: ApiPath + \"api/CaseManagement/GetCaseDetailByCaseId\",\r\n              type: \"GET\",\r\n              data: {\r\n                id: caseId,\r\n              },\r\n              success: function (data) {\r\n                hideLoader();\r\n                if (data) {\r\n                  window.getLoadedCaseFromDropdown = data;\r\n window.getLoadedCaseDataFromDropdown = JSON.parse(data.CaseManagement.CaseData);\r\n                 result = true;\r\n                }\r\n              },\r\n              error: function (msg) {\r\n                hideLoader();\r\n              },\r\n        });\r\n      } \r\n    }\r\n  });"
+                      },
+                      "actions": [
+                        {
+                          "name": "Pop values",
+                          "type": "customAction",
+                          "customAction": "if(result)\r\n{\r\n    var eventNames = self.events.eventNames();\r\n    for (var i = 0; i < eventNames.length; i++) {\r\n        var eventName = eventNames[i];\r\n        if(eventName.includes(\"populate\")){\r\n            self.emit(eventName.replace(\"formio.\",\"\"));\r\n        }\r\n    }\r\n    setTimeout(function(){\r\n        window.getLoadedCaseFromDropdown = null;\r\n        window.getLoadedCaseDataFromDropdown = null;\r\n    }, 500);  \r\n}"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "FlushLoadedData",
+                      "trigger": {
+                        "type": "event",
+                        "event": "flushLoadedData"
+                      },
+                      "actions": [
+                        {
+                          "name": "flushData",
+                          "type": "value",
+                          "value": "window.getLoadedCaseFromDropdown = null;"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Pop value",
+                      "trigger": {
+                        "type": "event",
+                        "event": "populatecases"
+                      },
+                      "actions": [
+                        {
+                          "name": "Populate",
+                          "type": "customAction",
+                          "customAction": ""
+                        }
+                      ]
+                    }
+                  ],
+                  "attributes": {
+                    "id": "LoadCaseDataFromDropdown"
+                  },
+                  "type": "select",
+                  "disableLimit": false,
+                  "searchField": "query",
+                  "limit": 200,
+                  "input": true,
+                  "searchThreshold": 0.3,
+                  "keyModified": true
+                }
+              ],
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "size": "md",
+              "currentWidth": 6
+            },
+            {
+              "components": [
+                {
+                  "label": "Columns",
+                  "columns": [
+                    {
+                      "components": [
+                        {
+                          "label": "DOB",
+                          "format": "yyyy-MM-dd",
+                          "tableView": false,
+                          "datePicker": {
+                            "disableWeekends": false,
+                            "disableWeekdays": false
+                          },
+                          "enableTime": false,
+                          "logic": [
+                            {
+                              "name": "Pop value",
+                              "trigger": {
+                                "type": "event",
+                                "event": "populateDOB"
+                              },
+                              "actions": [
+                                {
+                                  "name": "PopValue",
+                                  "type": "customAction",
+                                  "customAction": "if(typeof window.getLoadedCaseFromDropdown != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement.DOB != \"undefined\"){\n  value = window.getLoadedCaseFromDropdown.CaseManagement.DOB\n}"
+                                }
+                              ]
+                            }
+                          ],
+                          "allowCalculateOverride": true,
+                          "enableMinDateInput": false,
+                          "enableMaxDateInput": false,
+                          "key": "DOB",
+                          "type": "datetime",
+                          "input": true,
+                          "widget": {
+                            "type": "calendar",
+                            "displayInTimezone": "viewer",
+                            "locale": "en",
+                            "useLocaleSettings": false,
+                            "allowInput": true,
+                            "mode": "single",
+                            "enableTime": false,
+                            "noCalendar": false,
+                            "format": "yyyy-MM-dd",
+                            "hourIncrement": 1,
+                            "minuteIncrement": 1,
+                            "time_24hr": false,
+                            "minDate": null,
+                            "disableWeekends": false,
+                            "disableWeekdays": false,
+                            "maxDate": null
+                          }
+                        }
+                      ],
+                      "width": 6,
+                      "offset": 0,
+                      "push": 0,
+                      "pull": 0,
+                      "size": "md",
+                      "currentWidth": 6
+                    },
+                    {
+                      "components": [
+                        {
+                          "label": "Age",
+                          "mask": false,
+                          "disabled": true,
+                          "tableView": false,
+                          "delimiter": false,
+                          "requireDecimal": false,
+                          "inputFormat": "plain",
+                          "truncateMultipleSpaces": false,
+                          "logic": [
+                            {
+                              "name": "Pop value",
+                              "trigger": {
+                                "type": "event",
+                                "event": "populateAge"
+                              },
+                              "actions": [
+                                {
+                                  "name": "PopValue",
+                                  "type": "customAction",
+                                  "customAction": "if(typeof window.getLoadedCaseFromDropdown != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement.DOB != \"undefined\"){\n  value = getAgeFromDob(window.getLoadedCaseFromDropdown.CaseManagement.DOB)\n}"
+                                }
+                              ]
+                            }
+                          ],
+                          "allowCalculateOverride": true,
+                          "key": "Age",
+                          "type": "number",
+                          "spellcheck": true,
+                          "input": true
+                        }
+                      ],
+                      "width": 6,
+                      "offset": 0,
+                      "push": 0,
+                      "pull": 0,
+                      "size": "md",
+                      "currentWidth": 6
+                    }
+                  ],
+                  "key": "Columns1",
+                  "type": "columns",
+                  "input": false,
+                  "tableView": false,
+                  "keyModified": true
+                }
+              ],
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "size": "md",
+              "currentWidth": 6
+            },
+            {
+              "components": [
+                {
+                  "label": "First Name",
+                  "tableView": true,
+                  "allowCalculateOverride": true,
+                  "key": "First_Name",
+                  "logic": [
+                    {
+                      "name": "Pop value",
+                      "trigger": {
+                        "type": "event",
+                        "event": "populateFirstName"
+                      },
+                      "actions": [
+                        {
+                          "name": "PopValue",
+                          "type": "customAction",
+                          "customAction": "if(typeof window.getLoadedCaseFromDropdown != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement.FirstName != \"undefined\"){\n  value = window.getLoadedCaseFromDropdown.CaseManagement.FirstName\n}"
+                        }
+                      ]
+                    }
+                  ],
+                  "type": "textfield",
+                  "input": true
+                }
+              ],
+              "size": "md",
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "currentWidth": 6
+            },
+            {
+              "components": [
+                {
+                  "label": "Last Name",
+                  "tableView": true,
+                  "allowCalculateOverride": true,
+                  "key": "Last_Name",
+                  "logic": [
+                    {
+                      "name": "Pop value",
+                      "trigger": {
+                        "type": "event",
+                        "event": "populateLastName"
+                      },
+                      "actions": [
+                        {
+                          "name": "PopValue",
+                          "type": "customAction",
+                          "customAction": "if(typeof window.getLoadedCaseFromDropdown != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement != \"undefined\" && typeof window.getLoadedCaseFromDropdown.CaseManagement.LastName != \"undefined\"){\n  value = window.getLoadedCaseFromDropdown.CaseManagement.LastName\n}"
+                        }
+                      ]
+                    }
+                  ],
+                  "type": "textfield",
+                  "input": true
+                }
+              ],
+              "size": "md",
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "currentWidth": 6
+            },
+            {
+              "components": [
+                {
+                  "label": "Program/Subsidy",
+                  "widget": "choicesjs",
+                  "tableView": true,
+                  "data": {
+                    "values": [
+                      {
+                        "label": "ESSHI",
+                        "value": "ESSHI"
+                      },
+                      {
+                        "label": "Robinhood",
+                        "value": "Robinhood"
+                      },
+                      {
+                        "label": "HPD",
+                        "value": "HPD"
+                      }
+                    ]
+                  },
+                  "key": "ProgramSubsidy",
+                  "type": "select",
+                  "input": true
+                }
+              ],
+              "size": "md",
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "currentWidth": 6
+            },
+            {
+              "components": [
+                {
+                  "label": "Worker",
+                  "widget": "choicesjs",
+                  "tableView": true,
+                  "dataSrc": "url",
+                  "data": {
+                    "url": "https://apisandbox.planstreetinc.com/api/Public/GetAllActiveResources?clientId=115",
+                    "headers": [
+                      {
+                        "key": "",
+                        "value": ""
+                      }
+                    ]
+                  },
+                  "valueProperty": "ResourceId",
+                  "template": "<span>{{ item.Name }}</span>",
+                  "key": "Worker",
+                  "customConditional": "show = false;\r\nif (typeof window.token !== \"undefined\" && window.token !== \"\" && window.location.href.toLowerCase().indexOf(\"publicform\") == -1 && window.location.href.toLowerCase().indexOf(\"clientportal\") == -1) {\r\n  show = true;\r\n}\r\nif(window.location.href.indexOf(\"MobileForm\") > -1 || window.location.href.indexOf(\"MobileFilledFormViewer\") > -1){\r\n  show = true;\r\n}",
+                  "type": "select",
+                  "lazyLoad": false,
+                  "disableLimit": false,
+                  "input": true,
+                  "searchThreshold": 0.3
+                }
+              ],
+              "size": "md",
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "currentWidth": 6
+            }
+          ],
+          "key": "Columns",
+          "type": "columns",
+          "input": false,
+          "tableView": false
+        }
+      ],
+      "collapsed": false
+    },
+    {
+      "title": "Family Unit",
+      "collapsible": true,
+      "key": "Family_Unit",
+      "type": "panel",
+      "label": "Panel",
+      "input": false,
+      "tableView": false,
+      "components": [
+        {
+          "label": "Columns",
+          "columns": [
+            {
+              "components": [
+                {
+                  "label": "Benefits Allocation",
+                  "widget": "choicesjs",
+                  "tableView": true,
+                  "data": {
+                    "values": [
+                      {
+                        "label": "Client",
+                        "value": "Client"
+                      },
+                      {
+                        "label": "Child(ren)",
+                        "value": "Children"
+                      },
+                      {
+                        "label": "Client & Child(ren)",
+                        "value": "Client__Children"
+                      }
+                    ]
+                  },
+                  "key": "Benefits_Allocation",
+                  "type": "select",
+                  "input": true
+                }
+              ],
+              "width": 4,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "size": "md",
+              "currentWidth": 4
+            },
+            {
+              "components": [
+                {
+                  "label": "Number of child(ren) covered",
+                  "widget": "choicesjs",
+                  "tableView": true,
+                  "data": {
+                    "values": [
+                      {
+                        "label": "1",
+                        "value": "1"
+                      },
+                      {
+                        "label": "2",
+                        "value": "2"
+                      },
+                      {
+                        "label": "3",
+                        "value": "3"
+                      },
+                      {
+                        "label": "4",
+                        "value": "4"
+                      },
+                      {
+                        "label": "5",
+                        "value": "5"
+                      },
+                      {
+                        "label": "6",
+                        "value": "6"
+                      },
+                      {
+                        "label": "7",
+                        "value": "7"
+                      },
+                      {
+                        "label": "8",
+                        "value": "8"
+                      },
+                      {
+                        "label": "9",
+                        "value": "9"
+                      },
+                      {
+                        "label": "10",
+                        "value": "10"
+                      }
+                    ]
+                  },
+                  "key": "Number_of_children_covered",
+                  "type": "select",
+                  "input": true
+                }
+              ],
+              "width": 4,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "size": "md",
+              "currentWidth": 4
+            },
+            {
+              "components": [
+                {
+                  "label": "Number of Adult Covered",
+                  "widget": "choicesjs",
+                  "tableView": true,
+                  "data": {
+                    "values": [
+                      {
+                        "label": "1",
+                        "value": "1"
+                      },
+                      {
+                        "label": "2",
+                        "value": "2"
+                      },
+                      {
+                        "label": "3",
+                        "value": "3"
+                      },
+                      {
+                        "label": "4",
+                        "value": "4"
+                      },
+                      {
+                        "label": "5",
+                        "value": "5"
+                      },
+                      {
+                        "label": "6",
+                        "value": "6"
+                      },
+                      {
+                        "label": "7",
+                        "value": "7"
+                      },
+                      {
+                        "label": "8",
+                        "value": "8"
+                      },
+                      {
+                        "label": "9",
+                        "value": "9"
+                      },
+                      {
+                        "label": "10",
+                        "value": "10"
+                      }
+                    ]
+                  },
+                  "key": "Number_of_Adult_Covered",
+                  "type": "select",
+                  "input": true
+                }
+              ],
+              "size": "md",
+              "width": 4,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "currentWidth": 4
+            }
+          ],
+          "key": "Columns2",
+          "type": "columns",
+          "input": false,
+          "tableView": false
+        },
+        {
+          "label": "Columns",
+          "columns": [
+            {
+              "components": [
+                {
+                  "label": "Household Composition",
+                  "widget": "choicesjs",
+                  "customClass": "custom_choice",
+                  "tableView": true,
+                  "data": {
+                    "values": [
+                      {
+                        "label": "Self only",
+                        "value": "Self_only"
+                      },
+                      {
+                        "label": "Self and Spouse",
+                        "value": "Self_and_Spouse"
+                      },
+                      {
+                        "label": "Self, Spouse with Children",
+                        "value": "Self_Spouse_with_Children"
+                      },
+                      {
+                        "label": "Single Parent with Children",
+                        "value": "Single_Parent_with_Children"
+                      },
+                      {
+                        "label": "Self, Spouse, Children and Other Relatives / Adults",
+                        "value": "Self_Spouse_Children_and_Other_RelativesAdults"
+                      },
+                      {
+                        "label": "Self and Other Relatives / Adults ",
+                        "value": "Self_and_Other_Relatives__Adults_"
+                      }
+                    ]
+                  },
+                  "allowCalculateOverride": true,
+                  "key": "Household_Composition",
+                  "logic": [
+                    {
+                      "name": "Pop value",
+                      "trigger": {
+                        "type": "event",
+                        "event": "populateIntakeHousehold_Composition"
+                      },
+                      "actions": [
+                        {
+                          "name": "Populate",
+                          "type": "customAction",
+                          "customAction": "if(typeof window.getLoadedCaseDataFromDropdown != \"undefined\"){\n  value = utils.getValue({data: window.getLoadedCaseDataFromDropdown}, component.key)\n}"
+                        }
+                      ]
+                    }
+                  ],
+                  "type": "select",
+                  "input": true
+                }
+              ],
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "size": "md",
+              "currentWidth": 6
+            },
+            {
+              "components": [
+                {
+                  "label": "Number of People In Household",
+                  "widget": "choicesjs",
+                  "tableView": true,
+                  "data": {
+                    "values": [
+                      {
+                        "label": "1",
+                        "value": "1"
+                      },
+                      {
+                        "label": "2",
+                        "value": "2"
+                      },
+                      {
+                        "label": "3",
+                        "value": "3"
+                      },
+                      {
+                        "label": "4",
+                        "value": "4"
+                      },
+                      {
+                        "label": "5",
+                        "value": "5"
+                      },
+                      {
+                        "label": "6",
+                        "value": "6"
+                      },
+                      {
+                        "label": "7",
+                        "value": "7"
+                      },
+                      {
+                        "label": "8",
+                        "value": "8"
+                      },
+                      {
+                        "label": "9",
+                        "value": "9"
+                      },
+                      {
+                        "label": "10",
+                        "value": "10"
+                      },
+                      {
+                        "label": "11",
+                        "value": "11"
+                      },
+                      {
+                        "label": "12",
+                        "value": "12"
+                      },
+                      {
+                        "label": "13",
+                        "value": "13"
+                      },
+                      {
+                        "label": "14",
+                        "value": "14"
+                      },
+                      {
+                        "label": "15",
+                        "value": "15"
+                      }
+                    ]
+                  },
+                  "allowCalculateOverride": true,
+                  "key": "Number_of_People_In_Household",
+                  "logic": [
+                    {
+                      "name": "Pop value",
+                      "trigger": {
+                        "type": "event",
+                        "event": "populateIntakeNumber_of_People_In_Household"
+                      },
+                      "actions": [
+                        {
+                          "name": "Populate",
+                          "type": "customAction",
+                          "customAction": "if(typeof window.getLoadedCaseDataFromDropdown != \"undefined\"){\n  value = utils.getValue({data: window.getLoadedCaseDataFromDropdown}, component.key)\n}"
+                        }
+                      ]
+                    }
+                  ],
+                  "type": "select",
+                  "input": true
+                }
+              ],
+              "width": 6,
+              "offset": 0,
+              "push": 0,
+              "pull": 0,
+              "size": "md",
+              "currentWidth": 6
+            }
+          ],
+          "key": "Columns3",
+          "type": "columns",
+          "input": false,
+          "tableView": false
+        },
+        {
+          "label": "List everybody who lives in your household (Excluding You)",
+          "reorder": false,
+          "addAnotherPosition": "bottom",
+          "layoutFixed": false,
+          "enableRowGroups": false,
+          "initEmpty": false,
+          "tableView": false,
+          "defaultValue": [
+            {
+              "Name": "",
+              "House_Member_DOB": "",
+              "Relationship_to_Client": "",
+              "House_Member_Age": 0
+            }
+          ],
+          "allowCalculateOverride": true,
+          "key": "List_everybody_who_lives_in_your_household_Excluding_You",
+          "logic": [
+            {
+              "name": "Pop value",
+              "trigger": {
+                "type": "event",
+                "event": "populateIntakeList_everybody_who_lives_in_your_household_Excluding_You"
+              },
+              "actions": [
+                {
+                  "name": "Populate",
+                  "type": "customAction",
+                  "customAction": "if(typeof window.getLoadedCaseDataFromDropdown != \"undefined\"){\n  value = utils.getValue({data: window.getLoadedCaseDataFromDropdown}, component.key)\n}"
+                }
+              ]
+            }
+          ],
+          "type": "datagrid",
+          "input": true,
+          "components": [
+            {
+              "label": "Name",
+              "tableView": true,
+              "key": "Name",
+              "type": "textfield",
+              "input": true,
+              "logic": [
+                {
+                  "name": "Pop value",
+                  "trigger": {
+                    "type": "event",
+                    "event": "populateIntakeName"
+                  },
+                  "actions": [
+                    {
+                      "name": "Populate",
+                      "type": "customAction",
+                      "customAction": "if(typeof window.getLoadedCaseDataFromDropdown != \"undefined\"){\n  value = utils.getValue({data: window.getLoadedCaseDataFromDropdown}, component.key)\n}"
+                    }
+                  ]
+                }
+              ],
+              "allowCalculateOverride": true
+            },
+            {
+              "label": "House Member DOB",
+              "format": "MM-dd-yyyy",
+              "tableView": false,
+              "datePicker": {
+                "disableWeekends": false,
+                "disableWeekdays": false
+              },
+              "enableTime": false,
+              "enableMinDateInput": false,
+              "enableMaxDateInput": false,
+              "key": "House_Member_DOB",
+              "type": "datetime",
+              "input": true,
+              "widget": {
+                "type": "calendar",
+                "displayInTimezone": "viewer",
+                "locale": "en",
+                "useLocaleSettings": false,
+                "allowInput": true,
+                "mode": "single",
+                "enableTime": false,
+                "noCalendar": false,
+                "format": "MM-dd-yyyy",
+                "hourIncrement": 1,
+                "minuteIncrement": 1,
+                "time_24hr": false,
+                "minDate": null,
+                "disableWeekends": false,
+                "disableWeekdays": false,
+                "maxDate": null
+              },
+              "logic": [
+                {
+                  "name": "Pop value",
+                  "trigger": {
+                    "type": "event",
+                    "event": "populateIntakeHouse_Member_DOB"
+                  },
+                  "actions": [
+                    {
+                      "name": "Populate",
+                      "type": "customAction",
+                      "customAction": "if(typeof window.getLoadedCaseDataFromDropdown != \"undefined\"){\n  value = utils.getValue({data: window.getLoadedCaseDataFromDropdown}, component.key)\n}"
+                    }
+                  ]
+                }
+              ],
+              "allowCalculateOverride": true
+            },
+            {
+              "label": "House Member Age",
+              "mask": false,
+              "disabled": true,
+              "tableView": false,
+              "delimiter": false,
+              "requireDecimal": false,
+              "inputFormat": "plain",
+              "truncateMultipleSpaces": false,
+              "calculateValue": "if(typeof row.House_Member_DOB != \"undefined\" ){\n  let DOB = row.House_Member_DOB;\n\n  if (DOB !== \"\") {\n    var selectedYear = new Date(DOB);\n    var ageDifMs = Date.now() - selectedYear.getTime();\n    var ageDate = new Date(ageDifMs);\n    value = Math.abs(ageDate.getUTCFullYear() - 1970);\n  }\n  else {\n    value = 0;\n  }\n}",
+              "key": "House_Member_Age",
+              "type": "number",
+              "input": true,
+              "logic": [
+                {
+                  "name": "Pop value",
+                  "trigger": {
+                    "type": "event",
+                    "event": "populateIntakeHouse_Member_Age"
+                  },
+                  "actions": [
+                    {
+                      "name": "Populate",
+                      "type": "customAction",
+                      "customAction": "if(typeof window.getLoadedCaseDataFromDropdown != \"undefined\"){\n  value = utils.getValue({data: window.getLoadedCaseDataFromDropdown}, component.key)\n}"
+                    }
+                  ]
+                }
+              ],
+              "allowCalculateOverride": true
+            },
+            {
+              "label": "Relationship to Client",
+              "widget": "choicesjs",
+              "tableView": true,
+              "data": {
+                "values": [
+                  {
+                    "label": "Spouse",
+                    "value": "Spouse"
+                  },
+                  {
+                    "label": "Domestic Partner",
+                    "value": "Domestic_Partner"
+                  },
+                  {
+                    "label": "Mother",
+                    "value": "Mother"
+                  },
+                  {
+                    "label": "Father",
+                    "value": "Father"
+                  },
+                  {
+                    "label": "Son",
+                    "value": "Son"
+                  },
+                  {
+                    "label": "Daughter",
+                    "value": "Daughter"
+                  },
+                  {
+                    "label": "Sister",
+                    "value": "Sister"
+                  },
+                  {
+                    "label": "Brother",
+                    "value": "Brother"
+                  },
+                  {
+                    "label": "Grandmother",
+                    "value": "Grandmother"
+                  },
+                  {
+                    "label": "Grandfather",
+                    "value": "Grandfather"
+                  },
+                  {
+                    "label": "Other relative",
+                    "value": "Other_relative"
+                  },
+                  {
+                    "label": "Other non-relative",
+                    "value": "Other_nonrelative"
+                  }
+                ]
+              },
+              "key": "Relationship_to_Client",
+              "type": "select",
+              "input": true,
+              "logic": [
+                {
+                  "name": "Pop value",
+                  "trigger": {
+                    "type": "event",
+                    "event": "populateIntakeRelationship_to_Client"
+                  },
+                  "actions": [
+                    {
+                      "name": "Populate",
+                      "type": "customAction",
+                      "customAction": "if(typeof window.getLoadedCaseDataFromDropdown != \"undefined\"){\n  value = utils.getValue({data: window.getLoadedCaseDataFromDropdown}, component.key)\n}"
+                    }
+                  ]
+                }
+              ],
+              "allowCalculateOverride": true
+            }
+          ]
+        }
+      ],
+      "collapsed": false
+    },
+    {
+      "title": "Benefits Tracker",
+      "collapsible": true,
+      "key": "Benefits_Tracker",
+      "type": "panel",
+      "label": "Panel",
+      "input": false,
+      "tableView": false,
+      "collapsed": false,
+      "components": [
+        {
+          "label": "Benefits' Detail",
+          "openWhenEmpty": true,
+          "tableView": false,
+          "templates": {
+            "header": "<div class=\"row\">\r\n      {% util.eachComponent(components, function(component) { %}\r\n        {% if (displayValue(component)) { %}\r\n<div class=\"col-sm-2\"></div>\r\n        {% } %}\r\n      {% }) %}\r\n</div>\r\n",
+            "row": "<div class=\"row\">\r\n  {% util.eachComponent(components, function(component) { %}\r\n    {% if (displayValue(component)) { %}\r\n<div class=\"col-sm-6\">\r\n \r\n       <b> {{isVisibleInRow(component) ? t(component.label): \"\" }}</b>\r\n \r\n        {{ isVisibleInRow(component) ? getView(component, row[component.key]) : ''}}\r\n</div>\r\n<br />\r\n\r\n \r\n    {% } %}\r\n<br />\r\n\r\n \r\n  {% }) %}\r\n \r\n  <!-- Render Edit and Remove buttons if form is not read-only and not disabled -->\r\n  {% if (!instance.options.readOnly && !instance.disabled) { %}\r\n<div class=\"col-sm-2\">\r\n<div class=\"btn-group pull-right\">\r\n<button class=\"btn btn-default btn-light btn-sm editRow\"><i class=\"{{ iconClass('edit') }}\"></i></button>\r\n        {% if (!instance.hasRemoveButtons || instance.hasRemoveButtons()) { %}\r\n<button class=\"btn btn-danger btn-sm removeRow\"><i class=\"{{ iconClass('trash') }}\"></i></button>\r\n        {% } %}\r\n</div>\r\n</div>\r\n  {% } %}\r\n</div>\r\n"
+          },
+          "rowDrafts": false,
+          "key": "Benefits_Detail",
+          "type": "editgrid",
+          "displayAsTable": false,
+          "input": true,
+          "components": [
+            {
+              "label": "Columns",
+              "columns": [
+                {
+                  "components": [
+                    {
+                      "label": "Interaction Type",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "In Person",
+                            "value": "In_Person"
+                          },
+                          {
+                            "label": "Phone",
+                            "value": "Phone"
+                          },
+                          {
+                            "label": "Text",
+                            "value": "Text"
+                          },
+                          {
+                            "label": "Cancel Scheduled Appt",
+                            "value": "Cancel_Scheduled_Appt"
+                          }
+                        ]
+                      },
+                      "key": "Interaction_Type",
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "size": "md",
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Activity Date",
+                      "format": "MM-dd-yyyy",
+                      "tableView": false,
+                      "datePicker": {
+                        "disableWeekends": false,
+                        "disableWeekdays": false
+                      },
+                      "enableTime": false,
+                      "timePicker": {
+                        "showMeridian": false
+                      },
+                      "enableMinDateInput": false,
+                      "enableMaxDateInput": false,
+                      "key": "Activity_Date",
+                      "type": "datetime",
+                      "input": true,
+                      "widget": {
+                        "type": "calendar",
+                        "displayInTimezone": "viewer",
+                        "locale": "en",
+                        "useLocaleSettings": false,
+                        "allowInput": true,
+                        "mode": "single",
+                        "enableTime": false,
+                        "noCalendar": false,
+                        "format": "MM-dd-yyyy",
+                        "hourIncrement": 1,
+                        "minuteIncrement": 1,
+                        "time_24hr": true,
+                        "minDate": null,
+                        "disableWeekends": false,
+                        "disableWeekdays": false,
+                        "maxDate": null
+                      }
+                    }
+                  ],
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "size": "md",
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "ESSHI Categories",
+                      "widget": "choicesjs",
+                      "description": "On Site Services",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Alcoholism & Substance Abuse",
+                            "value": "Alcoholism__Substance_Abuse"
+                          },
+                          {
+                            "label": "Budgeting/Financial Assistance",
+                            "value": "BudgetingFinancial_Assistance"
+                          },
+                          {
+                            "label": "Child Care",
+                            "value": "Child_Care"
+                          },
+                          {
+                            "label": "Children Services",
+                            "value": "Children_Services"
+                          },
+                          {
+                            "label": "Educational Services",
+                            "value": "Educational_Services"
+                          },
+                          {
+                            "label": "Employment Enhancement & Retention",
+                            "value": "Employment_Enhancement__Retention"
+                          },
+                          {
+                            "label": "ESSHI Rental Subsidy",
+                            "value": "ESSHI_Rental_Subsidy"
+                          },
+                          {
+                            "label": "Financial Counseling/Education",
+                            "value": "Financial_CounselingEducation"
+                          },
+                          {
+                            "label": "Health Education/Prevention",
+                            "value": "Health_EducationPrevention"
+                          },
+                          {
+                            "label": "Housing Services",
+                            "value": "Housing_Services"
+                          },
+                          {
+                            "label": "Legal Services",
+                            "value": "Legal_Services"
+                          },
+                          {
+                            "label": "Parenting Skills Development",
+                            "value": "Parenting_Skills_Development"
+                          },
+                          {
+                            "label": "Physical Health Services",
+                            "value": "Physical_Health_Services"
+                          },
+                          {
+                            "label": "Self Sufficiency Services",
+                            "value": "Self_Sufficiency_Services"
+                          },
+                          {
+                            "label": "Social Services",
+                            "value": "Social_Services"
+                          },
+                          {
+                            "label": "Social/Recreational",
+                            "value": "SocialRecreational"
+                          },
+                          {
+                            "label": "Transportation Assistance",
+                            "value": "Transportation_Assistance"
+                          }
+                        ]
+                      },
+                      "key": "ESSHI_Categories",
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Benefits Categories",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Food / Nutrition Assistance",
+                            "value": "Food__Nutrition_Assistance"
+                          },
+                          {
+                            "label": "Housing Assistance",
+                            "value": "Housing_Assistance"
+                          },
+                          {
+                            "label": "Utility Assistance",
+                            "value": "Utility_Assistance"
+                          },
+                          {
+                            "label": "Health Assistance",
+                            "value": "Health_Assistance"
+                          },
+                          {
+                            "label": "Cash Assistance",
+                            "value": "Cash_Assistance"
+                          },
+                          {
+                            "label": "Transportation Assistance",
+                            "value": "Transportation_Assistance"
+                          },
+                          {
+                            "label": "Other Assistance",
+                            "value": "Other_Assistance"
+                          },
+                          {
+                            "label": "External Referrals",
+                            "value": "External_Referrals"
+                          },
+                          {
+                            "label": "Case Management",
+                            "value": "Case_Management"
+                          },
+                          {
+                            "label": "Benefit Maintenance",
+                            "value": "Benefit_Maintenance"
+                          },
+                          {
+                            "label": "Home Visit",
+                            "value": "Home_Visit"
+                          }
+                        ]
+                      },
+                      "key": "Benefits_Categories",
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Service Type",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Admin Assist-Schedule Appointments",
+                            "value": "Admin_AssistSchedule_Appointments"
+                          },
+                          {
+                            "label": "Advocacy",
+                            "value": "Advocacy"
+                          },
+                          {
+                            "label": "Call Call NYC Agency",
+                            "value": "Call_Call_NYC_Agency"
+                          },
+                          {
+                            "label": "Doc Assist-Read Correspondence",
+                            "value": "Doc_AssistRead_Correspondence"
+                          },
+                          {
+                            "label": "Doc Assist-Explain Documents",
+                            "value": "Doc_AssistExplain_Documents"
+                          },
+                          {
+                            "label": "Doc Assist-Translate Documents",
+                            "value": "Doc_AssistTranslate_Documents"
+                          },
+                          {
+                            "label": "Doc Assist-Document Request",
+                            "value": "Doc_AssistDocument_Request"
+                          },
+                          {
+                            "label": "Doc Assist-Lease Renewal",
+                            "value": "Doc_AssistLease_Renewal"
+                          },
+                          {
+                            "label": "Doc assist-Annual Building Recertification ",
+                            "value": "Doc_assistAnnual_Building_Recertification_"
+                          },
+                          {
+                            "label": "Employment Assist-Resume",
+                            "value": "Employment_AssistResume"
+                          },
+                          {
+                            "label": "Employment Assist-Job search",
+                            "value": "Employment_AssistJob_search"
+                          },
+                          {
+                            "label": "Employment Assist-Interview preparation",
+                            "value": "Employment_AssistInterview_preparation"
+                          },
+                          {
+                            "label": "Employment Assist-Background check",
+                            "value": "Employment_AssistBackground_check"
+                          },
+                          {
+                            "label": "Financial Assist-Request credit report",
+                            "value": "Financial_AssistRequest_credit_report"
+                          },
+                          {
+                            "label": "Follow Up-Check-in with client",
+                            "value": "Follow_UpCheckin_with_client"
+                          },
+                          {
+                            "label": "Follow Up-Send Client Reminder",
+                            "value": "Follow_UpSend_Client_Reminder"
+                          },
+                          {
+                            "label": "Tech Assist-Create email accounts",
+                            "value": "Tech_AssistCreate_email_accounts"
+                          },
+                          {
+                            "label": "Tech Assist-Print Documents",
+                            "value": "Tech_AssistPrint_Documents"
+                          },
+                          {
+                            "label": "Resource Assist-Gift Card",
+                            "value": "Resource_AssistGift_Card"
+                          },
+                          {
+                            "label": "Resource Assist-Clothing",
+                            "value": "Resource_AssistClothing"
+                          },
+                          {
+                            "label": "Resource Assist-shoes",
+                            "value": "Resource_Assistshoes"
+                          },
+                          {
+                            "label": "Resource Assist-Furniture",
+                            "value": "Resource_AssistFurniture"
+                          },
+                          {
+                            "label": "Resource Assist-Toys",
+                            "value": "Resource_AssistToys"
+                          },
+                          {
+                            "label": "Resource Assist-School Supplies",
+                            "value": "Resource_AssistSchool_Supplies"
+                          }
+                        ]
+                      },
+                      "key": "Service_Type",
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Application status",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Submitted",
+                            "value": "Submitted"
+                          },
+                          {
+                            "label": "No Submissions needed",
+                            "value": "No_Submissions_needed"
+                          },
+                          {
+                            "label": "Unknown",
+                            "value": "Unknown"
+                          },
+                          {
+                            "label": "Pending",
+                            "value": "Pending"
+                          }
+                        ]
+                      },
+                      "key": "Application_status",
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Food / Nutrition Assistance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "SNAP - Monthly",
+                            "value": "SNAP__Monthly"
+                          },
+                          {
+                            "label": "SNAP - Emergency",
+                            "value": "SNAP__Emergency"
+                          },
+                          {
+                            "label": "SNAP - Recertification",
+                            "value": "SNAP__Recertification"
+                          },
+                          {
+                            "label": "WIC - Monthly",
+                            "value": "WIC__Monthly"
+                          },
+                          {
+                            "label": "WIC - Recertification",
+                            "value": "WIC__Recertification"
+                          },
+                          {
+                            "label": "Food Assistance - Other",
+                            "value": "Food_Assistance__Other"
+                          }
+                        ]
+                      },
+                      "key": "Food__Nutrition_Assistance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Food__Nutrition_Assistance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Housing Assistance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Emergency Rental Assistance Program (ERAP)",
+                            "value": "Emergency_Rental_Assistance_Program_ERAP"
+                          },
+                          {
+                            "label": "Family Eviction Prevention Program (FEPS) - Monthly",
+                            "value": "Family_Eviction_Prevention_Program_FEPS__Monthly"
+                          },
+                          {
+                            "label": "Family Eviction Prevention Program (FEPS) - One Time",
+                            "value": "Family_Eviction_Prevention_Program_FEPS__One_Time"
+                          },
+                          {
+                            "label": "Family Eviction Prevention Program (FEPS) - Recertification",
+                            "value": "Family_Eviction_Prevention_Program_FEPS__Recertification"
+                          },
+                          {
+                            "label": "Housing Secured Placement (Supportive / Transitional / Private)",
+                            "value": "Housing_Secured_Placement_Supportive__Transitional__Private"
+                          },
+                          {
+                            "label": "HRA One Shot Deals",
+                            "value": "HRA_One_Shot_Deals"
+                          },
+                          {
+                            "label": "Public Housing - One-Time",
+                            "value": "Public_Housing__OneTime"
+                          },
+                          {
+                            "label": "Public Housing - Recertification",
+                            "value": "Public_Housing__Recertification"
+                          },
+                          {
+                            "label": "Rent Arrears",
+                            "value": "Rent_Arrears"
+                          },
+                          {
+                            "label": "Rent Increase Exemption (SCRIE/DRIE) - Initial",
+                            "value": "Rent_Increase_Exemption_SCRIEDRIE__Initial"
+                          },
+                          {
+                            "label": "Rent Increase Exemption (SCRIE/DRIE) - Recertification",
+                            "value": "Rent_Increase_Exemption_SCRIEDRIE__Recertification"
+                          },
+                          {
+                            "label": "Section 8 Recertification",
+                            "value": "Section_8_Recertification"
+                          },
+                          {
+                            "label": "Shelter",
+                            "value": "Shelter"
+                          },
+                          {
+                            "label": "Eviction Prevention - Other",
+                            "value": "Eviction_Prevention__Other"
+                          },
+                          {
+                            "label": "Housing Assistance - Other",
+                            "value": "Housing_Assistance__Other"
+                          }
+                        ]
+                      },
+                      "key": "Housing_Assistance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Housing_Assistance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Utility Assistance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Emergency Broadband Benefit (EBB)",
+                            "value": "Emergency_Broadband_Benefit_EBB"
+                          },
+                          {
+                            "label": "Home Energy Assistance Program (HEAP) ",
+                            "value": "Home_Energy_Assistance_Program_HEAP_"
+                          },
+                          {
+                            "label": "Lifeline - Monthly",
+                            "value": "Lifeline__Monthly"
+                          },
+                          {
+                            "label": "Lifeline - Recertification",
+                            "value": "Lifeline__Recertification"
+                          },
+                          {
+                            "label": "Utilities Assistance - Other",
+                            "value": "Utilities_Assistance__Other"
+                          },
+                          {
+                            "label": "Assurance/Safelink",
+                            "value": "AssuranceSafelink"
+                          },
+                          {
+                            "label": "Affordable Connectivity Program/Emergency Broadband Assistance",
+                            "value": "Affordable_Connectivity_ProgramEmergency_Broadband_Assistance"
+                          },
+                          {
+                            "label": "Sano Connect",
+                            "value": "Sano_Connect"
+                          },
+                          {
+                            "label": "EnergyShare",
+                            "value": "EnergyShare"
+                          }
+                        ]
+                      },
+                      "key": "Utility_Assistance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Utility_Assistance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Health Assistance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Dental Care referrals",
+                            "value": "Dental_Care_referrals"
+                          },
+                          {
+                            "label": "Emergency Medicaid for Non-Citizens  for Adults - Initial",
+                            "value": "Emergency_Medicaid_for_NonCitizens__for_Adults__Initial"
+                          },
+                          {
+                            "label": "Emergency Medicaid for Non-Citizens for Children - Initial",
+                            "value": "Emergency_Medicaid_for_NonCitizens_for_Children__Initial"
+                          },
+                          {
+                            "label": "Emergency Medicaid for Non-Citizens for Adults - Recertification",
+                            "value": "Emergency_Medicaid_for_NonCitizens_for_Adults__Recertification"
+                          },
+                          {
+                            "label": "Emergency Medicaid for Non-Citizens for Children - Recertification",
+                            "value": "Emergency_Medicaid_for_NonCitizens_for_Children__Recertification"
+                          },
+                          {
+                            "label": "Early Intervention",
+                            "value": "Early_Intervention"
+                          },
+                          {
+                            "label": "EPIC Program - Initial",
+                            "value": "EPIC_Program__Initial"
+                          },
+                          {
+                            "label": "EPIC Program - Recertification",
+                            "value": "EPIC_Program__Recertification"
+                          },
+                          {
+                            "label": "Family Planning",
+                            "value": "Family_Planning"
+                          },
+                          {
+                            "label": "General Medical Care",
+                            "value": "General_Medical_Care"
+                          },
+                          {
+                            "label": "HIV/AIDS Screening",
+                            "value": "HIVAIDS_Screening"
+                          },
+                          {
+                            "label": "Medicare Part A",
+                            "value": "Medicare_Part_A"
+                          },
+                          {
+                            "label": "Medicare Part B",
+                            "value": "Medicare_Part_B"
+                          },
+                          {
+                            "label": "Medicare Part C",
+                            "value": "Medicare_Part_C"
+                          },
+                          {
+                            "label": "Medicare Savings Program - Initial",
+                            "value": "Medicare_Savings_Program__Initial"
+                          },
+                          {
+                            "label": "Medicare Savings Program - Recertification",
+                            "value": "Medicare_Savings_Program__Recertification"
+                          },
+                          {
+                            "label": "Medicare Savings Program - Retroactive",
+                            "value": "Medicare_Savings_Program__Retroactive"
+                          },
+                          {
+                            "label": "New York Prescription Saver Card",
+                            "value": "New_York_Prescription_Saver_Card"
+                          },
+                          {
+                            "label": "Pharmacy Assistance",
+                            "value": "Pharmacy_Assistance"
+                          },
+                          {
+                            "label": "Low-Income Subsidies (Extra Help) - Initial",
+                            "value": "LowIncome_Subsidies_Extra_Help__Initial"
+                          },
+                          {
+                            "label": "Low-Income Subsidies (Extra Help) - Recertification",
+                            "value": "LowIncome_Subsidies_Extra_Help__Recertification"
+                          },
+                          {
+                            "label": "Presumptive eligibility",
+                            "value": "Presumptive_eligibility"
+                          },
+                          {
+                            "label": "Public Health Insurance for Adults - Initial",
+                            "value": "Public_Health_Insurance_for_Adults__Initial"
+                          },
+                          {
+                            "label": "Public Health Insurance for Adults - Recertification",
+                            "value": "Public_Health_Insurance_for_Adults__Recertification"
+                          },
+                          {
+                            "label": "Public Health Insurance for Children - Initial",
+                            "value": "Public_Health_Insurance_for_Children__Initial"
+                          },
+                          {
+                            "label": "Public Health Insurance for Children - Recertification\t",
+                            "value": "Public_Health_Insurance_for_Children__Recertification"
+                          },
+                          {
+                            "label": "Subsidized Qualified Health Plan (Marketplace/Medicaid) for Adults - Initial",
+                            "value": "Subsidized_Qualified_Health_Plan_MarketplaceMedicaid_for_Adults__Initial"
+                          },
+                          {
+                            "label": "Subsidized Qualified Health Plan (Marketplace/Medicaid) for Adults - Recertification",
+                            "value": "Subsidized_Qualified_Health_Plan_MarketplaceMedicaid_for_Adults__Recertification"
+                          },
+                          {
+                            "label": "Subsidized Qualified Health Plan (Marketplace/Medicaid) for Children - Initial",
+                            "value": "Subsidized_Qualified_Health_Plan_MarketplaceMedicaid_for_Children__Initial"
+                          },
+                          {
+                            "label": "Subsidized Qualified Health Plan (Marketplace/Medicaid) for Children - Recertification",
+                            "value": "Subsidized_Qualified_Health_Plan_MarketplaceMedicaid_for_Children__Recertification"
+                          },
+                          {
+                            "label": "Unsubsidized Qualified Health Plan (Marketplace) for Adults - Initial",
+                            "value": "Unsubsidized_Qualified_Health_Plan_Marketplace_for_Adults__Initial"
+                          },
+                          {
+                            "label": "Unsubsidized Qualified Health Plan (Marketplace) for Adults - Recertification",
+                            "value": "Unsubsidized_Qualified_Health_Plan_Marketplace_for_Adults__Recertification"
+                          },
+                          {
+                            "label": "Unsubsidized Qualified Health Plan (Marketplace) for Children - Initial",
+                            "value": "Unsubsidized_Qualified_Health_Plan_Marketplace_for_Children__Initial"
+                          },
+                          {
+                            "label": "Unsubsidized Qualified Health Plan (Marketplace) for Children - Recertification",
+                            "value": "Unsubsidized_Qualified_Health_Plan_Marketplace_for_Children__Recertification"
+                          },
+                          {
+                            "label": "Health Assistance - Other",
+                            "value": "Health_Assistance__Other"
+                          }
+                        ]
+                      },
+                      "key": "Health_Assistance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Health_Assistance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Cash Assistance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Child Care Assistance (CCA)",
+                            "value": "Child_Care_Assistance_CCA"
+                          },
+                          {
+                            "label": "Child Care Subsidy (Non- HRA)",
+                            "value": "Child_Care_Subsidy_Non_HRA"
+                          },
+                          {
+                            "label": "Child Support (Non- TANF)",
+                            "value": "Child_Support_Non_TANF"
+                          },
+                          {
+                            "label": "Child Tax Credit (CTC)",
+                            "value": "Child_Tax_Credit_CTC"
+                          },
+                          {
+                            "label": "Earned Income Tax Credit (EITC)",
+                            "value": "Earned_Income_Tax_Credit_EITC"
+                          },
+                          {
+                            "label": "Emergency Cash Grant",
+                            "value": "Emergency_Cash_Grant"
+                          },
+                          {
+                            "label": "Family Assistance (TANF)",
+                            "value": "Family_Assistance_TANF"
+                          },
+                          {
+                            "label": "NYC School Tax Credit - One Time",
+                            "value": "NYC_School_Tax_Credit__One_Time"
+                          },
+                          {
+                            "label": "Safety Net Assistance",
+                            "value": "Safety_Net_Assistance"
+                          },
+                          {
+                            "label": "Social Security Retirement Benefits",
+                            "value": "Social_Security_Retirement_Benefits"
+                          },
+                          {
+                            "label": "Social Security Survivor Benefits",
+                            "value": "Social_Security_Survivor_Benefits"
+                          },
+                          {
+                            "label": "SSDI",
+                            "value": "SSDI"
+                          },
+                          {
+                            "label": "SSI",
+                            "value": "SSI"
+                          },
+                          {
+                            "label": "Unemployment Insurance",
+                            "value": "Unemployment_Insurance"
+                          },
+                          {
+                            "label": "Tax Assistance - Other",
+                            "value": "Tax_Assistance__Other"
+                          },
+                          {
+                            "label": "Cash Assistance - Other",
+                            "value": "Cash_Assistance__Other"
+                          }
+                        ]
+                      },
+                      "key": "Cash_Assistance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Cash_Assistance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Transportation Assistance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Access-A-Ride - Monthly",
+                            "value": "AccessARide__Monthly"
+                          },
+                          {
+                            "label": "Access-A-Ride - Recertification",
+                            "value": "AccessARide__Recertification"
+                          },
+                          {
+                            "label": "Fair Fares",
+                            "value": "Fair_Fares"
+                          },
+                          {
+                            "label": "Reduced Fare Metro Card",
+                            "value": "Reduced_Fare_Metro_Card"
+                          }
+                        ]
+                      },
+                      "key": "Transportation_Assistance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Transportation_Assistance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Other Assistance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Birth Certificate",
+                            "value": "Birth_Certificate"
+                          },
+                          {
+                            "label": "FAFSA",
+                            "value": "FAFSA"
+                          },
+                          {
+                            "label": "Green Card",
+                            "value": "Green_Card"
+                          },
+                          {
+                            "label": "Head Start Program",
+                            "value": "Head_Start_Program"
+                          },
+                          {
+                            "label": "Immigration Form and Fee Waiver Assistance",
+                            "value": "Immigration_Form_and_Fee_Waiver_Assistance"
+                          },
+                          {
+                            "label": "In-School Youth Program (Learn n Earn)",
+                            "value": "InSchool_Youth_Program_Learn_n_Earn"
+                          },
+                          {
+                            "label": "ITIN",
+                            "value": "ITIN"
+                          },
+                          {
+                            "label": "Job Placement",
+                            "value": "Job_Placement"
+                          },
+                          {
+                            "label": "Non-Driver's ID",
+                            "value": "NonDrivers_ID"
+                          },
+                          {
+                            "label": "Out of School Time",
+                            "value": "Out_of_School_Time"
+                          },
+                          {
+                            "label": "Senior Employment Service (SES)",
+                            "value": "Senior_Employment_Service_SES"
+                          },
+                          {
+                            "label": "Social Security Card",
+                            "value": "Social_Security_Card"
+                          },
+                          {
+                            "label": "U.S. Naturalization Certificate\t",
+                            "value": "US_Naturalization_Certificate"
+                          },
+                          {
+                            "label": "U.S. Passport",
+                            "value": "US_Passport"
+                          },
+                          {
+                            "label": "Universal Pre-Kindergarten (UPK)",
+                            "value": "Universal_PreKindergarten_UPK"
+                          },
+                          {
+                            "label": "Document Assistance - Other",
+                            "value": "Document_Assistance__Other"
+                          },
+                          {
+                            "label": "Education Assistance - Other",
+                            "value": "Education_Assistance__Other"
+                          }
+                        ]
+                      },
+                      "key": "Other_Assistance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Other_Assistance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "External Referrals",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Domestic Violence Referral",
+                            "value": "Domestic_Violence_Referral"
+                          },
+                          {
+                            "label": "Dress for Success Referral",
+                            "value": "Dress_for_Success_Referral"
+                          },
+                          {
+                            "label": "ESL Referral",
+                            "value": "ESL_Referral"
+                          },
+                          {
+                            "label": "Financial Counseling Referral",
+                            "value": "Financial_Counseling_Referral"
+                          },
+                          {
+                            "label": "GED Program Referral",
+                            "value": "GED_Program_Referral"
+                          },
+                          {
+                            "label": "Job Training Referral",
+                            "value": "Job_Training_Referral"
+                          },
+                          {
+                            "label": "Legal Services Referral",
+                            "value": "Legal_Services_Referral"
+                          },
+                          {
+                            "label": "Mental Health Service Referral",
+                            "value": "Mental_Health_Service_Referral"
+                          },
+                          {
+                            "label": "Off-Site Food Pantry Referral",
+                            "value": "OffSite_Food_Pantry_Referral"
+                          },
+                          {
+                            "label": "Sliding Scale Health Referral",
+                            "value": "Sliding_Scale_Health_Referral"
+                          },
+                          {
+                            "label": "Substance Abuse Referral",
+                            "value": "Substance_Abuse_Referral"
+                          },
+                          {
+                            "label": "WIC",
+                            "value": "WIC"
+                          },
+                          {
+                            "label": "Food delivery services",
+                            "value": "Food_delivery_services"
+                          },
+                          {
+                            "label": "HPD Housing Ambassadors",
+                            "value": "HPD_Housing_Ambassadors"
+                          },
+                          {
+                            "label": "Homebase",
+                            "value": "Homebase"
+                          },
+                          {
+                            "label": "Immigration legal services",
+                            "value": "Immigration_legal_services"
+                          },
+                          {
+                            "label": "Housing legal services",
+                            "value": "Housing_legal_services"
+                          },
+                          {
+                            "label": "Free tax preparation services",
+                            "value": "Free_tax_preparation_services"
+                          },
+                          {
+                            "label": "Health insurance navigation",
+                            "value": "Health_insurance_navigation"
+                          },
+                          {
+                            "label": "Shelter",
+                            "value": "Shelter"
+                          },
+                          {
+                            "label": "Primary care services",
+                            "value": "Primary_care_services"
+                          },
+                          {
+                            "label": "Dental care",
+                            "value": "Dental_care"
+                          },
+                          {
+                            "label": "Adult Protective Services",
+                            "value": "Adult_Protective_Services"
+                          },
+                          {
+                            "label": "Veterans Services",
+                            "value": "Veterans_Services"
+                          },
+                          {
+                            "label": "NYC Kids Rise",
+                            "value": "NYC_Kids_Rise"
+                          },
+                          {
+                            "label": "Others",
+                            "value": "Others"
+                          }
+                        ]
+                      },
+                      "key": "External_Referrals",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "External_Referrals"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 4,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Case Management",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Accompaniment to in-person appointment",
+                            "value": "Accompaniment_to_inperson_appointment"
+                          },
+                          {
+                            "label": "Account creation - AHRA",
+                            "value": "Account_creation__AHRA"
+                          },
+                          {
+                            "label": "Account creation - email",
+                            "value": "Account_creation__email"
+                          },
+                          {
+                            "label": "Account linked - Provider Portal",
+                            "value": "Account_linked__Provider_Portal"
+                          },
+                          {
+                            "label": "Account creation - Other (i.e. bank, ConnectEBT, Housing Connect, etc.)",
+                            "value": "Account_creation__Other_ie_bank_ConnectEBT_Housing_Connect_etc"
+                          },
+                          {
+                            "label": "Account retrieval",
+                            "value": "Account_retrieval"
+                          },
+                          {
+                            "label": "Annual Building Recertification ",
+                            "value": "Annual_Building_Recertification_"
+                          },
+                          {
+                            "label": "Benefits application document support",
+                            "value": "Benefits_application_document_support"
+                          },
+                          {
+                            "label": "Benefit card replacement",
+                            "value": "Benefit_card_replacement"
+                          },
+                          {
+                            "label": "Benefits case closure",
+                            "value": "Benefits_case_closure"
+                          },
+                          {
+                            "label": "Background check assistance",
+                            "value": "Background_check_assistance"
+                          },
+                          {
+                            "label": "Check-in With Client",
+                            "value": "Checkin_With_Client"
+                          },
+                          {
+                            "label": "Call NYC Agency",
+                            "value": "Call_NYC_Agency"
+                          },
+                          {
+                            "label": "Call ConEdison",
+                            "value": "Call_ConEdison"
+                          },
+                          {
+                            "label": "Document Translation/interpretation services",
+                            "value": "Document_Translationinterpretation_services"
+                          },
+                          {
+                            "label": "Document Request",
+                            "value": "Document_Request"
+                          },
+                          {
+                            "label": "Explanation of notices",
+                            "value": "Explanation_of_notices"
+                          },
+                          {
+                            "label": "Explain Documents",
+                            "value": "Explain_Documents"
+                          },
+                          {
+                            "label": "Interview preparation assistance",
+                            "value": "Interview_preparation_assistance"
+                          },
+                          {
+                            "label": "Job search assistance",
+                            "value": "Job_search_assistance"
+                          },
+                          {
+                            "label": "Lease Renewal",
+                            "value": "Lease_Renewal"
+                          },
+                          {
+                            "label": "NYCBenefits Case Triaging",
+                            "value": "NYCBenefits_Case_Triaging"
+                          },
+                          {
+                            "label": "Permission to use care-of address",
+                            "value": "Permission_to_use_careof_address"
+                          },
+                          {
+                            "label": "Print Documents",
+                            "value": "Print_Documents"
+                          },
+                          {
+                            "label": "Resume assistance",
+                            "value": "Resume_assistance"
+                          },
+                          {
+                            "label": "Request credit report",
+                            "value": "Request_credit_report"
+                          },
+                          {
+                            "label": "Read Correspondence",
+                            "value": "Read_Correspondence"
+                          },
+                          {
+                            "label": "Send Reminder",
+                            "value": "Send_Reminder"
+                          },
+                          {
+                            "label": "Technical support - Phone interview",
+                            "value": "Technical_support__Phone_interview"
+                          },
+                          {
+                            "label": "Technical support - AHRA usage",
+                            "value": "Technical_support__AHRA_usage"
+                          }
+                        ]
+                      },
+                      "key": "Case_Management",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Case_Management"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "width": 4,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Benefit Maintenance",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "EBT Replacement Claim Advocacy or Appeal",
+                            "value": "EBT_Replacement_Claim_Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "SNAP Advocacy or Appeal",
+                            "value": "SNAP_Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "SNAP Mediation",
+                            "value": "SNAP_Mediation"
+                          },
+                          {
+                            "label": "SummerEBT Advocacy or Appeal",
+                            "value": "SummerEBT_Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Cash Assistance (TA + SNA) - Advocacy or Appeal",
+                            "value": "Cash_Assistance_TA__SNA__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "DV Waiver - Advocacy",
+                            "value": "DV_Waiver__Advocacy"
+                          },
+                          {
+                            "label": "Emergency Assistance/One Shot Deal - Advocacy or Appeal",
+                            "value": "Emergency_AssistanceOne_Shot_Deal__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Social Security Survivors Benefits - Advocacy or Appeal",
+                            "value": "Social_Security_Survivors_Benefits__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "SSDI - Advocacy or Appeal",
+                            "value": "SSDI__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "SSI - Advocacy or Appeal",
+                            "value": "SSI__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Unemployment Insurance - Advocacy or Appeal",
+                            "value": "Unemployment_Insurance__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Child Care Voucher - Advocacy, Conference, or Fair Hearing",
+                            "value": "Child_Care_Voucher__Advocacy_Conference_or_Fair_Hearing"
+                          },
+                          {
+                            "label": "Child Health Plus - Advocacy or Appeal",
+                            "value": "Child_Health_Plus__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Emergency Medicaid - Advocacy or Appeal",
+                            "value": "Emergency_Medicaid__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Essential Plan - Advocacy or Appeal",
+                            "value": "Essential_Plan__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Initial Primary Care - Appointment Scheduled",
+                            "value": "Initial_Primary_Care__Appointment_Scheduled"
+                          },
+                          {
+                            "label": "Medicaid - Advocacy or Appeal",
+                            "value": "Medicaid__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Medical Debt - Negotiation",
+                            "value": "Medical_Debt__Negotiation"
+                          },
+                          {
+                            "label": "Medicare Savings Program - Advocacy or Appeal",
+                            "value": "Medicare_Savings_Program__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "NYC Care - Advocacy or Appeal",
+                            "value": "NYC_Care__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Qualified Health Plan - Advocacy or Appeal",
+                            "value": "Qualified_Health_Plan__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "VA Health Care - Advocacy or Appeal",
+                            "value": "VA_Health_Care__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "CityFHEPS - Advocacy or Appeal",
+                            "value": "CityFHEPS__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "DRIE/SCRIE - Advocacy or Appeal",
+                            "value": "DRIESCRIE__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "FHEPS - Advocacy or Appeal",
+                            "value": "FHEPS__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "HUD-VASH Voucher - Advocacy or Appeal",
+                            "value": "HUDVASH_Voucher__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "NYCHA - Application Advocacy or Appeal",
+                            "value": "NYCHA__Application_Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "NYCHA - Application Renewal",
+                            "value": "NYCHA__Application_Renewal"
+                          },
+                          {
+                            "label": "NYCHA - Emergency Transfer Request",
+                            "value": "NYCHA__Emergency_Transfer_Request"
+                          },
+                          {
+                            "label": "NYCHA - Tenant Advocacy",
+                            "value": "NYCHA__Tenant_Advocacy"
+                          },
+                          {
+                            "label": "NYCHA - Transfer Request",
+                            "value": "NYCHA__Transfer_Request"
+                          },
+                          {
+                            "label": "Section 8 - Advocacy or Appeal",
+                            "value": "Section_8__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Section 8 - Emergency Transfer Request",
+                            "value": "Section_8__Emergency_Transfer_Request"
+                          },
+                          {
+                            "label": "Section 8 - Transfer Request",
+                            "value": "Section_8__Transfer_Request"
+                          },
+                          {
+                            "label": "Senior Housing - Advocacy or Appeal",
+                            "value": "Senior_Housing__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Supportive Housing - Advocacy or Appeal",
+                            "value": "Supportive_Housing__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "TBI/NHTD - Advocacy or Appeal",
+                            "value": "TBINHTD__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Temporary Shelter - Advocacy or Appeal",
+                            "value": "Temporary_Shelter__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Access-A-Ride - Advocacy or Appeal",
+                            "value": "AccessARide__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Fair Fares - Advocacy or Appeal",
+                            "value": "Fair_Fares__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Fair Fares - Card Replacement",
+                            "value": "Fair_Fares__Card_Replacement"
+                          },
+                          {
+                            "label": "HEAP - Advocacy",
+                            "value": "HEAP__Advocacy"
+                          },
+                          {
+                            "label": "Lifeline - Advocacy or Appeal",
+                            "value": "Lifeline__Advocacy_or_Appeal"
+                          },
+                          {
+                            "label": "Medical Hardship Exemption (ConEd)",
+                            "value": "Medical_Hardship_Exemption_ConEd"
+                          },
+                          {
+                            "label": "Utility Arrears Negotiation",
+                            "value": "Utility_Arrears_Negotiation"
+                          },
+                          {
+                            "label": "HRA Burial Assistance – Advocacy or Appeal",
+                            "value": "HRA_Burial_Assistance__Advocacy_or_Appeal"
+                          }
+                        ]
+                      },
+                      "key": "Benefit_Maintenance",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Benefit_Maintenance"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "width": 4,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Home Visit Type",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Annual",
+                            "value": "Annual"
+                          },
+                          {
+                            "label": "Bi-annual",
+                            "value": "Biannual"
+                          },
+                          {
+                            "label": "Monthly",
+                            "value": "Monthly"
+                          },
+                          {
+                            "label": "Quarterly",
+                            "value": "Quarterly"
+                          }
+                        ]
+                      },
+                      "key": "Home_Visit_Type",
+                      "conditional": {
+                        "show": true,
+                        "when": "Container.Benefits_Detail.Benefits_Categories",
+                        "eq": "Home_Visit"
+                      },
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "width": 4,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Additional Note",
+                      "tableView": true,
+                      "key": "Additional_Note",
+                      "type": "textfield",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "width": 4,
+                  "currentWidth": 4
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Outcomes Status",
+                      "widget": "choicesjs",
+                      "tableView": true,
+                      "data": {
+                        "values": [
+                          {
+                            "label": "Accepted",
+                            "value": "Accepted"
+                          },
+                          {
+                            "label": "Rejected",
+                            "value": "Rejected"
+                          },
+                          {
+                            "label": "Successful - Benefit Maintained / Reinstated",
+                            "value": "Successful__Benefit_Maintained__Reinstated"
+                          },
+                          {
+                            "label": "Successful - Benefit Level Increased",
+                            "value": "Successful__Benefit_Level_Increased"
+                          },
+                          {
+                            "label": "Unsuccessful",
+                            "value": "Unsuccessful"
+                          },
+                          {
+                            "label": "Home Visit Completed ",
+                            "value": "Home_Visit_Completed_"
+                          },
+                          {
+                            "label": "Home Visit Imcomplete",
+                            "value": "Home_Visit_Imcomplete"
+                          },
+                          {
+                            "label": "Pending",
+                            "value": "Pending"
+                          }
+                        ]
+                      },
+                      "key": "Outcomes_Status",
+                      "type": "select",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 6,
+                  "width": 6
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Date of Outcome Status Update",
+                      "format": "MM-dd-yyyy",
+                      "tableView": false,
+                      "datePicker": {
+                        "disableWeekends": false,
+                        "disableWeekdays": false
+                      },
+                      "enableTime": false,
+                      "timePicker": {
+                        "showMeridian": false
+                      },
+                      "enableMinDateInput": false,
+                      "enableMaxDateInput": false,
+                      "key": "Date_of_Outcome_Status_Update",
+                      "type": "datetime",
+                      "input": true,
+                      "widget": {
+                        "type": "calendar",
+                        "displayInTimezone": "viewer",
+                        "locale": "en",
+                        "useLocaleSettings": false,
+                        "allowInput": true,
+                        "mode": "single",
+                        "enableTime": false,
+                        "noCalendar": false,
+                        "format": "MM-dd-yyyy",
+                        "hourIncrement": 1,
+                        "minuteIncrement": 1,
+                        "time_24hr": true,
+                        "minDate": null,
+                        "disableWeekends": false,
+                        "disableWeekdays": false,
+                        "maxDate": null
+                      }
+                    }
+                  ],
+                  "size": "md",
+                  "width": 6,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 6
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Outcome Status Note",
+                      "tableView": true,
+                      "key": "Outcome_Status_Note",
+                      "type": "textfield",
+                      "input": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 6,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 6
+                },
+                {
+                  "components": [
+                    {
+                      "label": "Associated Outcome Dollar Amount",
+                      "mask": false,
+                      "spellcheck": true,
+                      "tableView": false,
+                      "currency": "USD",
+                      "inputFormat": "plain",
+                      "truncateMultipleSpaces": false,
+                      "key": "Associated_Outcome_Dollar_Amount",
+                      "type": "currency",
+                      "input": true,
+                      "delimiter": true
+                    }
+                  ],
+                  "size": "md",
+                  "width": 6,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 6
+                },
+                {
+                  "components": [],
+                  "size": "md",
+                  "width": 6,
+                  "offset": 0,
+                  "push": 0,
+                  "pull": 0,
+                  "currentWidth": 6
+                }
+              ],
+              "key": "Columns",
+              "type": "columns",
+              "input": false,
+              "tableView": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
