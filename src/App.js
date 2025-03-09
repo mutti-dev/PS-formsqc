@@ -1,24 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import SideDrawer from './components/SideDrawer';
+import JSONExtractor from './components/JSONExtractor';
+import JSONComparator from './components/JSONComparator';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div style={{ display: 'flex' }}>
+        <SideDrawer />
+        <main style={{ marginLeft: '240px', padding: '20px', flex: 1 }}>
+          <h1>JSON Utility App</h1>
+          <Routes>
+            <Route path="/extractor" element={<JSONExtractor />} />
+            <Route path="/comparator" element={<JSONComparator />} />
+            <Route path="*" element={<Navigate to="/extractor" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 
