@@ -19,7 +19,7 @@ export default function WordConverter() {
 
   return (
     <div style={styles.container}>
-      <h2>Word Converter</h2>
+      <h2>Drop Downs</h2>
       <textarea
         style={styles.textarea}
         value={inputText}
