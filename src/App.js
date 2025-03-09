@@ -10,7 +10,7 @@ function App() {
       <div style={{ display: 'flex' }}>
         <SideDrawer />
         <main style={{ marginLeft: '240px', padding: '20px', flex: 1 }}>
-          <h1>JSON Utility App</h1>
+          <h1>Form QC Tool</h1>
           <Routes>
             <Route path="/extractor" element={<JSONExtractor />} />
             <Route path="/comparator" element={<JSONComparator />} />
