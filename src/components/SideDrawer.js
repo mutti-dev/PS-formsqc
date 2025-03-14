@@ -51,12 +51,20 @@ export default function SideDrawer() {
               </Link>
             </li>
             <li style={styles.item}>
-
+              <Link 
+                to="/codeviewer" 
+                style={styles.link}
+                activeStyle={styles.activeLink}
+              >
+                <span style={styles.icon}>💻</span>
+                <span style={styles.linkText}>Code Viewer</span>
+              </Link>
+            </li>
+            <li style={styles.item}>
               <span style={styles.link}>
-              
                 <span style={styles.icon}>🔤</span>
-                <span style={styles.linkText}><a href='https://mutti-dev.github.io/Planstreet_test/text-convertor.html' target='_blank'>API Maker</a></span>
-                </span>
+                <span style={styles.linkText}><a href='https://mutti-dev.github.io/Planstreet_test/text-convertor.html' target='_blank' rel="noopener noreferrer">API Maker</a></span>
+              </span>
             </li>
           </ul>
         </nav>

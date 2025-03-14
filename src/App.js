@@ -4,6 +4,8 @@ import SideDrawer from './components/SideDrawer';
 import JSONExtractor from './components/JSONExtractor';
 import JSONComparator from './components/JSONComparator';
 import WordConverter from './components/WordConverter';
+import CodeViewer from './components/CodeViewer';
+import codeContentData from './codeContentData'; // new import
 
 function App() {
   return (
@@ -16,6 +18,10 @@ function App() {
             <Route path="/extractor" element={<JSONExtractor />} />
             <Route path="/comparator" element={<JSONComparator />} />
             <Route path="/converter" element={<WordConverter />} />
+            <Route 
+              path="/codeviewer" 
+              element={<CodeViewer codeContent={codeContentData} />} 
+            />
             <Route path="*" element={<Navigate to="/extractor" replace />} />
           </Routes>
         </main>
