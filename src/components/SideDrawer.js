@@ -50,6 +50,14 @@ export default function SideDrawer() {
                 <span style={styles.linkText}>Word Converter</span>
               </Link>
             </li>
+            <li style={styles.item}>
+
+              <span style={styles.link}>
+              
+                <span style={styles.icon}>🔤</span>
+                <span style={styles.linkText}><a href='https://mutti-dev.github.io/Planstreet_test/text-convertor.html' target='_blank'>API Maker</a></span>
+                </span>
+            </li>
           </ul>
         </nav>
       </div>
