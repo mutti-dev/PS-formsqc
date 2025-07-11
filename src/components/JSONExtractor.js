@@ -1,90 +1,376 @@
-import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
-import { extractLabelsFromJSON } from '../utils/utils';
+import React, { useState } from "react";
+import * as XLSX from "xlsx";
+import { extractLabelsFromJSON } from "../utils/utils";
 
 export default function JSONExtractor() {
   const [data, setData] = useState([]);
-  const [filter, setFilter] = useState('');
+  console.log("Data", data);
+  const [filter, setFilter] = useState("");
+  const [jsonInput, setJsonInput] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [hiddenTypes, setHiddenTypes] = useState([]);
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
-    if(file) {
-      const reader = new FileReader();
-      reader.onload = evt => {
-        const json = JSON.parse(evt.target.result);
-        const extracted = extractLabelsFromJSON(json);
-        setData(extracted);
-      }
-      reader.readAsText(file);
+  const handleExtract = () => {
+    if (!jsonInput.trim()) {
+      setError("Please paste your JSON data");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const json = JSON.parse(jsonInput);
+      const extracted = extractLabelsFromJSON(json);
+      setData(extracted);
+    } catch (err) {
+      setError("Invalid JSON format. Please check your input.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const clearAll = () => {
+    setJsonInput("");
+    setData([]);
+    setError("");
+    setFilter("");
+    setHiddenTypes([]);
+  };
+
+  const toggleTypeVisibility = (type) => {
+    setHiddenTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const exportData = data.map((entry) => ({
+    Label: entry.type === "panel" ? entry.title : entry.label,
+    Key: entry.key || "",
+    KeyLength: entry.key ? entry.key.length : 0,
+    Type: entry.type,
+    Format: entry.format || "",
+  }));
+
   const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Labels");
     XLSX.writeFile(wb, "labels.xlsx");
   };
 
   // Filtered data based on label, key, or type
-  const filteredData = data.filter(entry =>
-    entry.label.toLowerCase().includes(filter.toLowerCase()) ||
-    (entry.key && entry.key.toLowerCase().includes(filter.toLowerCase())) ||
-    entry.type.toLowerCase().includes(filter.toLowerCase())
+  const filteredData = data.filter((entry) => {
+    if (hiddenTypes.includes(entry.type)) {
+      return false;
+    }
+
+    const lowerFilter = filter.toLowerCase();
+    const matchesLabel = entry.label?.toLowerCase().includes(lowerFilter);
+    const matchesKey = entry.key?.toLowerCase().includes(lowerFilter);
+    const matchesType = entry.type?.toLowerCase().includes(lowerFilter);
+    const matchesPanelTitle =
+      entry.type === "panel" &&
+      entry.title?.toLowerCase().includes(lowerFilter);
+
+    return matchesLabel || matchesKey || matchesType || matchesPanelTitle;
+  });
+
+  console.log("filtered Data", filteredData);
+
+  // Check for keys exceeding 110 characters
+  const longKeys = data.filter((entry) => entry.key && entry.key.length > 110);
+
+  // Find duplicate labels
+  const labelCounts = {};
+
+  data.forEach((entry) => {
+    // Skip types that shouldn't be checked
+    if (entry.type === "columns" || entry.type === "content") {
+      return;
+    }
+
+    // Use title for panels, label otherwise
+    const labelKey = entry.type === "panel" ? entry.title : entry.label;
+
+    if (!labelKey) return;
+
+    if (labelCounts[labelKey]) {
+      labelCounts[labelKey]++;
+    } else {
+      labelCounts[labelKey] = 1;
+    }
+  });
+
+  const duplicateLabels = Object.entries(labelCounts)
+    .filter(([label, count]) => count > 1)
+    .map(([label, count]) => ({ label, count }));
+
+  // Get unique types for filtering
+  const uniqueTypes = [...new Set(data.map((entry) => entry.type))];
+
+  // Get select components with their values
+  const selectComponents = data.filter(
+    (entry) => entry.type === "select" && entry.values
   );
+
+  // Extract select values from original JSON
+  const extractSelectValues = (jsonData) => {
+    const selectItems = [];
+
+    const traverse = (obj, path = "") => {
+      if (obj && typeof obj === "object") {
+        if (Array.isArray(obj)) {
+          obj.forEach((item, index) => {
+            traverse(item, `${path}[${index}]`);
+          });
+        } else {
+          Object.keys(obj).forEach((key) => {
+            const currentPath = path ? `${path}.${key}` : key;
+            const value = obj[key];
+
+            if (
+              key === "type" &&
+              value === "select" &&
+              obj.data &&
+              obj.data.values
+            ) {
+              selectItems.push({
+                label: obj.label || "Unknown",
+                key: obj.key || "Unknown",
+                values: obj.data.values.map((v) => ({
+                  label: v.label,
+                  value: v.value,
+                })),
+              });
+            } else if (value && typeof value === "object") {
+              traverse(value, currentPath);
+            }
+          });
+        }
+      }
+    };
+
+    try {
+      const parsed =
+        typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+      traverse(parsed);
+    } catch (e) {
+      console.error("Error parsing JSON for select values:", e);
+    }
+
+    return selectItems;
+  };
+
+  const selectValues = jsonInput ? extractSelectValues(jsonInput) : [];
 
   return (
     <div style={styles.container}>
-      <div style={styles.uploadContainer}>
-        <label style={styles.uploadButton}>
-          📁 Upload JSON File
-          <input 
-            type="file" 
-            accept=".json" 
-            onChange={handleFile}
-            style={{ display: 'none' }}
-          />
-        </label>
-        <div style={styles.fileTypes}>.json only</div>
+      <div style={styles.header}>
+        <h1 style={styles.title}>JSON Label Extractor</h1>
+        <p style={styles.subtitle}>
+          Paste your JSON data below and extract labels with key information
+        </p>
       </div>
 
+      {/* JSON Input Section */}
+      <div style={styles.inputSection}>
+        <div style={styles.inputHeader}>
+          <h2 style={styles.sectionTitle}>📄 JSON Input</h2>
+          <button
+            onClick={clearAll}
+            style={styles.clearButton}
+            disabled={!jsonInput && data.length === 0}
+          >
+            🗑️ Clear All
+          </button>
+        </div>
+
+        <textarea
+          value={jsonInput}
+          onChange={(e) => setJsonInput(e.target.value)}
+          placeholder="Paste your JSON data here..."
+          style={styles.textarea}
+          rows={10}
+        />
+
+        {error && <div style={styles.errorMessage}>⚠️ {error}</div>}
+
+        <div style={styles.buttonContainer}>
+          <button
+            onClick={handleExtract}
+            style={styles.extractButton}
+            disabled={isLoading || !jsonInput.trim()}
+          >
+            {isLoading ? "⏳ Extracting..." : "🔍 Extract Labels"}
+          </button>
+        </div>
+      </div>
+
+      {/* Results Section */}
       {data.length > 0 && (
-        <div style={styles.contentBox}>
+        <div style={styles.resultsSection}>
+          <div style={styles.resultsHeader}>
+            <h2 style={styles.sectionTitle}>
+              📊 Extracted Labels ({data.length} items)
+            </h2>
+            <button onClick={exportExcel} style={styles.exportButton}>
+              ⬇️ Export to Excel
+            </button>
+          </div>
+
+          {/* Analytics Section */}
+          <div style={styles.analyticsContainer}>
+            {/* Duplicate Labels */}
+            {duplicateLabels.length > 0 && (
+              <div style={styles.analyticsBox}>
+                <div style={styles.analyticsHeader}>
+                  🔄 Duplicate Labels ({duplicateLabels.length})
+                </div>
+                <div style={styles.duplicateList}>
+                  {duplicateLabels.map(({ label, count }, idx) => (
+                    <div key={idx} style={styles.duplicateItem}>
+                      <span style={styles.duplicateLabel}>{label}</span>
+                      <span style={styles.duplicateCount}>
+                        {count} occurrences
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Select Components */}
+            {selectValues.length > 0 && (
+              <div style={styles.analyticsBox}>
+                <div style={styles.analyticsHeader}>
+                  📋 Select Components ({selectValues.length})
+                </div>
+                <div style={styles.selectList}>
+                  {selectValues.map((select, idx) => (
+                    <div key={idx} style={styles.selectItem}>
+                      <div style={styles.selectLabel}>
+                        <strong>{select.label}</strong> ({select.key})
+                      </div>
+                      <div style={styles.selectValues}>
+                        {select.values.map((option, optIdx) => (
+                          <span key={optIdx} style={styles.selectValue}>
+                            {option.label} ({option.value})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Type Filter */}
+            <div style={styles.analyticsBox}>
+              <div style={styles.analyticsHeader}>🎯 Filter by Type</div>
+              <div style={styles.typeFilters}>
+                {uniqueTypes.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => toggleTypeVisibility(type)}
+                    style={{
+                      ...styles.typeFilterButton,
+                      ...(hiddenTypes.includes(type)
+                        ? styles.typeFilterButtonHidden
+                        : {}),
+                    }}
+                  >
+                    {hiddenTypes.includes(type) ? "👁️‍🗨️" : "👁️"} {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {longKeys.length > 0 && (
+            <div style={styles.warningBox}>
+              <div style={styles.warningHeader}>⚠️ Key Length Warning</div>
+              <p style={styles.warningText}>
+                {longKeys.length} key(s) exceed 110 characters:
+              </p>
+              <div style={styles.warningList}>
+                {longKeys.map((entry, idx) => (
+                  <div key={idx} style={styles.warningItem}>
+                    <strong>{entry.label}</strong>: {entry.key.length}{" "}
+                    characters
+                    <div style={styles.truncatedKey}>
+                      {entry.key.substring(0, 110)}...
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Filter Section */}
           <div style={styles.filterContainer}>
             <input
               type="text"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Search labels, keys, or types..."
+              placeholder="🔍 Search labels, keys, or types..."
               style={styles.searchInput}
             />
-            <button 
-              onClick={exportExcel}
-              style={styles.exportButton}
-            >
-              ⬇️ Export to Excel
-            </button>
+            <div style={styles.filterInfo}>
+              Showing {filteredData.length} of {data.length} items
+              {hiddenTypes.length > 0 && (
+                <span style={styles.hiddenTypesInfo}>
+                  ({hiddenTypes.length} type{hiddenTypes.length > 1 ? "s" : ""}{" "}
+                  hidden)
+                </span>
+              )}
+            </div>
           </div>
 
+          {/* Table Section */}
           <div style={styles.tableContainer}>
             <table style={styles.table}>
               <thead>
                 <tr style={styles.tableHeader}>
-                  <th>Label</th>
-                  <th>Key</th>
-                  <th>Type</th>
-                  <th>Format</th>
+                  <th style={styles.tableHeaderCell}>Label</th>
+                  <th style={styles.tableHeaderCell}>Key</th>
+                  <th style={styles.tableHeaderCell}>Key Length</th>
+                  <th style={styles.tableHeaderCell}>Type</th>
+                  <th style={styles.tableHeaderCell}>Format</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredData.map((entry, idx) => (
                   <tr key={idx} style={styles.tableRow}>
-                    <td style={styles.tableCell}>{entry.label}</td>
-                    <td style={styles.tableCell}>{entry.key}</td>
-                    <td style={styles.tableCell}>{entry.type}</td>
                     <td style={styles.tableCell}>
-                      {entry.type === 'datetime' ? entry.format || '-' : '-'}
+                      {/* <span style={styles.labelText}>{entry.label}</span> */}
+                      {entry.type === "panel" ? entry.title : entry.label}
                     </td>
+                    <td style={styles.tableCell}>
+                      <div style={styles.keyCell}>
+                        <span style={styles.keyText}>{entry.key}</span>
+                      </div>
+                    </td>
+                    <td style={styles.tableCell}>
+                      <span
+                        style={{
+                          ...styles.keyLength,
+                          color:
+                            entry.key && entry.key.length > 110
+                              ? "#e74c3c"
+                              : "#27ae60",
+                        }}
+                      >
+                        {entry.key ? entry.key.length : 0}
+                        {entry.key && entry.key.length > 110 && (
+                          <span style={styles.warningIcon}> ⚠️</span>
+                        )}
+                      </span>
+                    </td>
+                    <td style={styles.tableCell}>
+                      <span style={styles.typeTag}>{entry.type}</span>
+                    </td>
+                    <td style={styles.tableCell}>{entry.format || "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -98,99 +384,326 @@ export default function JSONExtractor() {
 
 const styles = {
   container: {
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
-    maxWidth: '1200px',
-    margin: '2rem auto',
-    padding: '0 1rem',
+    fontFamily:
+      "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    maxWidth: "1400px",
+    margin: "0 auto",
+    padding: "2rem",
+    backgroundColor: "#f8fafc",
+    minHeight: "100vh",
   },
-  uploadContainer: {
-    textAlign: 'center',
-    marginBottom: '2rem',
+  header: {
+    textAlign: "center",
+    marginBottom: "2rem",
   },
-  uploadButton: {
-    backgroundColor: '#4A90E2',
-    color: 'white',
-    padding: '12px 24px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    transition: 'background-color 0.2s',
-    ':hover': {
-      backgroundColor: '#357ABD',
-    },
+  title: {
+    fontSize: "2.5rem",
+    fontWeight: "700",
+    color: "#1e293b",
+    margin: "0 0 0.5rem 0",
   },
-  fileTypes: {
-    color: '#666',
-    fontSize: '0.9rem',
-    marginTop: '8px',
+  subtitle: {
+    fontSize: "1.1rem",
+    color: "#64748b",
+    margin: 0,
   },
-  contentBox: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-    padding: '2rem',
+  inputSection: {
+    backgroundColor: "white",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    marginBottom: "2rem",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+  },
+  inputHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "1rem",
+  },
+  sectionTitle: {
+    fontSize: "1.5rem",
+    fontWeight: "600",
+    color: "#1e293b",
+    margin: 0,
+  },
+  clearButton: {
+    backgroundColor: "#ef4444",
+    color: "white",
+    border: "none",
+    padding: "8px 16px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    transition: "all 0.2s",
+    opacity: 0.8,
+  },
+  textarea: {
+    width: "100%",
+    minHeight: "200px",
+    padding: "1rem",
+    border: "2px solid #e2e8f0",
+    borderRadius: "8px",
+    fontSize: "0.95rem",
+    fontFamily: "'JetBrains Mono', 'Consolas', monospace",
+    resize: "vertical",
+    transition: "border-color 0.2s",
+    backgroundColor: "#fafafa",
+    boxSizing: "border-box",
+  },
+  errorMessage: {
+    color: "#e74c3c",
+    backgroundColor: "#fef2f2",
+    padding: "12px",
+    borderRadius: "8px",
+    marginTop: "1rem",
+    fontSize: "0.9rem",
+    border: "1px solid #fecaca",
+  },
+  buttonContainer: {
+    display: "flex",
+    gap: "1rem",
+    marginTop: "1rem",
+  },
+  extractButton: {
+    backgroundColor: "#3b82f6",
+    color: "white",
+    border: "none",
+    padding: "12px 24px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "1rem",
+    fontWeight: "600",
+    transition: "all 0.2s",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  resultsSection: {
+    backgroundColor: "white",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+  },
+  resultsHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "1.5rem",
+  },
+  exportButton: {
+    backgroundColor: "#10b981",
+    color: "white",
+    border: "none",
+    padding: "12px 24px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "1rem",
+    fontWeight: "600",
+    transition: "all 0.2s",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  warningBox: {
+    backgroundColor: "#fef3cd",
+    border: "1px solid #f59e0b",
+    borderRadius: "8px",
+    padding: "1rem",
+    marginBottom: "1.5rem",
+  },
+  warningHeader: {
+    fontSize: "1.1rem",
+    fontWeight: "600",
+    color: "#92400e",
+    marginBottom: "0.5rem",
+  },
+  warningText: {
+    color: "#92400e",
+    margin: "0 0 0.5rem 0",
+  },
+  warningList: {
+    maxHeight: "200px",
+    overflowY: "auto",
+  },
+  warningItem: {
+    marginBottom: "0.5rem",
+    fontSize: "0.9rem",
+    color: "#92400e",
+  },
+  truncatedKey: {
+    fontSize: "0.8rem",
+    color: "#6b7280",
+    fontFamily: "'JetBrains Mono', 'Consolas', monospace",
+    marginTop: "0.25rem",
   },
   filterContainer: {
-    display: 'flex',
-    gap: '1rem',
-    marginBottom: '1.5rem',
-    flexWrap: 'wrap',
+    display: "flex",
+    gap: "1rem",
+    marginBottom: "1.5rem",
+    alignItems: "center",
   },
   searchInput: {
     flex: 1,
-    padding: '12px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    minWidth: '300px',
-    ':focus': {
-      outline: 'none',
-      borderColor: '#4A90E2',
-      boxShadow: '0 0 0 3px rgba(74, 144, 226, 0.1)',
-    },
+    padding: "12px",
+    border: "2px solid #e2e8f0",
+    borderRadius: "8px",
+    fontSize: "1rem",
+    transition: "border-color 0.2s",
   },
-  exportButton: {
-    backgroundColor: '#00C853',
-    color: 'white',
-    border: 'none',
-    padding: '12px 24px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    transition: 'background-color 0.2s',
-    ':hover': {
-      backgroundColor: '#009624',
-    },
+  filterInfo: {
+    color: "#64748b",
+    fontSize: "0.9rem",
+    fontWeight: "500",
   },
   tableContainer: {
-    overflowX: 'auto',
-    borderRadius: '8px',
-    border: '1px solid #f0f0f0',
+    overflowX: "auto",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
   },
   table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '0.95rem',
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: "0.9rem",
   },
   tableHeader: {
-    backgroundColor: '#f8f9fa',
-    borderBottom: '2px solid #e0e0e0',
+    backgroundColor: "#f8fafc",
+  },
+  tableHeaderCell: {
+    padding: "1rem",
+    textAlign: "left",
+    fontWeight: "600",
+    color: "#374151",
+    borderBottom: "2px solid #e2e8f0",
   },
   tableRow: {
-    ':nth-of-type(even)': {
-      backgroundColor: '#fafafa',
-    },
-    ':hover': {
-      backgroundColor: '#f5f5f5',
-    },
+    borderBottom: "1px solid #f1f5f9",
+    transition: "background-color 0.2s",
   },
   tableCell: {
-    padding: '14px 16px',
-    borderBottom: '1px solid #eee',
-    textAlign: 'left',
+    padding: "1rem",
+    verticalAlign: "top",
+  },
+  labelText: {
+    fontWeight: "500",
+    color: "#1e293b",
+  },
+  keyCell: {
+    maxWidth: "300px",
+  },
+  keyText: {
+    fontFamily: "'JetBrains Mono', 'Consolas', monospace",
+    fontSize: "0.85rem",
+    color: "#475569",
+    wordBreak: "break-all",
+  },
+  keyLength: {
+    fontWeight: "600",
+    fontSize: "0.9rem",
+  },
+  warningIcon: {
+    fontSize: "0.8rem",
+  },
+  typeTag: {
+    backgroundColor: "#e0e7ff",
+    color: "#4338ca",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    fontSize: "0.8rem",
+    fontWeight: "500",
+  },
+  analyticsContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "1rem",
+    marginBottom: "1.5rem",
+  },
+  analyticsBox: {
+    backgroundColor: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    padding: "1rem",
+  },
+  analyticsHeader: {
+    fontSize: "1.1rem",
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: "0.75rem",
+  },
+  duplicateList: {
+    maxHeight: "200px",
+    overflowY: "auto",
+  },
+  duplicateItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "0.5rem 0",
+    borderBottom: "1px solid #e2e8f0",
+  },
+  duplicateLabel: {
+    fontWeight: "500",
+    color: "#374151",
+  },
+  duplicateCount: {
+    backgroundColor: "#fef3c7",
+    color: "#92400e",
+    padding: "2px 8px",
+    borderRadius: "12px",
+    fontSize: "0.8rem",
+    fontWeight: "500",
+  },
+  selectList: {
+    maxHeight: "300px",
+    overflowY: "auto",
+  },
+  selectItem: {
+    marginBottom: "1rem",
+    padding: "0.75rem",
+    backgroundColor: "white",
+    border: "1px solid #e2e8f0",
+    borderRadius: "6px",
+  },
+  selectLabel: {
+    marginBottom: "0.5rem",
+    color: "#1e293b",
+  },
+  selectValues: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "0.5rem",
+  },
+  selectValue: {
+    backgroundColor: "#e0f2fe",
+    color: "#0c4a6e",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    fontSize: "0.8rem",
+    fontWeight: "500",
+  },
+  typeFilters: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "0.5rem",
+  },
+  typeFilterButton: {
+    backgroundColor: "#e0f2fe",
+    color: "#0c4a6e",
+    border: "1px solid #0284c7",
+    padding: "6px 12px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    fontWeight: "500",
+    transition: "all 0.2s",
+  },
+  typeFilterButtonHidden: {
+    backgroundColor: "#fef2f2",
+    color: "#991b1b",
+    borderColor: "#dc2626",
+  },
+  hiddenTypesInfo: {
+    color: "#ef4444",
+    fontSize: "0.8rem",
+    marginLeft: "0.5rem",
   },
 };

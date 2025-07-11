@@ -2084,7 +2084,7 @@
                           }
                         ]
                       },
-                      "key": "External_Referrals",
+                      "key": "External_Referrals_External_Referrals_External_Referrals_External_Referrals_External_ReferralsExternal_Referrals_External_Referrals_External_Referrals_External_Referrals_External_Referrals",
                       "conditional": {
                         "show": true,
                         "when": "Container.Benefits_Detail.Benefits_Categories",
@@ -2104,7 +2104,7 @@
                 {
                   "components": [
                     {
-                      "label": "Case Management",
+                      "label": "External Referrals",
                       "widget": "choicesjs",
                       "tableView": true,
                       "data": {

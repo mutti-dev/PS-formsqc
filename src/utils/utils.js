@@ -1,34 +1,46 @@
 // Recursively extract objects with 'label' and 'type'
+// Recursively extract objects with 'label' and 'type'
 export function extractLabelsFromJSON(json) {
-    let result = [];
-    function traverse(obj) {
-      if (obj && typeof obj === 'object') {
-        // If the current object has both "label" and "type", add it.
-        if (obj.label && obj.type) {
-          const entry = { 
-            label: obj.label, 
-            key: obj.key, 
-            type: obj.type 
-          };
-          if(obj.type === 'datetime' && obj.format) {
-            entry.format = obj.format;
-          }
-          result.push(entry);
+  let result = [];
+
+  function traverse(obj) {
+    if (obj && typeof obj === 'object') {
+      // If the current object has both "label" and "type", add it.
+      if (obj.label && obj.type) {
+        const entry = {
+          label: obj.label,
+          key: obj.key,
+          type: obj.type,
+        };
+
+        // Add optional fields
+        if (obj.type === 'datetime' && obj.format) {
+          entry.format = obj.format;
         }
-        // Traverse arrays and objects
-        Object.keys(obj).forEach(key => {
-          const prop = obj[key];
-          if(Array.isArray(prop)) {
-            prop.forEach(item => traverse(item));
-          } else if(typeof prop === 'object') {
-            traverse(prop);
-          }
-        });
+
+        if (obj.title) {
+          entry.title = obj.title;
+        }
+
+        result.push(entry);
       }
+
+      // Traverse arrays and nested objects
+      Object.keys(obj).forEach(key => {
+        const prop = obj[key];
+        if (Array.isArray(prop)) {
+          prop.forEach(item => traverse(item));
+        } else if (typeof prop === 'object') {
+          traverse(prop);
+        }
+      });
     }
-    traverse(json);
-    return result;
   }
+
+  traverse(json);
+  return result;
+}
+
   
   // Deep compare two arrays of extracted entries (by label) and return report differences.
   export function deepCompareJSON(data1, data2) {
