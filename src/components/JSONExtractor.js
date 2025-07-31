@@ -10,6 +10,7 @@ export default function JSONExtractor() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hiddenTypes, setHiddenTypes] = useState([]);
+  const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
 
   const handleExtract = () => {
     if (!jsonInput.trim()) {
@@ -79,8 +80,8 @@ export default function JSONExtractor() {
 
   console.log("filtered Data", filteredData);
 
-  // Check for keys exceeding 110 characters
-  const longKeys = data.filter((entry) => entry.key && entry.key.length > 110);
+  // Check for keys exceeding threshold
+  const longKeys = data.filter((entry) => entry.key && entry.key.length > keyLengthThreshold);
 
   // Find duplicate labels
   const labelCounts = {};
@@ -206,6 +207,26 @@ export default function JSONExtractor() {
             {isLoading ? "⏳ Extracting..." : "🔍 Extract Labels"}
           </button>
         </div>
+
+        <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+          <label htmlFor="keyLengthThreshold" style={{ fontWeight: 500, color: "#1e293b" }}>
+            Key Length Threshold:
+          </label>
+          <input
+            id="keyLengthThreshold"
+            type="number"
+            min={1}
+            value={keyLengthThreshold}
+            onChange={e => setKeyLengthThreshold(Number(e.target.value))}
+            style={{
+              padding: "8px",
+              border: "2px solid #e2e8f0",
+              borderRadius: "8px",
+              fontSize: "1rem",
+              width: "100px"
+            }}
+          />
+        </div>
       </div>
 
       {/* Results Section */}
@@ -291,7 +312,7 @@ export default function JSONExtractor() {
             <div style={styles.warningBox}>
               <div style={styles.warningHeader}>⚠️ Key Length Warning</div>
               <p style={styles.warningText}>
-                {longKeys.length} key(s) exceed 110 characters:
+                {longKeys.length} key(s) exceed {keyLengthThreshold} characters:
               </p>
               <div style={styles.warningList}>
                 {longKeys.map((entry, idx) => (
@@ -299,7 +320,7 @@ export default function JSONExtractor() {
                     <strong>{entry.label}</strong>: {entry.key.length}{" "}
                     characters
                     <div style={styles.truncatedKey}>
-                      {entry.key.substring(0, 110)}...
+                      {entry.key.substring(0, keyLengthThreshold)}...
                     </div>
                   </div>
                 ))}
@@ -356,13 +377,13 @@ export default function JSONExtractor() {
                         style={{
                           ...styles.keyLength,
                           color:
-                            entry.key && entry.key.length > 110
+                            entry.key && entry.key.length > keyLengthThreshold
                               ? "#e74c3c"
                               : "#27ae60",
                         }}
                       >
                         {entry.key ? entry.key.length : 0}
-                        {entry.key && entry.key.length > 110 && (
+                        {entry.key && entry.key.length > keyLengthThreshold && (
                           <span style={styles.warningIcon}> ⚠️</span>
                         )}
                       </span>
