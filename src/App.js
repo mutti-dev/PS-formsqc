@@ -4,6 +4,9 @@ import SideDrawer from './components/SideDrawer';
 import JSONExtractor from './components/JSONExtractor';
 import JSONComparator from './components/JSONComparator';
 import WordConverter from './components/WordConverter';
+import FormComparator from './components/FormComparator';
+
+
 
 function App() {
   return (
@@ -16,6 +19,7 @@ function App() {
             <Route path="/extractor" element={<JSONExtractor />} />
             <Route path="/comparator" element={<JSONComparator />} />
             <Route path="/converter" element={<WordConverter />} />
+            <Route path="/form" element={<FormComparator />} />
             <Route path="*" element={<Navigate to="/extractor" replace />} />
           </Routes>
         </main>
