@@ -7,6 +7,9 @@ import WordConverter from './components/WordConverter';
 import FormComparator from './components/FormComparator';
 
 
+import JsonFormatter from './components/JSONFormatter';
+
+
 
 function App() {
   return (
@@ -20,6 +23,7 @@ function App() {
             <Route path="/comparator" element={<JSONComparator />} />
             <Route path="/converter" element={<WordConverter />} />
             <Route path="/form" element={<FormComparator />} />
+            <Route path="/jsonformatter" element={<JsonFormatter />} />
             <Route path="*" element={<Navigate to="/extractor" replace />} />
           </Routes>
         </main>
