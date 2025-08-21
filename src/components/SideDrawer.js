@@ -32,12 +32,12 @@ export default function SideDrawer() {
             </li>
             <li style={styles.item}>
               <Link 
-                to="/comparator" 
+                to="/form" 
                 style={styles.link}
                 activeStyle={styles.activeLink}
               >
                 <span style={styles.icon}>⚖️</span>
-                <span style={styles.linkText}>JSON Comparator</span>
+                <span style={styles.linkText}>Form Comparator</span>
               </Link>
             </li>
             <li style={styles.item}>
