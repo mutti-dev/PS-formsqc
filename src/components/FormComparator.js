@@ -10,6 +10,367 @@ export default function FormComparator() {
   const [hasResults, setHasResults] = useState(false);
 
   // Inline styles
+
+
+//   // recursive function to extract all fields
+//   const extractFields = (components, fields = {}) => {
+//     components.forEach((comp) => {
+//       if (comp.key) {
+//         fields[comp.key] = comp.label || "";
+//       }
+//       if (comp.components) {
+//         extractFields(comp.components, fields);
+//       }
+//       if (comp.columns) {
+//         comp.columns.forEach((col) => extractFields(col.components, fields));
+//       }
+//     });
+//     return fields;
+//   };
+
+// recursive function to extract only actual input fields (ignore container/columns/content)
+const extractFields = (components, fields = {}) => {
+  const ignoreTypes = ["container", "columns", "content"];
+
+  components.forEach((comp) => {
+    // agar component ka type ignoreTypes me hai to skip
+    if (!ignoreTypes.includes(comp.type)) {
+      if (comp.key) {
+        fields[comp.key] = comp.label || "";
+      }
+    }
+
+    // agar andar nested components hain to unko traverse karo
+    if (comp.components) {
+      extractFields(comp.components, fields);
+    }
+
+    // agar columns hain to unke andar bhi dekh lo
+    if (comp.columns) {
+      comp.columns.forEach((col) => extractFields(col.components || [], fields));
+    }
+  });
+
+  return fields;
+};
+
+
+  const compareForms = async () => {
+    if (!sandboxJson.trim() || !prodJson.trim()) {
+      alert("⚠️ Please fill both JSON inputs!");
+      return;
+    }
+
+    setIsComparing(true);
+    
+    // Simulate processing time for better UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    try {
+      const sandboxObj = JSON.parse(sandboxJson);
+      const prodObj = JSON.parse(prodJson);
+
+      const sandboxFields = extractFields(sandboxObj.components || sandboxObj);
+      const prodFields = extractFields(prodObj.components || prodObj);
+
+      const sim = [];
+      const miss = [];
+      const warn = [];
+
+      Object.keys(prodFields).forEach((key) => {
+        if (sandboxFields[key]) {
+          if (prodFields[key] !== sandboxFields[key]) {
+            warn.push({
+              key,
+              prodLabel: prodFields[key],
+              sandboxLabel: sandboxFields[key]
+            });
+          } else {
+            sim.push({ key, label: prodFields[key] });
+          }
+        } else {
+          miss.push({ key, label: prodFields[key], type: 'Missing in Sandbox' });
+        }
+      });
+
+      Object.keys(sandboxFields).forEach((key) => {
+        if (!prodFields[key]) {
+          miss.push({ key, label: sandboxFields[key], type: 'Missing in Prod' });
+        }
+      });
+
+      setSimilar(sim);
+      setMissing(miss);
+      setWarnings(warn);
+      setHasResults(true);
+    } catch (e) {
+      alert("❌ Invalid JSON format! Please check your input and try again.");
+    }
+    
+    setIsComparing(false);
+  };
+
+  const clearAll = () => {
+    setSandboxJson("");
+    setProdJson("");
+    setSimilar([]);
+    setMissing([]);
+    setWarnings([]);
+    setHasResults(false);
+  };
+
+  // CSS Animation for spinner
+  const spinnerKeyframes = `
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  `;
+
+  return (
+    <div style={styles.container}>
+      <style>{spinnerKeyframes}</style>
+      <div style={styles.maxWidth}>
+        {/* Header */}
+        <div style={styles.header}>
+          <div style={styles.headerIcon}>
+            <div style={styles.iconWrapper}>
+              <svg style={styles.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+          </div>
+          <h1 style={styles.title}>
+            Form Comparator
+          </h1>
+          <p style={styles.subtitle}>
+            Compare your JSON forms between Sandbox and Production environments
+          </p>
+        </div>
+
+        {/* Input Section */}
+        <div style={styles.inputSection}>
+          <div style={{...styles.inputGrid, ...(window.innerWidth >= 1024 ? styles.inputGridLg : {})}}>
+            {/* Sandbox Input */}
+            <div style={styles.inputGroup}>
+              <div style={styles.inputHeader}>
+                <div style={{...styles.inputIconWrapper, ...styles.sandboxIconWrapper}}>
+                  <svg style={styles.inputIconSandbox} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 style={styles.inputTitle}>Sandbox JSON</h3>
+              </div>
+              <textarea
+                style={styles.textarea}
+                placeholder="Paste your Sandbox JSON configuration here..."
+                value={sandboxJson}
+                onChange={(e) => setSandboxJson(e.target.value)}
+                onFocus={(e) => e.target.style.borderColor = '#f97316'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              />
+            </div>
+
+            {/* Production Input */}
+            <div style={styles.inputGroup}>
+              <div style={styles.inputHeader}>
+                <div style={{...styles.inputIconWrapper, ...styles.prodIconWrapper}}>
+                  <svg style={styles.inputIconProd} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 style={styles.inputTitle}>Production JSON</h3>
+              </div>
+              <textarea
+                style={styles.textarea}
+                placeholder="Paste your Production JSON configuration here..."
+                value={prodJson}
+                onChange={(e) => setProdJson(e.target.value)}
+                onFocus={(e) => e.target.style.borderColor = '#10b981'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={styles.buttonGroup}>
+            <button
+              onClick={compareForms}
+              disabled={isComparing}
+              style={{
+                ...styles.compareButton,
+                ...(isComparing ? styles.compareButtonDisabled : {})
+              }}
+              onMouseEnter={(e) => !isComparing && Object.assign(e.target.style, styles.compareButtonHover)}
+              onMouseLeave={(e) => !isComparing && Object.assign(e.target.style, styles.compareButton)}
+            >
+              {isComparing ? (
+                <>
+                  <div style={styles.spinner}></div>
+                  <span>Comparing...</span>
+                </>
+              ) : (
+                <>
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l14 9-14 9V3z" />
+                  </svg>
+                  <span>Compare Forms</span>
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5-5 5M6 12h12" />
+                  </svg>
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={clearAll}
+              style={styles.clearButton}
+              onMouseEnter={(e) => Object.assign(e.target.style, styles.clearButtonHover)}
+              onMouseLeave={(e) => Object.assign(e.target.style, styles.clearButton)}
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>Clear All</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Results Section */}
+        {hasResults && (
+          <div style={{...styles.resultsGrid, ...(window.innerWidth >= 1024 ? styles.resultsGridLg : {})}}>
+            {/* Similar Fields */}
+            {/* <div style={styles.resultCard}>
+              <div style={{...styles.cardHeader, ...styles.cardHeaderGreen}}>
+                <svg style={styles.cardIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 style={styles.cardTitle}>Matching Fields</h3>
+                  <p style={styles.cardSubtitle}>Fields that are identical in both environments</p>
+                </div>
+              </div>
+              <div style={styles.cardContent}>
+                {similar.length === 0 ? (
+                  <p style={styles.emptyState}>No matching fields found</p>
+                ) : (
+                  <div style={styles.itemList}>
+                    {similar.map((item, i) => (
+                      <div key={i} style={{...styles.itemCard, ...styles.itemCardGreen}}>
+                        <div style={{...styles.itemKey, ...styles.itemKeyGreen}}>{item.key}</div>
+                        {item.label && (
+                          <div style={{...styles.itemLabel, ...styles.itemLabelGreen}}>"{item.label}"</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div> */}
+
+            {/* Missing Fields */}
+            <div style={styles.resultCard}>
+              <div style={{...styles.cardHeader, ...styles.cardHeaderRed}}>
+                <svg style={styles.cardIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 style={styles.cardTitle}>Missing Fields</h3>
+                  <p style={styles.cardSubtitle}>Fields present in one environment only</p>
+                </div>
+              </div>
+              <div style={styles.cardContent}>
+                {missing.length === 0 ? (
+                  <p style={styles.emptyState}>No missing fields found</p>
+                ) : (
+                  <div style={styles.itemList}>
+                    {missing.map((item, i) => (
+                      <div key={i} style={{...styles.itemCard, ...styles.itemCardRed}}>
+                        <div style={styles.warningLabel}>
+                          <span style={{
+                            ...styles.badge,
+                            ...(item.type === 'Missing in Sandbox' ? styles.badgeOrange : styles.badgeBlue)
+                          }}>
+                            {item.type}
+                          </span>
+                        </div>
+                        <div style={{...styles.itemKey, ...styles.itemKeyRed}}>{item.key}</div>
+                        {item.label && (
+                          <div style={{...styles.itemLabel, ...styles.itemLabelRed}}>"{item.label}"</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Warnings */}
+            <div style={styles.resultCard}>
+              <div style={{...styles.cardHeader, ...styles.cardHeaderYellow}}>
+                <svg style={styles.cardIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                  <h3 style={styles.cardTitle}>Label Changes</h3>
+                  <p style={styles.cardSubtitle}>Fields with different labels</p>
+                </div>
+              </div>
+              <div style={styles.cardContent}>
+                {warnings.length === 0 ? (
+                  <p style={styles.emptyState}>No label differences found</p>
+                ) : (
+                  <div style={styles.itemList}>
+                    {warnings.map((item, i) => (
+                      <div key={i} style={{...styles.itemCard, ...styles.itemCardYellow}}>
+                        <div style={{...styles.itemKey, ...styles.itemKeyYellow}}>{item.key}</div>
+                        <div style={styles.warningItem}>
+                          <div style={styles.warningLabel}>
+                            <span style={{...styles.warningBadge, ...styles.prodBadge}}>PROD</span>
+                            <span style={{color: '#374151'}}>"{item.prodLabel}"</span>
+                          </div>
+                          <div style={styles.warningLabel}>
+                            <span style={{...styles.warningBadge, ...styles.sandboxBadge}}>SANDBOX</span>
+                            <span style={{color: '#374151'}}>"{item.sandboxLabel}"</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stats Summary */}
+        {hasResults && (
+          <div style={styles.summaryCard}>
+            <h3 style={styles.summaryTitle}>Comparison Summary</h3>
+            <div style={{...styles.summaryGrid, ...(window.innerWidth >= 768 ? styles.summaryGridMd : {})}}>
+              <div style={styles.summaryItem}>
+                <div style={{...styles.summaryNumber, ...styles.summaryNumberGreen}}>{similar.length}</div>
+                <div style={styles.summaryLabel}>Matching Fields</div>
+              </div>
+              <div style={styles.summaryItem}>
+                <div style={{...styles.summaryNumber, ...styles.summaryNumberRed}}>{missing.length}</div>
+                <div style={styles.summaryLabel}>Missing Fields</div>
+              </div>
+              <div style={styles.summaryItem}>
+                <div style={{...styles.summaryNumber, ...styles.summaryNumberYellow}}>{warnings.length}</div>
+                <div style={styles.summaryLabel}>Label Changes</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+
   const styles = {
     container: {
       minHeight: '100vh',
@@ -378,359 +739,3 @@ export default function FormComparator() {
       color: '#6b7280'
     }
   };
-
-//   // recursive function to extract all fields
-//   const extractFields = (components, fields = {}) => {
-//     components.forEach((comp) => {
-//       if (comp.key) {
-//         fields[comp.key] = comp.label || "";
-//       }
-//       if (comp.components) {
-//         extractFields(comp.components, fields);
-//       }
-//       if (comp.columns) {
-//         comp.columns.forEach((col) => extractFields(col.components, fields));
-//       }
-//     });
-//     return fields;
-//   };
-
-// recursive function to extract only actual input fields (ignore container/columns/content)
-const extractFields = (components, fields = {}) => {
-  const ignoreTypes = ["container", "columns", "content"];
-
-  components.forEach((comp) => {
-    // agar component ka type ignoreTypes me hai to skip
-    if (!ignoreTypes.includes(comp.type)) {
-      if (comp.key) {
-        fields[comp.key] = comp.label || "";
-      }
-    }
-
-    // agar andar nested components hain to unko traverse karo
-    if (comp.components) {
-      extractFields(comp.components, fields);
-    }
-
-    // agar columns hain to unke andar bhi dekh lo
-    if (comp.columns) {
-      comp.columns.forEach((col) => extractFields(col.components || [], fields));
-    }
-  });
-
-  return fields;
-};
-
-
-  const compareForms = async () => {
-    if (!sandboxJson.trim() || !prodJson.trim()) {
-      alert("⚠️ Please fill both JSON inputs!");
-      return;
-    }
-
-    setIsComparing(true);
-    
-    // Simulate processing time for better UX
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    try {
-      const sandboxObj = JSON.parse(sandboxJson);
-      const prodObj = JSON.parse(prodJson);
-
-      const sandboxFields = extractFields(sandboxObj.components || sandboxObj);
-      const prodFields = extractFields(prodObj.components || prodObj);
-
-      const sim = [];
-      const miss = [];
-      const warn = [];
-
-      Object.keys(prodFields).forEach((key) => {
-        if (sandboxFields[key]) {
-          if (prodFields[key] !== sandboxFields[key]) {
-            warn.push({
-              key,
-              prodLabel: prodFields[key],
-              sandboxLabel: sandboxFields[key]
-            });
-          } else {
-            sim.push({ key, label: prodFields[key] });
-          }
-        } else {
-          miss.push({ key, label: prodFields[key], type: 'Missing in Sandbox' });
-        }
-      });
-
-      Object.keys(sandboxFields).forEach((key) => {
-        if (!prodFields[key]) {
-          miss.push({ key, label: sandboxFields[key], type: 'Missing in Prod' });
-        }
-      });
-
-      setSimilar(sim);
-      setMissing(miss);
-      setWarnings(warn);
-      setHasResults(true);
-    } catch (e) {
-      alert("❌ Invalid JSON format! Please check your input and try again.");
-    }
-    
-    setIsComparing(false);
-  };
-
-  const clearAll = () => {
-    setSandboxJson("");
-    setProdJson("");
-    setSimilar([]);
-    setMissing([]);
-    setWarnings([]);
-    setHasResults(false);
-  };
-
-  // CSS Animation for spinner
-  const spinnerKeyframes = `
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-  `;
-
-  return (
-    <div style={styles.container}>
-      <style>{spinnerKeyframes}</style>
-      <div style={styles.maxWidth}>
-        {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.headerIcon}>
-            <div style={styles.iconWrapper}>
-              <svg style={styles.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </div>
-          </div>
-          <h1 style={styles.title}>
-            Form Comparator
-          </h1>
-          <p style={styles.subtitle}>
-            Compare your JSON forms between Sandbox and Production environments
-          </p>
-        </div>
-
-        {/* Input Section */}
-        <div style={styles.inputSection}>
-          <div style={{...styles.inputGrid, ...(window.innerWidth >= 1024 ? styles.inputGridLg : {})}}>
-            {/* Sandbox Input */}
-            <div style={styles.inputGroup}>
-              <div style={styles.inputHeader}>
-                <div style={{...styles.inputIconWrapper, ...styles.sandboxIconWrapper}}>
-                  <svg style={styles.inputIconSandbox} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 style={styles.inputTitle}>Sandbox JSON</h3>
-              </div>
-              <textarea
-                style={styles.textarea}
-                placeholder="Paste your Sandbox JSON configuration here..."
-                value={sandboxJson}
-                onChange={(e) => setSandboxJson(e.target.value)}
-                onFocus={(e) => e.target.style.borderColor = '#f97316'}
-                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-              />
-            </div>
-
-            {/* Production Input */}
-            <div style={styles.inputGroup}>
-              <div style={styles.inputHeader}>
-                <div style={{...styles.inputIconWrapper, ...styles.prodIconWrapper}}>
-                  <svg style={styles.inputIconProd} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 style={styles.inputTitle}>Production JSON</h3>
-              </div>
-              <textarea
-                style={styles.textarea}
-                placeholder="Paste your Production JSON configuration here..."
-                value={prodJson}
-                onChange={(e) => setProdJson(e.target.value)}
-                onFocus={(e) => e.target.style.borderColor = '#10b981'}
-                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-              />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div style={styles.buttonGroup}>
-            <button
-              onClick={compareForms}
-              disabled={isComparing}
-              style={{
-                ...styles.compareButton,
-                ...(isComparing ? styles.compareButtonDisabled : {})
-              }}
-              onMouseEnter={(e) => !isComparing && Object.assign(e.target.style, styles.compareButtonHover)}
-              onMouseLeave={(e) => !isComparing && Object.assign(e.target.style, styles.compareButton)}
-            >
-              {isComparing ? (
-                <>
-                  <div style={styles.spinner}></div>
-                  <span>Comparing...</span>
-                </>
-              ) : (
-                <>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l14 9-14 9V3z" />
-                  </svg>
-                  <span>Compare Forms</span>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5-5 5M6 12h12" />
-                  </svg>
-                </>
-              )}
-            </button>
-            
-            <button
-              onClick={clearAll}
-              style={styles.clearButton}
-              onMouseEnter={(e) => Object.assign(e.target.style, styles.clearButtonHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, styles.clearButton)}
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span>Clear All</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Results Section */}
-        {hasResults && (
-          <div style={{...styles.resultsGrid, ...(window.innerWidth >= 1024 ? styles.resultsGridLg : {})}}>
-            {/* Similar Fields */}
-            <div style={styles.resultCard}>
-              <div style={{...styles.cardHeader, ...styles.cardHeaderGreen}}>
-                <svg style={styles.cardIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h3 style={styles.cardTitle}>Matching Fields</h3>
-                  <p style={styles.cardSubtitle}>Fields that are identical in both environments</p>
-                </div>
-              </div>
-              <div style={styles.cardContent}>
-                {similar.length === 0 ? (
-                  <p style={styles.emptyState}>No matching fields found</p>
-                ) : (
-                  <div style={styles.itemList}>
-                    {similar.map((item, i) => (
-                      <div key={i} style={{...styles.itemCard, ...styles.itemCardGreen}}>
-                        <div style={{...styles.itemKey, ...styles.itemKeyGreen}}>{item.key}</div>
-                        {item.label && (
-                          <div style={{...styles.itemLabel, ...styles.itemLabelGreen}}>"{item.label}"</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Missing Fields */}
-            <div style={styles.resultCard}>
-              <div style={{...styles.cardHeader, ...styles.cardHeaderRed}}>
-                <svg style={styles.cardIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h3 style={styles.cardTitle}>Missing Fields</h3>
-                  <p style={styles.cardSubtitle}>Fields present in one environment only</p>
-                </div>
-              </div>
-              <div style={styles.cardContent}>
-                {missing.length === 0 ? (
-                  <p style={styles.emptyState}>No missing fields found</p>
-                ) : (
-                  <div style={styles.itemList}>
-                    {missing.map((item, i) => (
-                      <div key={i} style={{...styles.itemCard, ...styles.itemCardRed}}>
-                        <div style={styles.warningLabel}>
-                          <span style={{
-                            ...styles.badge,
-                            ...(item.type === 'Missing in Sandbox' ? styles.badgeOrange : styles.badgeBlue)
-                          }}>
-                            {item.type}
-                          </span>
-                        </div>
-                        <div style={{...styles.itemKey, ...styles.itemKeyRed}}>{item.key}</div>
-                        {item.label && (
-                          <div style={{...styles.itemLabel, ...styles.itemLabelRed}}>"{item.label}"</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Warnings */}
-            <div style={styles.resultCard}>
-              <div style={{...styles.cardHeader, ...styles.cardHeaderYellow}}>
-                <svg style={styles.cardIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <div>
-                  <h3 style={styles.cardTitle}>Label Changes</h3>
-                  <p style={styles.cardSubtitle}>Fields with different labels</p>
-                </div>
-              </div>
-              <div style={styles.cardContent}>
-                {warnings.length === 0 ? (
-                  <p style={styles.emptyState}>No label differences found</p>
-                ) : (
-                  <div style={styles.itemList}>
-                    {warnings.map((item, i) => (
-                      <div key={i} style={{...styles.itemCard, ...styles.itemCardYellow}}>
-                        <div style={{...styles.itemKey, ...styles.itemKeyYellow}}>{item.key}</div>
-                        <div style={styles.warningItem}>
-                          <div style={styles.warningLabel}>
-                            <span style={{...styles.warningBadge, ...styles.prodBadge}}>PROD</span>
-                            <span style={{color: '#374151'}}>"{item.prodLabel}"</span>
-                          </div>
-                          <div style={styles.warningLabel}>
-                            <span style={{...styles.warningBadge, ...styles.sandboxBadge}}>SANDBOX</span>
-                            <span style={{color: '#374151'}}>"{item.sandboxLabel}"</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Summary */}
-        {hasResults && (
-          <div style={styles.summaryCard}>
-            <h3 style={styles.summaryTitle}>Comparison Summary</h3>
-            <div style={{...styles.summaryGrid, ...(window.innerWidth >= 768 ? styles.summaryGridMd : {})}}>
-              <div style={styles.summaryItem}>
-                <div style={{...styles.summaryNumber, ...styles.summaryNumberGreen}}>{similar.length}</div>
-                <div style={styles.summaryLabel}>Matching Fields</div>
-              </div>
-              <div style={styles.summaryItem}>
-                <div style={{...styles.summaryNumber, ...styles.summaryNumberRed}}>{missing.length}</div>
-                <div style={styles.summaryLabel}>Missing Fields</div>
-              </div>
-              <div style={styles.summaryItem}>
-                <div style={{...styles.summaryNumber, ...styles.summaryNumberYellow}}>{warnings.length}</div>
-                <div style={styles.summaryLabel}>Label Changes</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
