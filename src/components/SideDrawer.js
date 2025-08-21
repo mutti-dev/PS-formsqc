@@ -51,6 +51,16 @@ export default function SideDrawer() {
               </Link>
             </li>
             <li style={styles.item}>
+              <Link 
+                to="/jsonformatter" 
+                style={styles.link}
+                activeStyle={styles.activeLink}
+              >
+                <span style={styles.icon}>🔤</span>
+                <span style={styles.linkText}>JSON Formatter</span>
+              </Link>
+            </li>
+            <li style={styles.item}>
 
               <span style={styles.link}>
               
