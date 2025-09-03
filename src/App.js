@@ -26,7 +26,7 @@ function App() {
             minWidth: 0,
           }}
         >
-          <h1>Form QC Tool</h1>
+          
           <Routes>
             <Route path="/extractor" element={<JSONExtractor />} />
             <Route path="/comparator" element={<JSONComparator />} />

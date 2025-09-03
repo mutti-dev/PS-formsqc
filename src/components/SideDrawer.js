@@ -33,7 +33,7 @@ export default function SideDrawer({ isOpen, setIsOpen }) {
             <>
               <h1 style={styles.title}>
                 <span style={styles.logo}>🚀</span>
-                Planstreet
+                Form QC Tool
               </h1>
               <div style={styles.divider} />
             </>
