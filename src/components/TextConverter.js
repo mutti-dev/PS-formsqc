@@ -1,47 +1,18 @@
 import React, { useState } from "react";
+import { copyToClipboard, convertText, limitText } from "../utils/utils";
 
 const TextConverter = () => {
   const [inputText, setInputText] = useState("");
   const [convertedText, setConvertedText] = useState("");
 
-  // Utility: copy text to clipboard
-  const copyToClipboard = (text) => {
-    if (!text) return;
-    try {
-      navigator.clipboard.writeText(text);
-    } catch {
-      // Fallback for older browsers
-      const temp = document.createElement("textarea");
-      temp.value = text;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      document.body.removeChild(temp);
-    }
-  };
-
-  // Standard conversion
   const handleConvert = () => {
-    const converted = inputText
-      .replace(/[^a-zA-Z0-9]+/g, "_")
-      .replace(/^(\d+)/, "");
-
+    const converted = convertText(inputText);
     setConvertedText(converted);
     copyToClipboard(converted);
   };
 
-  // Limited characters conversion
   const handleLimited = () => {
-    let converted = inputText
-      .replace(/[^a-zA-Z0-9]+/g, "_")
-      .replace(/^(\d+)/, "");
-
-    // Remove leading/trailing underscores
-    converted = converted.replace(/^_+|_+$/g, "");
-
-    // Limit to 110 characters
-    converted = converted.slice(0, 110);
-
+    const converted = limitText(inputText, 110);
     setConvertedText(converted);
     copyToClipboard(converted);
   };

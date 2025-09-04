@@ -9,7 +9,7 @@ export default function JSONExtractor() {
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hiddenTypes, setHiddenTypes] = useState([]);
+  const [hiddenTypes, setHiddenTypes] = useState(["columns", "content","container", "panel"]);
   const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
 
   const handleExtract = () => {
@@ -46,7 +46,9 @@ export default function JSONExtractor() {
     );
   };
 
-  const exportData = data.map((entry) => ({
+  const exportData = data
+  .filter((entry) => !hiddenTypes.includes(entry.type)) // apply hiddenTypes
+  .map((entry) => ({
     Label: entry.type === "panel" ? entry.title : entry.label,
     Key: entry.key || "",
     KeyLength: entry.key ? entry.key.length : 0,
@@ -55,11 +57,11 @@ export default function JSONExtractor() {
   }));
 
   const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Labels");
-    XLSX.writeFile(wb, "labels.xlsx");
-  };
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Labels");
+  XLSX.writeFile(wb, "labels.xlsx");
+};
 
   // Filtered data based on label, key, or type
   const filteredData = data.filter((entry) => {

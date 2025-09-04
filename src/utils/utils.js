@@ -68,3 +68,42 @@ export function extractLabelsFromJSON(json) {
   
     return report;
   }
+
+
+
+  // utils/textUtils.js
+
+// ✅ Copy text to clipboard (with fallback)
+export const copyToClipboard = (text) => {
+  if (!text) return;
+  try {
+    navigator.clipboard.writeText(text);
+  } catch {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+  }
+};
+
+// ✅ Standard conversion
+export const convertText = (input) => {
+  if (!input) return "";
+  return input
+    .replace(/[^a-zA-Z0-9]+/g, "_") // replace non-alphanumeric with "_"
+    .replace(/^(\d+)/, ""); // remove leading numbers
+};
+
+// ✅ Limited characters conversion (with trimming & length limit)
+export const limitText = (input, maxLength = 110) => {
+  let converted = convertText(input);
+
+  // Remove leading/trailing underscores
+  converted = converted.replace(/^_+|_+$/g, "");
+
+  // Limit to maxLength characters
+  return converted.slice(0, maxLength);
+};
+
