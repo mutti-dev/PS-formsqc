@@ -76,6 +76,8 @@ export function checkSelectOptions(components = []) {
     return results;
   }
 
+  const errors = [];
+
   allSelects.forEach((comp) => {
     const { label = "(no label)", type = "", key = "" } = comp;
     let options = [];
@@ -105,39 +107,44 @@ export function checkSelectOptions(components = []) {
     const dupLabels = labels.filter((l, i) => labels.indexOf(l) !== i);
     const dupValues = values.filter((v, i) => values.indexOf(v) !== i);
 
-    if (dupLabels.length === 0 && dupValues.length === 0) {
-      results.push({
-        rule: `${type} (${label})`,
-        passed: true,
-        message: `✅ <strong>${label}</strong> — All ${
-          type === "select" ? "option" : "checkbox"
-        } labels & values are unique.`,
-      });
-    } else {
+    if (dupLabels.length > 0 || dupValues.length > 0) {
       const msgs = [];
       if (dupLabels.length > 0)
         msgs.push(
-          `Duplicate labels: <strong>[${[...new Set(dupLabels)].join(
-            ", "
-          )}]</strong>`
+          `Duplicate labels: <strong>${[...new Set(dupLabels)].join("<br>")}</strong>`
         );
       if (dupValues.length > 0)
         msgs.push(
-          `Duplicate values: <strong>[${[...new Set(dupValues)].join(
-            ", "
-          )}]</strong>`
+          `Duplicate values: <strong>${[...new Set(dupValues)].join("<br>")}</strong>`
         );
 
-      results.push({
-        rule: `${type} (${label})`,
-        passed: false,
+      errors.push({
+        label,
         message: `❌ <strong>${label}</strong> — ${msgs.join(" & ")}`,
       });
     }
   });
 
+  if (errors.length === 0) {
+    results.push({
+      rule: "Select/Selectboxes Options",
+      passed: true,
+      message:
+        "✅ <strong>All Select/Selectboxes components have unique option labels and values.</strong>",
+    });
+  } else {
+    errors.forEach((err) =>
+      results.push({
+        rule: "Select/Selectboxes Options",
+        passed: false,
+        message: err.message,
+      })
+    );
+  }
+
   return results;
 }
+
 
 // ============================================================
 // ✅ 4. Check datetime format
@@ -210,6 +217,27 @@ export function checkDatetimeFormat(
 // ============================================================
 // ✅ 5. Run all validations
 // ============================================================
+
+// ___________________________________________________________
+// Validation Rules Summary
+
+// Rule 1: Unique Keys
+
+// Rule 2: Key Length ≤ 110
+
+//  Rule 3: Unique Labels
+
+// Rule 4: Single Container
+
+// Rule 5: Select/Selectboxes Option Uniqueness
+
+// Rule 6: Label–Key Match
+
+// Rule 7: Datetime Format Validation
+
+// ___________________________________________________________
+
+// Datetime Format Validation
 export function runValidations(parsedForm) {
   const results = [];
   const components = extractComponents(
