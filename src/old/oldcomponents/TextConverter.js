@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { copyToClipboard, convertText, limitText } from "../utils/utils";
+import { copyToClipboard, convertText, limitText } from "../oldutils/utils";
 
 const TextConverter = () => {
   const [inputText, setInputText] = useState("");

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
-import { extractLabelsFromJSON } from "../utils/utils";
+import { extractLabelsFromJSON } from "../oldutils/utils";
 
 export default function JSONExtractor() {
   const [data, setData] = useState([]);

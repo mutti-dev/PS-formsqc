@@ -1,4 +1,4 @@
-
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function SideDrawer({ isOpen, setIsOpen }) {
@@ -43,19 +43,19 @@ export default function SideDrawer({ isOpen, setIsOpen }) {
           <ul style={styles.list}>
             <li style={styles.item}>
               <Link
-                to="/analyze"
+                to="/extractor"
                 style={{
                   ...styles.link(isOpen),
-                  ...(location.pathname === "/analyze"
+                  ...(location.pathname === "/extractor"
                     ? styles.activeLink
                     : {}),
                 }}
               >
                 <span style={styles.icon}>{"📑"}</span>
-                {isOpen && <span style={styles.linkText}>JSON Analyzer</span>}
+                {isOpen && <span style={styles.linkText}>JSON Extractor</span>}
               </Link>
             </li>
-            {/* <li style={styles.item}>
+            <li style={styles.item}>
               <Link
                 to="/form"
                 style={{
@@ -108,7 +108,7 @@ export default function SideDrawer({ isOpen, setIsOpen }) {
                 <span style={styles.icon}>{"🔤"}</span>
                 {isOpen && <span style={styles.linkText}>API Maker</span>}
               </Link>
-            </li> */}
+            </li>
           </ul>
         </nav>
       </div>
