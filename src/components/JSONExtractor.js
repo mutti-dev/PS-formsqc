@@ -4,12 +4,11 @@ import { extractLabelsFromJSON } from "../utils/utils";
 
 export default function JSONExtractor() {
   const [data, setData] = useState([]);
-  console.log("Data", data);
   const [filter, setFilter] = useState("");
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hiddenTypes, setHiddenTypes] = useState(["columns", "content","container", "panel"]);
+  const [hiddenTypes, setHiddenTypes] = useState(["columns", "content", "container", "panel"]);
   const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
 
   const handleExtract = () => {
@@ -37,7 +36,6 @@ export default function JSONExtractor() {
     setData([]);
     setError("");
     setFilter("");
-    setHiddenTypes([]);
   };
 
   const toggleTypeVisibility = (type) => {
@@ -47,145 +45,124 @@ export default function JSONExtractor() {
   };
 
   const exportData = data
-  .filter((entry) => !hiddenTypes.includes(entry.type)) // apply hiddenTypes
-  .map((entry) => ({
-    Label: entry.type === "panel" ? entry.title : entry.label,
-    Key: entry.key || "",
-    KeyLength: entry.key ? entry.key.length : 0,
-    Type: entry.type,
-    Format: entry.format || "",
-  }));
+    .filter((entry) => !hiddenTypes.includes(entry.type))
+    .map((entry) => ({
+      Label: entry.type === "panel" ? entry.title : entry.label,
+      Key: entry.key || "",
+      KeyLength: entry.key ? entry.key.length : 0,
+      Type: entry.type,
+      Format: entry.format || "",
+    }));
 
   const exportExcel = () => {
-  const ws = XLSX.utils.json_to_sheet(exportData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Labels");
-  XLSX.writeFile(wb, "labels.xlsx");
-};
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Labels");
+    XLSX.writeFile(wb, "labels.xlsx");
+  };
 
-  // Filtered data based on label, key, or type
   const filteredData = data.filter((entry) => {
-    if (hiddenTypes.includes(entry.type)) {
-      return false;
-    }
-
+    if (hiddenTypes.includes(entry.type)) return false;
     const lowerFilter = filter.toLowerCase();
     const matchesLabel = entry.label?.toLowerCase().includes(lowerFilter);
     const matchesKey = entry.key?.toLowerCase().includes(lowerFilter);
     const matchesType = entry.type?.toLowerCase().includes(lowerFilter);
-    const matchesPanelTitle =
-      entry.type === "panel" &&
-      entry.title?.toLowerCase().includes(lowerFilter);
-
+    const matchesPanelTitle = entry.type === "panel" && entry.title?.toLowerCase().includes(lowerFilter);
     return matchesLabel || matchesKey || matchesType || matchesPanelTitle;
   });
 
-  console.log("filtered Data", filteredData);
-
-  // Check for keys exceeding threshold
   const longKeys = data.filter((entry) => entry.key && entry.key.length > keyLengthThreshold);
 
-  // Find duplicate labels
   const labelCounts = {};
-
   data.forEach((entry) => {
-    // Skip types that shouldn't be checked
-    if (entry.type === "columns" || entry.type === "content") {
-      return;
-    }
-
-    // Use title for panels, label otherwise
+    if (entry.type === "columns" || entry.type === "content") return;
     const labelKey = entry.type === "panel" ? entry.title : entry.label;
-
     if (!labelKey) return;
-
-    if (labelCounts[labelKey]) {
-      labelCounts[labelKey]++;
-    } else {
-      labelCounts[labelKey] = 1;
-    }
+    labelCounts[labelKey] = (labelCounts[labelKey] || 0) + 1;
   });
-
   const duplicateLabels = Object.entries(labelCounts)
-    .filter(([label, count]) => count > 1)
+    .filter(([_, count]) => count > 1)
     .map(([label, count]) => ({ label, count }));
 
-  // Get unique types for filtering
   const uniqueTypes = [...new Set(data.map((entry) => entry.type))];
 
-  // Get select components with their values
-  const selectComponents = data.filter(
-    (entry) => entry.type === "select" && entry.values
-  );
-
-  // Extract select values from original JSON
+  // 🟢 Extract SELECT components from JSON
   const extractSelectValues = (jsonData) => {
     const selectItems = [];
-
-    const traverse = (obj, path = "") => {
+    const traverse = (obj) => {
       if (obj && typeof obj === "object") {
         if (Array.isArray(obj)) {
-          obj.forEach((item, index) => {
-            traverse(item, `${path}[${index}]`);
-          });
+          obj.forEach(traverse);
         } else {
-          Object.keys(obj).forEach((key) => {
-            const currentPath = path ? `${path}.${key}` : key;
-            const value = obj[key];
-
-            if (
-              key === "type" &&
-              value === "select" &&
-              obj.data &&
-              obj.data.values
-            ) {
-              selectItems.push({
-                label: obj.label || "Unknown",
-                key: obj.key || "Unknown",
-                values: obj.data.values.map((v) => ({
-                  label: v.label,
-                  value: v.value,
-                })),
-              });
-            } else if (value && typeof value === "object") {
-              traverse(value, currentPath);
-            }
-          });
+          if (obj.type === "select" && obj.data?.values) {
+            selectItems.push({
+              label: obj.label || "Unknown",
+              key: obj.key || "Unknown",
+              values: obj.data.values.map((v) => ({
+                label: v.label,
+                value: v.value,
+              })),
+            });
+          }
+          Object.values(obj).forEach(traverse);
         }
       }
     };
-
     try {
-      const parsed =
-        typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+      const parsed = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
       traverse(parsed);
     } catch (e) {
       console.error("Error parsing JSON for select values:", e);
     }
-
     return selectItems;
   };
 
+  // 🟣 Extract SURVEY components separately
+  const extractSurveyValues = (jsonData) => {
+    const surveyItems = [];
+    const traverse = (obj) => {
+      if (obj && typeof obj === "object") {
+        if (Array.isArray(obj)) {
+          obj.forEach(traverse);
+        } else {
+          if (obj.type === "survey" && Array.isArray(obj.questions)) {
+            surveyItems.push({
+              label: obj.label || "Unknown",
+              key: obj.key || "Unknown",
+              questions: obj.questions.map((q) => ({
+                label: q.label,
+                value: q.value,
+              })),
+            });
+          }
+          Object.values(obj).forEach(traverse);
+        }
+      }
+    };
+    try {
+      const parsed = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+      traverse(parsed);
+    } catch (e) {
+      console.error("Error parsing JSON for survey values:", e);
+    }
+    return surveyItems;
+  };
+
   const selectValues = jsonInput ? extractSelectValues(jsonInput) : [];
+  const surveyValues = jsonInput ? extractSurveyValues(jsonInput) : [];
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>JSON Label Extractor</h1>
-        <p style={styles.subtitle}>
-          Paste your JSON data below and extract labels with key information
-        </p>
+        <p style={styles.subtitle}>Paste your JSON data below and extract labels with key information</p>
       </div>
 
       {/* JSON Input Section */}
       <div style={styles.inputSection}>
         <div style={styles.inputHeader}>
           <h2 style={styles.sectionTitle}>📄 JSON Input</h2>
-          <button
-            onClick={clearAll}
-            style={styles.clearButton}
-            disabled={!jsonInput && data.length === 0}
-          >
+          <button onClick={clearAll} style={styles.clearButton} disabled={!jsonInput && data.length === 0}>
             🗑️ Clear All
           </button>
         </div>
@@ -201,11 +178,7 @@ export default function JSONExtractor() {
         {error && <div style={styles.errorMessage}>⚠️ {error}</div>}
 
         <div style={styles.buttonContainer}>
-          <button
-            onClick={handleExtract}
-            style={styles.extractButton}
-            disabled={isLoading || !jsonInput.trim()}
-          >
+          <button onClick={handleExtract} style={styles.extractButton} disabled={isLoading || !jsonInput.trim()}>
             {isLoading ? "⏳ Extracting..." : "🔍 Extract Labels"}
           </button>
         </div>
@@ -219,57 +192,47 @@ export default function JSONExtractor() {
             type="number"
             min={1}
             value={keyLengthThreshold}
-            onChange={e => setKeyLengthThreshold(Number(e.target.value))}
+            onChange={(e) => setKeyLengthThreshold(Number(e.target.value))}
             style={{
               padding: "8px",
               border: "2px solid #e2e8f0",
               borderRadius: "8px",
               fontSize: "1rem",
-              width: "100px"
+              width: "100px",
             }}
           />
         </div>
       </div>
 
-      {/* Results Section */}
       {data.length > 0 && (
         <div style={styles.resultsSection}>
           <div style={styles.resultsHeader}>
-            <h2 style={styles.sectionTitle}>
-              📊 Extracted Labels ({data.length} items)
-            </h2>
+            <h2 style={styles.sectionTitle}>📊 Extracted Labels ({data.length} items)</h2>
             <button onClick={exportExcel} style={styles.exportButton}>
               ⬇️ Export to Excel
             </button>
           </div>
 
-          {/* Analytics Section */}
           <div style={styles.analyticsContainer}>
             {/* Duplicate Labels */}
             {duplicateLabels.length > 0 && (
               <div style={styles.analyticsBox}>
-                <div style={styles.analyticsHeader}>
-                  🔄 Duplicate Labels ({duplicateLabels.length})
-                </div>
+                <div style={styles.analyticsHeader}>🔄 Duplicate Labels ({duplicateLabels.length})</div>
                 <div style={styles.duplicateList}>
                   {duplicateLabels.map(({ label, count }, idx) => (
                     <div key={idx} style={styles.duplicateItem}>
                       <span style={styles.duplicateLabel}>{label}</span>
-                      <span style={styles.duplicateCount}>
-                        {count} occurrences
-                      </span>
+                      <span style={styles.duplicateCount}>{count} occurrences</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Select Components */}
+            {/* SELECT Components */}
             {selectValues.length > 0 && (
               <div style={styles.analyticsBox}>
-                <div style={styles.analyticsHeader}>
-                  📋 Select Components ({selectValues.length})
-                </div>
+                <div style={styles.analyticsHeader}>📋 Select Components ({selectValues.length})</div>
                 <div style={styles.selectList}>
                   {selectValues.map((select, idx) => (
                     <div key={idx} style={styles.selectItem}>
@@ -280,6 +243,29 @@ export default function JSONExtractor() {
                         {select.values.map((option, optIdx) => (
                           <span key={optIdx} style={styles.selectValue}>
                             {option.label} ({option.value})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 🟣 SURVEY Components — NEW BOX */}
+            {surveyValues.length > 0 && (
+              <div style={styles.analyticsBox}>
+                <div style={styles.analyticsHeader}>🧩 Survey Components ({surveyValues.length})</div>
+                <div style={styles.selectList}>
+                  {surveyValues.map((survey, idx) => (
+                    <div key={idx} style={styles.selectItem}>
+                      <div style={styles.selectLabel}>
+                        <strong>{survey.label}</strong> ({survey.key})
+                      </div>
+                      <div style={styles.selectValues}>
+                        {survey.questions.map((q, qIdx) => (
+                          <span key={qIdx} style={styles.selectValue}>
+                            {q.label} ({q.value})
                           </span>
                         ))}
                       </div>
@@ -310,6 +296,8 @@ export default function JSONExtractor() {
               </div>
             </div>
           </div>
+
+          {/* ⚠️ Key length warnings */}
           {longKeys.length > 0 && (
             <div style={styles.warningBox}>
               <div style={styles.warningHeader}>⚠️ Key Length Warning</div>
@@ -319,8 +307,7 @@ export default function JSONExtractor() {
               <div style={styles.warningList}>
                 {longKeys.map((entry, idx) => (
                   <div key={idx} style={styles.warningItem}>
-                    <strong>{entry.label}</strong>: {entry.key.length}{" "}
-                    characters
+                    <strong>{entry.label}</strong>: {entry.key.length} characters
                     <div style={styles.truncatedKey}>
                       {entry.key.substring(0, keyLengthThreshold)}...
                     </div>
@@ -330,7 +317,7 @@ export default function JSONExtractor() {
             </div>
           )}
 
-          {/* Filter Section */}
+          {/* Filter & Table */}
           <div style={styles.filterContainer}>
             <input
               type="text"
@@ -343,14 +330,12 @@ export default function JSONExtractor() {
               Showing {filteredData.length} of {data.length} items
               {hiddenTypes.length > 0 && (
                 <span style={styles.hiddenTypesInfo}>
-                  ({hiddenTypes.length} type{hiddenTypes.length > 1 ? "s" : ""}{" "}
-                  hidden)
+                  ({hiddenTypes.length} type{hiddenTypes.length > 1 ? "s" : ""} hidden)
                 </span>
               )}
             </div>
           </div>
 
-          {/* Table Section */}
           <div style={styles.tableContainer}>
             <table style={styles.table}>
               <thead>
@@ -365,10 +350,7 @@ export default function JSONExtractor() {
               <tbody>
                 {filteredData.map((entry, idx) => (
                   <tr key={idx} style={styles.tableRow}>
-                    <td style={styles.tableCell}>
-                      {/* <span style={styles.labelText}>{entry.label}</span> */}
-                      {entry.type === "panel" ? entry.title : entry.label}
-                    </td>
+                    <td style={styles.tableCell}>{entry.type === "panel" ? entry.title : entry.label}</td>
                     <td style={styles.tableCell}>
                       <div style={styles.keyCell}>
                         <span style={styles.keyText}>{entry.key}</span>
