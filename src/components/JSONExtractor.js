@@ -161,7 +161,7 @@ export default function JSONExtractor() {
       {/* JSON Input Section */}
       <div style={styles.inputSection}>
         <div style={styles.inputHeader}>
-          <h2 style={styles.sectionTitle}>📄 JSON Input</h2>
+          <h2 style={styles.sectionTitle}>JSON Input</h2>
           <button onClick={clearAll} style={styles.clearButton} disabled={!jsonInput && data.length === 0}>
             🗑️ Clear All
           </button>
@@ -232,7 +232,7 @@ export default function JSONExtractor() {
             {/* SELECT Components */}
             {selectValues.length > 0 && (
               <div style={styles.analyticsBox}>
-                <div style={styles.analyticsHeader}>📋 Select Components ({selectValues.length})</div>
+                <div style={styles.analyticsHeader}>Select Components ({selectValues.length})</div>
                 <div style={styles.selectList}>
                   {selectValues.map((select, idx) => (
                     <div key={idx} style={styles.selectItem}>
@@ -255,7 +255,7 @@ export default function JSONExtractor() {
             {/* 🟣 SURVEY Components — NEW BOX */}
             {surveyValues.length > 0 && (
               <div style={styles.analyticsBox}>
-                <div style={styles.analyticsHeader}>🧩 Survey Components ({surveyValues.length})</div>
+                <div style={styles.analyticsHeader}> Survey Components ({surveyValues.length})</div>
                 <div style={styles.selectList}>
                   {surveyValues.map((survey, idx) => (
                     <div key={idx} style={styles.selectItem}>
@@ -277,7 +277,7 @@ export default function JSONExtractor() {
 
             {/* Type Filter */}
             <div style={styles.analyticsBox}>
-              <div style={styles.analyticsHeader}>🎯 Filter by Type</div>
+              <div style={styles.analyticsHeader}>Filter by Type</div>
               <div style={styles.typeFilters}>
                 {uniqueTypes.map((type) => (
                   <button
