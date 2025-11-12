@@ -52,7 +52,7 @@ export default function SideDrawer({ isOpen, setIsOpen }) {
                 }}
               >
                 <span style={styles.icon}>{"📑"}</span>
-                {isOpen && <span style={styles.linkText}>JSON Extractor</span>}
+                {isOpen && <span style={styles.linkText}>Form Review</span>}
               </Link>
             </li>
             <li style={styles.item}>

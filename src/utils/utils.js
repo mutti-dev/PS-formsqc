@@ -4,7 +4,7 @@ export function extractLabelsFromJSON(json) {
   let result = [];
 
   function traverse(obj) {
-    if (obj && typeof obj === 'object') {
+    if (obj && typeof obj === "object") {
       // If the current object has both "label" and "type", add it.
       if (obj.label && obj.type) {
         const entry = {
@@ -14,7 +14,7 @@ export function extractLabelsFromJSON(json) {
         };
 
         // Add optional fields
-        if (obj.type === 'datetime' && obj.format) {
+        if (obj.type === "datetime" && obj.format) {
           entry.format = obj.format;
         }
 
@@ -26,11 +26,11 @@ export function extractLabelsFromJSON(json) {
       }
 
       // Traverse arrays and nested objects
-      Object.keys(obj).forEach(key => {
+      Object.keys(obj).forEach((key) => {
         const prop = obj[key];
         if (Array.isArray(prop)) {
-          prop.forEach(item => traverse(item));
-        } else if (typeof prop === 'object') {
+          prop.forEach((item) => traverse(item));
+        } else if (typeof prop === "object") {
           traverse(prop);
         }
       });
@@ -41,37 +41,134 @@ export function extractLabelsFromJSON(json) {
   return result;
 }
 
-  
-  // Deep compare two arrays of extracted entries (by label) and return report differences.
-  export function deepCompareJSON(data1, data2) {
-    let report = [];
-    const map1 = {};
-    data1.forEach(item => map1[item.label] = item.type);
-    const map2 = {};
-    data2.forEach(item => map2[item.label] = item.type);
-  
-    // Find keys in data1 missing or different in data2
-    Object.keys(map1).forEach(key => {
-      if(!(key in map2)) {
-        report.push({ issue: 'Missing in JSON 2', details: key });
-      } else if(map1[key] !== map2[key]) {
-        report.push({ issue: 'Type mismatch for key: ' + key, details: `JSON1: ${map1[key]}, JSON2: ${map2[key]}` });
+// ======================
+
+const findDuplicateValues = (values) => {
+  const valueMap = {};
+  values.forEach(({ label, value }) => {
+    if (!valueMap[value]) valueMap[value] = [];
+    valueMap[value].push(label);
+  });
+
+  // Collect only those values that have multiple labels
+  return Object.entries(valueMap)
+    .filter(([_, labels]) => labels.length > 1)
+    .map(([value, labels]) => ({ value, labels }));
+};
+
+// 🟢 Main: Extract SELECT components and detect duplicates
+export const extractSelectValues = (jsonData) => {
+  const selectItems = [];
+
+  const traverse = (obj) => {
+    if (obj && typeof obj === "object") {
+      if (Array.isArray(obj)) {
+        obj.forEach(traverse);
+      } else {
+        if (obj.type === "select" && obj.data?.values) {
+          const values = obj.data.values.map((v) => ({
+            label: v.label,
+            value: v.value,
+          }));
+
+          const duplicates = findDuplicateValues(values);
+
+          selectItems.push({
+            label: obj.label || "Unknown",
+            key: obj.key || "Unknown",
+            values,
+            duplicateValues: duplicates.length ? duplicates : null,
+          });
+        }
+
+        Object.values(obj).forEach(traverse);
       }
-    });
-  
-    // Find keys in data2 that are missing in JSON1
-    Object.keys(map2).forEach(key => {
-      if(!(key in map1)) {
-        report.push({ issue: 'Missing in JSON 1', details: key });
-      }
-    });
-  
-    return report;
+    }
+  };
+
+  try {
+    const parsed =
+      typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+    traverse(parsed);
+  } catch (e) {
+    console.error("Error parsing JSON for select values:", e);
   }
 
+  return selectItems;
+};
 
+// 🟢 Main: Extract SURVEY components and detect duplicate values
+export const extractSurveyValues = (jsonData) => {
+  const surveyItems = [];
 
-  // utils/textUtils.js
+  const traverse = (obj) => {
+    if (obj && typeof obj === "object") {
+      if (Array.isArray(obj)) {
+        obj.forEach(traverse);
+      } else {
+        if (obj.type === "survey" && Array.isArray(obj.questions)) {
+          const values = obj.questions.map((q) => ({
+            label: q.label,
+            value: q.value,
+          }));
+
+          const duplicates = findDuplicateValues(values);
+
+          surveyItems.push({
+            label: obj.label || "Unknown",
+            key: obj.key || "Unknown",
+            questions: values,
+            duplicateValues: duplicates.length ? duplicates : null,
+          });
+        }
+
+        Object.values(obj).forEach(traverse);
+      }
+    }
+  };
+
+  try {
+    const parsed =
+      typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+    traverse(parsed);
+  } catch (e) {
+    console.error("Error parsing JSON for survey values:", e);
+  }
+
+  return surveyItems;
+};
+
+// Deep compare two arrays of extracted entries (by label) and return report differences.
+export function deepCompareJSON(data1, data2) {
+  let report = [];
+  const map1 = {};
+  data1.forEach((item) => (map1[item.label] = item.type));
+  const map2 = {};
+  data2.forEach((item) => (map2[item.label] = item.type));
+
+  // Find keys in data1 missing or different in data2
+  Object.keys(map1).forEach((key) => {
+    if (!(key in map2)) {
+      report.push({ issue: "Missing in JSON 2", details: key });
+    } else if (map1[key] !== map2[key]) {
+      report.push({
+        issue: "Type mismatch for key: " + key,
+        details: `JSON1: ${map1[key]}, JSON2: ${map2[key]}`,
+      });
+    }
+  });
+
+  // Find keys in data2 that are missing in JSON1
+  Object.keys(map2).forEach((key) => {
+    if (!(key in map1)) {
+      report.push({ issue: "Missing in JSON 1", details: key });
+    }
+  });
+
+  return report;
+}
+
+// utils/textUtils.js
 
 // ✅ Copy text to clipboard (with fallback)
 export const copyToClipboard = (text) => {
@@ -106,4 +203,3 @@ export const limitText = (input, maxLength = 110) => {
   // Limit to maxLength characters
   return converted.slice(0, maxLength);
 };
-

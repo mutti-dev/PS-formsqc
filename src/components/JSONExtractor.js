@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
-import { extractLabelsFromJSON } from "../utils/utils";
+import {
+  extractLabelsFromJSON,
+  extractSelectValues,
+  extractSurveyValues,
+} from "../utils/utils";
 
 export default function JSONExtractor() {
   const [data, setData] = useState([]);
@@ -8,7 +12,13 @@ export default function JSONExtractor() {
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hiddenTypes, setHiddenTypes] = useState(["columns", "content", "container", "panel"]);
+  const [hiddenTypes, setHiddenTypes] = useState([
+    "columns",
+    "content",
+    "container",
+    "panel",
+  ]);
+
   const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
 
   const handleExtract = () => {
@@ -23,6 +33,7 @@ export default function JSONExtractor() {
     try {
       const json = JSON.parse(jsonInput);
       const extracted = extractLabelsFromJSON(json);
+      console.log(extracted);
       setData(extracted);
     } catch (err) {
       setError("Invalid JSON format. Please check your input.");
@@ -67,11 +78,15 @@ export default function JSONExtractor() {
     const matchesLabel = entry.label?.toLowerCase().includes(lowerFilter);
     const matchesKey = entry.key?.toLowerCase().includes(lowerFilter);
     const matchesType = entry.type?.toLowerCase().includes(lowerFilter);
-    const matchesPanelTitle = entry.type === "panel" && entry.title?.toLowerCase().includes(lowerFilter);
+    const matchesPanelTitle =
+      entry.type === "panel" &&
+      entry.title?.toLowerCase().includes(lowerFilter);
     return matchesLabel || matchesKey || matchesType || matchesPanelTitle;
   });
 
-  const longKeys = data.filter((entry) => entry.key && entry.key.length > keyLengthThreshold);
+  const longKeys = data.filter(
+    (entry) => entry.key && entry.key.length > keyLengthThreshold
+  );
 
   const labelCounts = {};
   data.forEach((entry) => {
@@ -86,68 +101,6 @@ export default function JSONExtractor() {
 
   const uniqueTypes = [...new Set(data.map((entry) => entry.type))];
 
-  // 🟢 Extract SELECT components from JSON
-  const extractSelectValues = (jsonData) => {
-    const selectItems = [];
-    const traverse = (obj) => {
-      if (obj && typeof obj === "object") {
-        if (Array.isArray(obj)) {
-          obj.forEach(traverse);
-        } else {
-          if (obj.type === "select" && obj.data?.values) {
-            selectItems.push({
-              label: obj.label || "Unknown",
-              key: obj.key || "Unknown",
-              values: obj.data.values.map((v) => ({
-                label: v.label,
-                value: v.value,
-              })),
-            });
-          }
-          Object.values(obj).forEach(traverse);
-        }
-      }
-    };
-    try {
-      const parsed = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
-      traverse(parsed);
-    } catch (e) {
-      console.error("Error parsing JSON for select values:", e);
-    }
-    return selectItems;
-  };
-
-  // 🟣 Extract SURVEY components separately
-  const extractSurveyValues = (jsonData) => {
-    const surveyItems = [];
-    const traverse = (obj) => {
-      if (obj && typeof obj === "object") {
-        if (Array.isArray(obj)) {
-          obj.forEach(traverse);
-        } else {
-          if (obj.type === "survey" && Array.isArray(obj.questions)) {
-            surveyItems.push({
-              label: obj.label || "Unknown",
-              key: obj.key || "Unknown",
-              questions: obj.questions.map((q) => ({
-                label: q.label,
-                value: q.value,
-              })),
-            });
-          }
-          Object.values(obj).forEach(traverse);
-        }
-      }
-    };
-    try {
-      const parsed = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
-      traverse(parsed);
-    } catch (e) {
-      console.error("Error parsing JSON for survey values:", e);
-    }
-    return surveyItems;
-  };
-
   const selectValues = jsonInput ? extractSelectValues(jsonInput) : [];
   const surveyValues = jsonInput ? extractSurveyValues(jsonInput) : [];
 
@@ -155,14 +108,20 @@ export default function JSONExtractor() {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>JSON Label Extractor</h1>
-        <p style={styles.subtitle}>Paste your JSON data below and extract labels with key information</p>
+        <p style={styles.subtitle}>
+          Paste your JSON data below and extract labels with key information
+        </p>
       </div>
 
       {/* JSON Input Section */}
       <div style={styles.inputSection}>
         <div style={styles.inputHeader}>
           <h2 style={styles.sectionTitle}>JSON Input</h2>
-          <button onClick={clearAll} style={styles.clearButton} disabled={!jsonInput && data.length === 0}>
+          <button
+            onClick={clearAll}
+            style={styles.clearButton}
+            disabled={!jsonInput && data.length === 0}
+          >
             🗑️ Clear All
           </button>
         </div>
@@ -178,13 +137,27 @@ export default function JSONExtractor() {
         {error && <div style={styles.errorMessage}>⚠️ {error}</div>}
 
         <div style={styles.buttonContainer}>
-          <button onClick={handleExtract} style={styles.extractButton} disabled={isLoading || !jsonInput.trim()}>
+          <button
+            onClick={handleExtract}
+            style={styles.extractButton}
+            disabled={isLoading || !jsonInput.trim()}
+          >
             {isLoading ? "⏳ Extracting..." : "🔍 Extract Labels"}
           </button>
         </div>
 
-        <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
-          <label htmlFor="keyLengthThreshold" style={{ fontWeight: 500, color: "#1e293b" }}>
+        <div
+          style={{
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+          }}
+        >
+          <label
+            htmlFor="keyLengthThreshold"
+            style={{ fontWeight: 500, color: "#1e293b" }}
+          >
             Key Length Threshold:
           </label>
           <input
@@ -207,7 +180,9 @@ export default function JSONExtractor() {
       {data.length > 0 && (
         <div style={styles.resultsSection}>
           <div style={styles.resultsHeader}>
-            <h2 style={styles.sectionTitle}>📊 Extracted Labels ({data.length} items)</h2>
+            <h2 style={styles.sectionTitle}>
+              📊 Extracted Labels ({data.length} items)
+            </h2>
             <button onClick={exportExcel} style={styles.exportButton}>
               ⬇️ Export to Excel
             </button>
@@ -217,14 +192,50 @@ export default function JSONExtractor() {
             {/* Duplicate Labels */}
             {duplicateLabels.length > 0 && (
               <div style={styles.analyticsBox}>
-                <div style={styles.analyticsHeader}>🔄 Duplicate Labels ({duplicateLabels.length})</div>
+                <div style={styles.analyticsHeader}>
+                  🔄 Duplicate Labels ({duplicateLabels.length})
+                </div>
                 <div style={styles.duplicateList}>
                   {duplicateLabels.map(({ label, count }, idx) => (
                     <div key={idx} style={styles.duplicateItem}>
                       <span style={styles.duplicateLabel}>{label}</span>
-                      <span style={styles.duplicateCount}>{count} occurrences</span>
+                      <span style={styles.duplicateCount}>
+                        {count} occurrences
+                      </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* 🟢 Duplicate values section */}
+            {selectValues.some((item) => item.duplicateValues?.length > 0) && (
+              <div style={styles.analyticsBox}>
+                <div style={styles.selectList}>
+                  {selectValues
+                    .filter(
+                      (item) =>
+                        item.duplicateValues && item.duplicateValues.length > 0
+                    )
+                    .map((selectItem, idx) => (
+                      <div key={idx} style={styles.selectItem}>
+                        <div style={styles.analyticsHeader}>
+                          Select Duplicate Values ({selectItem.label})
+                        </div>
+
+                        {selectItem.duplicateValues.map((dup, dupIdx) => (
+                          <div key={dupIdx} style={styles.selectLabel}>
+                            <strong>Value:</strong> {dup.value}
+                            <div style={styles.selectValues}>
+                              <span style={{ fontWeight: "bold" }}>
+                                Labels:
+                              </span>{" "}
+                              {dup.labels.join(", ")}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -232,7 +243,9 @@ export default function JSONExtractor() {
             {/* SELECT Components */}
             {selectValues.length > 0 && (
               <div style={styles.analyticsBox}>
-                <div style={styles.analyticsHeader}>Select Components ({selectValues.length})</div>
+                <div style={styles.analyticsHeader}>
+                  Select Components ({selectValues.length})
+                </div>
                 <div style={styles.selectList}>
                   {selectValues.map((select, idx) => (
                     <div key={idx} style={styles.selectItem}>
@@ -255,7 +268,10 @@ export default function JSONExtractor() {
             {/* 🟣 SURVEY Components — NEW BOX */}
             {surveyValues.length > 0 && (
               <div style={styles.analyticsBox}>
-                <div style={styles.analyticsHeader}> Survey Components ({surveyValues.length})</div>
+                <div style={styles.analyticsHeader}>
+                  {" "}
+                  Survey Components ({surveyValues.length})
+                </div>
                 <div style={styles.selectList}>
                   {surveyValues.map((survey, idx) => (
                     <div key={idx} style={styles.selectItem}>
@@ -307,7 +323,8 @@ export default function JSONExtractor() {
               <div style={styles.warningList}>
                 {longKeys.map((entry, idx) => (
                   <div key={idx} style={styles.warningItem}>
-                    <strong>{entry.label}</strong>: {entry.key.length} characters
+                    <strong>{entry.label}</strong>: {entry.key.length}{" "}
+                    characters
                     <div style={styles.truncatedKey}>
                       {entry.key.substring(0, keyLengthThreshold)}...
                     </div>
@@ -330,7 +347,8 @@ export default function JSONExtractor() {
               Showing {filteredData.length} of {data.length} items
               {hiddenTypes.length > 0 && (
                 <span style={styles.hiddenTypesInfo}>
-                  ({hiddenTypes.length} type{hiddenTypes.length > 1 ? "s" : ""} hidden)
+                  ({hiddenTypes.length} type{hiddenTypes.length > 1 ? "s" : ""}{" "}
+                  hidden)
                 </span>
               )}
             </div>
@@ -350,7 +368,9 @@ export default function JSONExtractor() {
               <tbody>
                 {filteredData.map((entry, idx) => (
                   <tr key={idx} style={styles.tableRow}>
-                    <td style={styles.tableCell}>{entry.type === "panel" ? entry.title : entry.label}</td>
+                    <td style={styles.tableCell}>
+                      {entry.type === "panel" ? entry.title : entry.label}
+                    </td>
                     <td style={styles.tableCell}>
                       <div style={styles.keyCell}>
                         <span style={styles.keyText}>{entry.key}</span>
