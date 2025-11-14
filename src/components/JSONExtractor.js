@@ -47,6 +47,8 @@ const DuplicateLabelsSection = ({ duplicateLabels }) => {
     </CollapsibleSection>
   );
 };
+
+// DuplicateAPISection
 const DuplicateAPISection = ({ duplicateKeys }) => {
   if (duplicateKeys.length === 0) return null;
 
