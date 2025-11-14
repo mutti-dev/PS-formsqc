@@ -78,7 +78,7 @@ const DuplicateValuesSection = ({ selectValues }) => {
 
   return (
     <CollapsibleSection 
-      title="Duplicate Values" 
+      title="Duplicate Select Values" 
       count={`${itemsWithDuplicates.length} field(s)`}
       defaultOpen={true}
     >
