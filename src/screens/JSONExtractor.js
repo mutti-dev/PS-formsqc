@@ -38,6 +38,7 @@ import {
   SelectComponentsSection,
   SurveyComponentsSection,
   KeyLengthWarningsSection,
+  DuplicateSurveyValuesSection,
   TypeFilterSection,
   JsonStatsSection
 } from "../common/sections";
@@ -125,6 +126,7 @@ export default function JSONExtractor() {
       // Step 2: Extract form JSON using specialized function
       addParsingStep("Extracting form structure");
       const formConfig = extractFormJson(jsonInput);
+
 
       if (!formConfig) {
         setError("Could not extract form configuration from JSON");
@@ -293,6 +295,7 @@ export default function JSONExtractor() {
   const uniqueTypes = [...new Set(data.map((entry) => entry.type))];
   const selectValues = jsonInput ? extractSelectValues(jsonInput) : [];
   const surveyValues = jsonInput ? extractSurveyValues(jsonInput) : [];
+  console.log("survey", surveyValues);
 
   return (
     <Container fluid className="min-vh-100 ">
@@ -469,6 +472,7 @@ export default function JSONExtractor() {
                     <DuplicateLabelsSection duplicateLabels={duplicateLabels} />
                     <DuplicateAPISection duplicateKeys={duplicateKeys} />
                     <DuplicateValuesSection selectValues={selectValues} />
+                    <DuplicateSurveyValuesSection surveyValues={surveyValues} />
                     <SelectComponentsSection selectValues={selectValues} />
                     <SurveyComponentsSection surveyValues={surveyValues} />
                     <KeyLengthWarningsSection
