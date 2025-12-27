@@ -16,7 +16,7 @@ export default function SideDrawer({ isOpen, setIsOpen }) {
 
   const menuItems = [
     { path: "/extractor", name: "Form Review", icon: <FileEarmarkText /> },
-    { path: "/jsonformatter", name: "JSON Formatter", icon: <Braces /> },
+    // { path: "/jsonformatter", name: "JSON Formatter", icon: <Braces /> },
     { path: "/form", name: "Form Comparator", icon: <Files /> },
     { path: "/converter", name: "Word Converter", icon: <FileWord /> },
     { path: "/textconverter", name: "API Maker", icon: <CodeSlash /> },
