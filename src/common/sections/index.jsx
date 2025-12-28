@@ -8,3 +8,5 @@ export { default as SurveyComponentsSection } from './SurveyComponentsSection';
 export { default as KeyLengthWarningsSection } from './KeyLengthWarningsSection';
 export { default as TypeFilterSection } from './TypeFilterSection';
 export { default as JsonStatsSection } from './JsonStatsSection';
+export { default as DuplicateRadioValuesSection } from './DuplicateRadioValuesSection';
+export { default as RadioComponentsSection } from './RadioComponentsSection';

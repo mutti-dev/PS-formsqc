@@ -1,5 +1,4 @@
-// Recursively extract objects with 'label' and 'type'
-// Recursively extract objects with 'label' and 'type'
+
 export function extractLabelsFromJSON(json) {
   let result = [];
 
@@ -56,7 +55,8 @@ const findDuplicateValues = (values) => {
     .map(([value, labels]) => ({ value, labels }));
 };
 
-// 🟢 Main: Extract SELECT components and detect duplicates
+
+
 export const extractSelectValues = (jsonData) => {
   const selectItems = [];
 
@@ -136,6 +136,60 @@ export const extractSurveyValues = (jsonData) => {
   }
 
   return surveyItems;
+};
+
+
+
+// Extract RADIO components and detect duplicate values
+export const extractRadioValues = (jsonData) => {
+  const radioItems = [];
+
+  const findDuplicateValues = (values) => {
+    const valueMap = {};
+    values.forEach(({ label, value }) => {
+      if (!valueMap[value]) valueMap[value] = [];
+      valueMap[value].push(label);
+    });
+
+    return Object.entries(valueMap)
+      .filter(([_, labels]) => labels.length > 1)
+      .map(([value, labels]) => ({ value, labels }));
+  };
+
+  const traverse = (obj) => {
+    if (obj && typeof obj === "object") {
+      if (Array.isArray(obj)) {
+        obj.forEach(traverse);
+      } else {
+        if (obj.type === "radio" && Array.isArray(obj.values)) {
+          const values = obj.values.map((v) => ({
+            label: v.label,
+            value: v.value || v.label, // fallback if value missing
+          }));
+
+          const duplicates = findDuplicateValues(values);
+
+          radioItems.push({
+            label: obj.label || "Unknown Radio",
+            key: obj.key || "unknown_key",
+            values,
+            duplicateValues: duplicates.length ? duplicates : null,
+          });
+        }
+
+        Object.values(obj).forEach(traverse);
+      }
+    }
+  };
+
+  try {
+    const parsed = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+    traverse(parsed);
+  } catch (e) {
+    console.error("Error parsing JSON for radio values:", e);
+  }
+
+  return radioItems;
 };
 
 // Deep compare two arrays of extracted entries (by label) and return report differences.
