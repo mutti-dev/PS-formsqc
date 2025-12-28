@@ -1,46 +1,145 @@
 
-export function extractLabelsFromJSON(json) {
-  let result = [];
+// export function extractLabelsFromJSON(json) {
+//   let result = [];
 
-  function traverse(obj) {
+//   function traverse(obj) {
+//     if (obj && typeof obj === "object") {
+//       // If the current object has both "label" and "type", add it.
+//       if (obj.label && obj.type) {
+//         const entry = {
+//           label: obj.label,
+//           key: obj.key,
+//           type: obj.type,
+//         };
+
+//         // Add optional fields
+//         if (obj.type === "datetime" && obj.format) {
+//           entry.format = obj.format;
+//         }
+
+//         if (obj.title) {
+//           entry.title = obj.title;
+//         }
+
+//         result.push(entry);
+//       }
+
+//       // Traverse arrays and nested objects
+//       Object.keys(obj).forEach((key) => {
+//         const prop = obj[key];
+//         if (Array.isArray(prop)) {
+//           prop.forEach((item) => traverse(item));
+//         } else if (typeof prop === "object") {
+//           traverse(prop);
+//         }
+//       });
+//     }
+//   }
+
+//   traverse(json);
+//   return result;
+// }
+
+// ======================
+
+
+
+
+export function extractLabelsFromJSON(json, currentPath = [], results = []) {
+  if (json && typeof json === "object") {
+    if (json.label && json.type) {
+      const entry = {
+        label: json.label,
+        key: json.key,
+        type: json.type,
+        path: [...currentPath],  // Clone path
+      };
+      if (json.type === "datetime" && json.format) {
+        entry.format = json.format;
+      }
+      if (json.title) {
+        entry.title = json.title;
+      }
+      results.push(entry);
+    }
+
+    Object.keys(json).forEach((key, index) => {
+      const prop = json[key];
+      if (Array.isArray(prop)) {
+        prop.forEach((item, idx) => {
+          extractLabelsFromJSON(item, [...currentPath, key, idx], results);
+        });
+      } else if (typeof prop === "object") {
+        extractLabelsFromJSON(prop, [...currentPath, key], results);
+      }
+    });
+  }
+  return results;
+}
+
+
+export function extractConditions(json) {
+  const results = [];
+
+  function traverse(obj, path = []) {
     if (obj && typeof obj === "object") {
-      // If the current object has both "label" and "type", add it.
-      if (obj.label && obj.type) {
-        const entry = {
-          label: obj.label,
-          key: obj.key,
-          type: obj.type,
-        };
+      const conditions = [];
+      if (obj.customConditional) {
+        conditions.push({ type: 'customConditional', code: obj.customConditional });
+      }
+      if (obj.logic && Array.isArray(obj.logic)) {
+        conditions.push({ type: 'logic', items: obj.logic });
+      }
+      if (conditions.length > 0) {
+        // Find affected fields (simple regex scan)
+        const affectedFields = [];
+        conditions.forEach(cond => {
+          if (cond.code) {
+            const matches = cond.code.match(/data\[(['"])(.+?)\1\]/g) || [];
+            matches.forEach(m => {
+              const field = m.match(/['"](.+?)['"]/)[1];
+              if (!affectedFields.includes(field)) affectedFields.push(field);
+            });
+          } else if (cond.items) {
+            cond.items.forEach(item => {
+              // Scan trigger.javascript, actions.customAction, etc.
+              const jsCode = item.trigger?.javascript || '';
+              const actionCode = item.actions.map(a => a.customAction || a.value || '').join(' ');
+              const allCode = jsCode + ' ' + actionCode;
+              const matches = allCode.match(/data\[(['"])(.+?)\1\]/g) || [];
+              matches.forEach(m => {
+                const field = m.match(/['"](.+?)['"]/)[1];
+                if (!affectedFields.includes(field)) affectedFields.push(field);
+              });
+            });
+          }
+        });
 
-        // Add optional fields
-        if (obj.type === "datetime" && obj.format) {
-          entry.format = obj.format;
-        }
-
-        if (obj.title) {
-          entry.title = obj.title;
-        }
-
-        result.push(entry);
+        results.push({
+          key: obj.key || 'unknown',
+          label: obj.label || obj.title || 'Unnamed',
+          path: [...path],
+          conditions,
+          affectedFields,
+        });
       }
 
-      // Traverse arrays and nested objects
       Object.keys(obj).forEach((key) => {
         const prop = obj[key];
         if (Array.isArray(prop)) {
-          prop.forEach((item) => traverse(item));
+          prop.forEach((item, idx) => traverse(item, [...path, key, idx]));
         } else if (typeof prop === "object") {
-          traverse(prop);
+          traverse(prop, [...path, key]);
         }
       });
     }
   }
 
   traverse(json);
-  return result;
+  return results;
 }
 
-// ======================
+
 
 const findDuplicateValues = (values) => {
   const valueMap = {};
