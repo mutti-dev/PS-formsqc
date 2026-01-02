@@ -2,12 +2,27 @@ import {
     Badge,
     Card
 } from "react-bootstrap";
+import { useState, useMemo } from "react";
 import CollapsibleSection from "../CollapsibleSection";
+import SearchBar from "../SearchBar";
 
 function DuplicateSurveyValuesSection({ surveyValues }) {
-  const itemsWithDuplicates = surveyValues.filter(
-    (item) => item.duplicateValues?.length > 0
-  );
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const itemsWithDuplicates = useMemo(() => {
+    const duplicates = surveyValues.filter(
+      (item) => item.duplicateValues?.length > 0
+    );
+    if (!searchTerm) return duplicates;
+    return duplicates.filter(item =>
+      item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.duplicateValues.some(dup =>
+        dup.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dup.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    );
+  }, [surveyValues, searchTerm]);
 
   if (itemsWithDuplicates.length === 0) return null;
 
@@ -17,6 +32,11 @@ function DuplicateSurveyValuesSection({ surveyValues }) {
       count={`${itemsWithDuplicates.length} field(s)`}
       defaultOpen={true}
     >
+      <SearchBar
+        placeholder="Search duplicate survey values..."
+        value={searchTerm}
+        onSearch={setSearchTerm}
+      />
       {itemsWithDuplicates.map((selectItem, idx) => (
         <Card key={idx} className="mb-3 border">
           <Card.Header className="d-flex justify-content-between align-items-start">

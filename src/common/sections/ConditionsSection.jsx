@@ -1,16 +1,34 @@
 // common/sections/ConditionsSection.jsx
 import { Table, Badge, Card } from "react-bootstrap";
+import { useState, useMemo } from "react";
 import CollapsibleSection from "../CollapsibleSection";
+import SearchBar from "../SearchBar";
 
 function ConditionsSection({ conditions }) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredConditions = useMemo(() => {
+    if (!searchTerm) return conditions;
+    return conditions.filter(cond =>
+      cond.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cond.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      JSON.stringify(cond.conditions).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [conditions, searchTerm]);
+
   if (!conditions || conditions.length === 0) return null;
 
   return (
     <CollapsibleSection
       title="Conditions & Logic Analysis"
-      count={conditions.length}
+      count={filteredConditions.length}
       defaultOpen={false}
     >
+      <SearchBar
+        placeholder="Search conditions..."
+        value={searchTerm}
+        onSearch={setSearchTerm}
+      />
       <div className="table-responsive">
         <Table bordered hover className="align-middle mb-0 table-sm">
           <thead className="table-dark">
@@ -21,7 +39,7 @@ function ConditionsSection({ conditions }) {
             </tr>
           </thead>
           <tbody>
-            {conditions.map((cond, idx) => (
+            {filteredConditions.map((cond, idx) => (
               <tr key={idx}>
                 <td className="fw-semibold">{cond.label}</td>
                 <td className="font-monospace small text-muted">

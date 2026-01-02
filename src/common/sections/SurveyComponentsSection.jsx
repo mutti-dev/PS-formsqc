@@ -1,15 +1,36 @@
 import { Badge, Table } from "react-bootstrap";
+import { useState, useMemo } from "react";
 import CollapsibleSection from "../CollapsibleSection";
+import SearchBar from "../SearchBar";
 
 function SurveyComponentsSection({ surveyValues }) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredSurveyValues = useMemo(() => {
+    if (!searchTerm) return surveyValues;
+    return surveyValues.filter(survey =>
+      survey.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      survey.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      survey.questions.some(question =>
+        question.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(question.value).toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [surveyValues, searchTerm]);
+
   if (!surveyValues || surveyValues.length === 0) return null;
 
   return (
     <CollapsibleSection
       title="Survey Components"
-      count={surveyValues.length}
+      count={filteredSurveyValues.length}
       defaultOpen={false}
     >
+      <SearchBar
+        placeholder="Search survey components..."
+        value={searchTerm}
+        onSearch={setSearchTerm}
+      />
       <div className="table-responsive">
         <Table bordered hover className="align-middle mb-0 table-sm">
           <thead className="table-dark">
@@ -25,7 +46,7 @@ function SurveyComponentsSection({ surveyValues }) {
             </tr>
           </thead>
           <tbody>
-            {surveyValues.map((survey, idx) => (
+            {filteredSurveyValues.map((survey, idx) => (
               <tr key={idx}>
                 {/* LABEL - improved wrapping */}
                 <td

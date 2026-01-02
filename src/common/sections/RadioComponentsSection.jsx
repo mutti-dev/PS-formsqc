@@ -1,16 +1,37 @@
 // src/common/sections/RadioComponentsSection.jsx
 import { Table, Badge } from "react-bootstrap";
+import { useState, useMemo } from "react";
 import CollapsibleSection from "../CollapsibleSection";
+import SearchBar from "../SearchBar";
 
 function RadioComponentsSection({ radioValues }) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredRadioValues = useMemo(() => {
+    if (!searchTerm) return radioValues;
+    return radioValues.filter(radio =>
+      radio.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      radio.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      radio.values.some(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(option.value).toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [radioValues, searchTerm]);
+
   if (!radioValues || radioValues.length === 0) return null;
 
   return (
     <CollapsibleSection
       title="Radio Components"
-      count={radioValues.length}
+      count={filteredRadioValues.length}
       defaultOpen={false}
     >
+      <SearchBar
+        placeholder="Search radio components..."
+        value={searchTerm}
+        onSearch={setSearchTerm}
+      />
       <div className="table-responsive">
         <Table bordered hover className="align-middle mb-0">
           <thead className="table-dark">
@@ -23,7 +44,7 @@ function RadioComponentsSection({ radioValues }) {
             </tr>
           </thead>
           <tbody>
-            {radioValues.map((radio, idx) => (
+            {filteredRadioValues.map((radio, idx) => (
               <tr key={idx}>
                 <td className="fw-semibold text-break">{radio.label}</td>
                 <td className="font-monospace small text-break text-muted">

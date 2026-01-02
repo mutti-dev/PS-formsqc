@@ -4,21 +4,37 @@ import {
   ListGroup,
   ListGroupItem
 } from "react-bootstrap";
+import { useState, useMemo } from "react";
 import CollapsibleSection from "../CollapsibleSection";
+import SearchBar from "../SearchBar";
 
 
 
 function DuplicateLabelsSection({ duplicateLabels }) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredDuplicateLabels = useMemo(() => {
+    if (!searchTerm) return duplicateLabels;
+    return duplicateLabels.filter(({ label }) =>
+      label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [duplicateLabels, searchTerm]);
+
   if (duplicateLabels.length === 0) return null;
 
   return (
     <CollapsibleSection
       title="Duplicate Labels"
-      count={duplicateLabels.length}
+      count={filteredDuplicateLabels.length}
       defaultOpen={true}
     >
+      <SearchBar
+        placeholder="Search duplicate labels..."
+        value={searchTerm}
+        onSearch={setSearchTerm}
+      />
       <ListGroup variant="flush">
-        {duplicateLabels.map(({ label, count }, idx) => (
+        {filteredDuplicateLabels.map(({ label, count }, idx) => (
           <ListGroupItem
             key={idx}
             className="d-flex justify-content-between align-items-center"

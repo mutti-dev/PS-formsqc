@@ -1,10 +1,25 @@
 import { Badge, Card } from "react-bootstrap";
+import { useState, useMemo } from "react";
 import CollapsibleSection from "../CollapsibleSection";
+import SearchBar from "../SearchBar";
 
 function DuplicateRadioValuesSection({ radioValues }) {
-  const itemsWithDuplicates = radioValues.filter(
-    (item) => item.duplicateValues?.length > 0
-  );
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const itemsWithDuplicates = useMemo(() => {
+    const duplicates = radioValues.filter(
+      (item) => item.duplicateValues?.length > 0
+    );
+    if (!searchTerm) return duplicates;
+    return duplicates.filter(item =>
+      item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.duplicateValues.some(dup =>
+        dup.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dup.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    );
+  }, [radioValues, searchTerm]);
 
   if (itemsWithDuplicates.length === 0) return null;
 
@@ -14,6 +29,11 @@ function DuplicateRadioValuesSection({ radioValues }) {
       count={`${itemsWithDuplicates.length} field(s)`}
       defaultOpen={true}
     >
+      <SearchBar
+        placeholder="Search duplicate radio values..."
+        value={searchTerm}
+        onSearch={setSearchTerm}
+      />
       {itemsWithDuplicates.map((radioItem, idx) => (
         <Card key={idx} className="mb-3 border">
           <Card.Header className="d-flex justify-content-between align-items-start">

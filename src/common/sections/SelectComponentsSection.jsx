@@ -3,19 +3,40 @@ import {
     Table,
     Badge,
 } from "react-bootstrap";
+import { useState, useMemo } from "react";
 import CollapsibleSection from "../CollapsibleSection";
+import SearchBar from "../SearchBar";
 
 
 
 function SelectComponentsSection({ selectValues }) {
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredSelectValues = useMemo(() => {
+        if (!searchTerm) return selectValues;
+        return selectValues.filter(select =>
+            select.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            select.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            select.values.some(option =>
+                option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                String(option.value).toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        );
+    }, [selectValues, searchTerm]);
+
     if (!selectValues || selectValues.length === 0) return null;
 
     return (
         <CollapsibleSection
             title="Select Components"
-            count={selectValues.length}
+            count={filteredSelectValues.length}
             defaultOpen={false}
         >
+            <SearchBar
+                placeholder="Search select components..."
+                value={searchTerm}
+                onSearch={setSearchTerm}
+            />
             <div className="table-responsive">
                 <Table bordered hover className="align-middle mb-0">
                     <thead className="table-dark">
@@ -31,7 +52,7 @@ function SelectComponentsSection({ selectValues }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {selectValues.map((select, idx) => (
+                        {filteredSelectValues.map((select, idx) => (
                             <tr key={idx}>
                                 {/* LABEL */}
                                 <td className="fw-semibold text-break">
