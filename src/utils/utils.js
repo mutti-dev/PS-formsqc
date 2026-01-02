@@ -78,57 +78,107 @@ export function extractLabelsFromJSON(json, currentPath = [], results = []) {
 }
 
 
+// export function extractConditions(json) {
+//   const results = [];
+
+//   function traverse(obj, path = []) {
+//     if (obj && typeof obj === "object") {
+//       const conditions = [];
+//       if (obj.conditional) {
+//         conditions.push({ type: 'conditional', code: obj.customConditional });
+//       }
+//       if (obj.logic && Array.isArray(obj.logic)) {
+//         conditions.push({ type: 'logic', items: obj.logic });
+//       }
+//       if (conditions.length > 0) {
+//         // Find affected fields (simple regex scan)
+//         const affectedFields = [];
+//         conditions.forEach(cond => {
+//           if (cond.code) {
+//             const matches = cond.code.match(/data\[(['"])(.+?)\1\]/g) || [];
+//             matches.forEach(m => {
+//               const field = m.match(/['"](.+?)['"]/)[1];
+//               if (!affectedFields.includes(field)) affectedFields.push(field);
+//             });
+//           } else if (cond.items) {
+//             cond.items.forEach(item => {
+//               // Scan trigger.javascript, actions.customAction, etc.
+//               const jsCode = item.trigger?.javascript || '';
+//               const actionCode = item.actions.map(a => a.customAction || a.value || '').join(' ');
+//               const allCode = jsCode + ' ' + actionCode;
+//               const matches = allCode.match(/data\[(['"])(.+?)\1\]/g) || [];
+//               matches.forEach(m => {
+//                 const field = m.match(/['"](.+?)['"]/)[1];
+//                 if (!affectedFields.includes(field)) affectedFields.push(field);
+//               });
+//             });
+//           }
+//         });
+
+//         results.push({
+//           key: obj.key || 'unknown',
+//           label: obj.label || obj.title || 'Unnamed',
+//           path: [...path],
+//           conditions,
+//           affectedFields,
+//         });
+//       }
+
+//       Object.keys(obj).forEach((key) => {
+//         const prop = obj[key];
+//         if (Array.isArray(prop)) {
+//           prop.forEach((item, idx) => traverse(item, [...path, key, idx]));
+//         } else if (typeof prop === "object") {
+//           traverse(prop, [...path, key]);
+//         }
+//       });
+//     }
+//   }
+
+//   traverse(json);
+//   return results;
+// }
+
+
 export function extractConditions(json) {
   const results = [];
 
   function traverse(obj, path = []) {
     if (obj && typeof obj === "object") {
-      const conditions = [];
-      if (obj.customConditional) {
-        conditions.push({ type: 'customConditional', code: obj.customConditional });
-      }
-      if (obj.logic && Array.isArray(obj.logic)) {
-        conditions.push({ type: 'logic', items: obj.logic });
-      }
-      if (conditions.length > 0) {
-        // Find affected fields (simple regex scan)
-        const affectedFields = [];
-        conditions.forEach(cond => {
-          if (cond.code) {
-            const matches = cond.code.match(/data\[(['"])(.+?)\1\]/g) || [];
-            matches.forEach(m => {
-              const field = m.match(/['"](.+?)['"]/)[1];
-              if (!affectedFields.includes(field)) affectedFields.push(field);
-            });
-          } else if (cond.items) {
-            cond.items.forEach(item => {
-              // Scan trigger.javascript, actions.customAction, etc.
-              const jsCode = item.trigger?.javascript || '';
-              const actionCode = item.actions.map(a => a.customAction || a.value || '').join(' ');
-              const allCode = jsCode + ' ' + actionCode;
-              const matches = allCode.match(/data\[(['"])(.+?)\1\]/g) || [];
-              matches.forEach(m => {
-                const field = m.match(/['"](.+?)['"]/)[1];
-                if (!affectedFields.includes(field)) affectedFields.push(field);
-              });
-            });
-          }
-        });
+
+      // ✅ Handle simple conditional object
+      if (
+        obj.conditional &&
+        typeof obj.conditional === "object" &&
+        obj.conditional.when
+      ) {
+        const { show, when, eq } = obj.conditional;
 
         results.push({
-          key: obj.key || 'unknown',
-          label: obj.label || obj.title || 'Unnamed',
+          key: obj.key || "unknown",
+          label: obj.label || obj.title || "Unnamed",
           path: [...path],
-          conditions,
-          affectedFields,
+          conditions: [
+            {
+              type: "simpleConditional",
+              show,
+              when,
+              eq,
+            },
+          ],
+          affectedFields: [when],
         });
       }
 
+      // Continue traversal
       Object.keys(obj).forEach((key) => {
         const prop = obj[key];
+
         if (Array.isArray(prop)) {
-          prop.forEach((item, idx) => traverse(item, [...path, key, idx]));
-        } else if (typeof prop === "object") {
+          prop.forEach((item, idx) =>
+            traverse(item, [...path, key, idx])
+          );
+        } else if (typeof prop === "object" && prop !== null) {
           traverse(prop, [...path, key]);
         }
       });
@@ -138,6 +188,7 @@ export function extractConditions(json) {
   traverse(json);
   return results;
 }
+
 
 
 

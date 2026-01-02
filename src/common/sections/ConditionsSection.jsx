@@ -1,4 +1,4 @@
-// NEW: ConditionsSection.jsx in common/sections
+// common/sections/ConditionsSection.jsx
 import { Table, Badge, Card } from "react-bootstrap";
 import CollapsibleSection from "../CollapsibleSection";
 
@@ -16,40 +16,56 @@ function ConditionsSection({ conditions }) {
           <thead className="table-dark">
             <tr>
               <th style={{ width: "20%" }}>Component</th>
-              <th style={{ width: "30%" }}>Key</th>
-              <th style={{ width: "50%" }}>Conditions / Logic</th>
+              <th style={{ width: "25%" }}>Key</th>
+              <th style={{ width: "55%" }}>Conditions</th>
             </tr>
           </thead>
           <tbody>
             {conditions.map((cond, idx) => (
               <tr key={idx}>
                 <td className="fw-semibold">{cond.label}</td>
-                <td className="font-monospace small text-muted">{cond.key}</td>
+                <td className="font-monospace small text-muted">
+                  {cond.key}
+                </td>
                 <td>
                   <div className="p-2 rounded bg-body-secondary">
                     {cond.conditions.map((c, cIdx) => (
                       <Card key={cIdx} className="mb-2">
-                        <Card.Header>
-                          {c.type === 'customConditional' ? 'Custom Conditional' : 'Logic'}
+                        <Card.Header className="fw-semibold">
+                          {c.type === "simpleConditional"
+                            ? "Simple Conditional"
+                            : "Logic"}
                         </Card.Header>
-                        <Card.Body>
-                          <code className="d-block mb-2">
-                            {c.code || JSON.stringify(c.items, null, 2)}
-                          </code>
-                          <div>
-                            <strong>Affected Fields:</strong>
-                            <div className="d-flex flex-wrap gap-1 mt-1">
-                              {cond.affectedFields.length > 0 ? (
-                                cond.affectedFields.map((field, fIdx) => (
-                                  <Badge key={fIdx} bg="info">
-                                    {field}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <Badge bg="secondary">None detected</Badge>
-                              )}
-                            </div>
-                          </div>
+
+                        <Card.Body className="small">
+                          {/* ✅ SIMPLE CONDITIONAL */}
+                          {c.type === "simpleConditional" && (
+                            <>
+                              <div className="mb-2">
+                                <Badge bg={c.show ? "success" : "danger"}>
+                                  {c.show ? "SHOW" : "HIDE"}
+                                </Badge>
+                              </div>
+
+                              <div className="d-flex flex-wrap gap-2 mb-2">
+                                <Badge bg="primary">
+                                  WHEN: {c.when}
+                                </Badge>
+                                <Badge bg="warning" text="dark">
+                                  EQUALS: {String(c.eq)}
+                                </Badge>
+                              </div>
+                            </>
+                          )}
+
+                          {/* ✅ LOGIC (future-proof) */}
+                          {c.type === "logic" && (
+                            <pre className="mb-2">
+                              {JSON.stringify(c.items, null, 2)}
+                            </pre>
+                          )}
+
+                          
                         </Card.Body>
                       </Card>
                     ))}
