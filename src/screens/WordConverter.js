@@ -29,9 +29,8 @@ export default function WordConverter() {
     const converted = words.map((word) => ({
       label: word,
       value: word
-        .toLowerCase()
-        .replace(/\s+/g, "_")
-        .replace(/[^a-z0-9_]/g, ""),
+        .replace(/\s+/g, "_")        // spaces → underscores
+        .replace(/[^A-Za-z0-9_]/g, "") // remove special chars, keep case
     }));
 
     setResult(converted);
@@ -58,7 +57,7 @@ export default function WordConverter() {
           <Card className="shadow-sm border-0">
             <Card.Header className="text-primary text-center py-4">
               <h1 className="display-6 fw-bold mb-0">Word to Dropdown Converter</h1>
-              
+
             </Card.Header>
 
             <Card.Body className="p-4">
