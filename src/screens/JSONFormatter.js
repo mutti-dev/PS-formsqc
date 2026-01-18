@@ -8,7 +8,6 @@ import {
   Form,
   Alert,
   Badge,
-  InputGroup,
   Tooltip,
   OverlayTrigger,
 } from "react-bootstrap";
@@ -26,8 +25,6 @@ function JsonFormatter() {
   const [rawJson, setRawJson] = useState("");
   const [error, setError] = useState("");
   const [searchKeys, setSearchKeys] = useState("");
-  const [keyResults, setKeyResults] = useState([]);
-  const [jsonStats, setJsonStats] = useState(null);
 
   const resetState = () => {
     setError("");
@@ -94,22 +91,7 @@ function JsonFormatter() {
     resetState();
   };
 
-  const handlePasteExample = () => {
-    const example = {
-      name: "John Doe",
-      age: 30,
-      email: "john@example.com",
-      address: {
-        street: "123 Main St",
-        city: "Anytown",
-        country: "USA",
-      },
-      hobbies: ["reading", "coding", "hiking"],
-      active: true,
-      metadata: null,
-    };
-    setRawJson(JSON.stringify(example, null, 2));
-  };
+
 
   return (
     <Container fluid className="min-vh-100">

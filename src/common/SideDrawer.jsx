@@ -7,10 +7,9 @@ import {
   FileEarmarkText,
   Files,
   FileWord,
-  Braces,
+
   CodeSlash,
 } from "react-bootstrap-icons";
-import ThemeChange from "./ThemeChange";
 
 
 export default function SideDrawer({ isOpen, setIsOpen }) {
