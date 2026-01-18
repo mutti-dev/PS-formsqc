@@ -1,5 +1,3 @@
-// src/utils/jsonUtils.js
-
 export const parseJson = (input) => {
   try {
     return JSON.parse(input);
