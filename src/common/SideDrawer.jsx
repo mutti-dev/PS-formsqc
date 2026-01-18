@@ -10,16 +10,18 @@ import {
   Braces,
   CodeSlash,
 } from "react-bootstrap-icons";
+import ThemeChange from "./ThemeChange";
+
 
 export default function SideDrawer({ isOpen, setIsOpen }) {
   const location = useLocation();
 
   const menuItems = [
-    { path: "/extractor", name: "Form Review", icon: <FileEarmarkText /> },
+    { path: "/JsonExtractor", name: "Form Review", icon: <FileEarmarkText /> },
     // { path: "/jsonformatter", name: "JSON Formatter", icon: <Braces /> },
-    { path: "/form", name: "Form Comparator", icon: <Files /> },
-    { path: "/converter", name: "Word Converter", icon: <FileWord /> },
-    { path: "/textconverter", name: "API Maker", icon: <CodeSlash /> },
+    { path: "/FormComparator", name: "Form Comparator", icon: <Files /> },
+    { path: "/Converter", name: "Word Converter", icon: <FileWord /> },
+    { path: "/TextConverter", name: "API Maker", icon: <CodeSlash /> },
   ];
 
   return (

@@ -394,7 +394,7 @@ export default function JSONExtractor() {
       <Row className="justify-content-center">
         <Col>
           <Card className="shadow-sm border-0 mb-4">
-            <Card.Header className="bg-dark text-white py-4">
+            <Card.Header className="py-4">
               <h1 className="display-5 fw-bold text-center text-primary mb-0">
                 Analyze Form JSON
               </h1>
@@ -448,7 +448,7 @@ export default function JSONExtractor() {
 
               {parsingSteps.length > 0 && (
                 <Card className="mb-3 border">
-                  <Card.Header className="bg-dark text-white d-flex justify-content-between align-items-center">
+                  <Card.Header className="d-flex justify-content-between align-items-center">
                     <span className="fw-semibold">Validation Steps</span>
                     <Button variant="link" className="text-white" size="sm" onClick={() => setShowDebug(!showDebug)}>
                       {showDebug ? "Hide" : "Show"} Details
@@ -502,7 +502,7 @@ export default function JSONExtractor() {
 
                   {/* FEATURE-RICH TABLE */}
                   <Card className="mt-4">
-                    <Card.Header className="bg-dark text-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <Card.Header className=" text-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                       <div className="d-flex align-items-center gap-3">
                         <span className="fw-semibold">
                           Extracted Fields ({table.getRowModel().rows.length} shown / {labels.length} total)

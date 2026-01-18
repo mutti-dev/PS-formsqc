@@ -44,7 +44,7 @@ function KeyLengthWarningsSection({ longKeys, threshold }) {
                             <strong>{entry.label}</strong>
                             <Badge bg="danger">{entry.key.length} characters</Badge>
                         </div>
-                        <code className="text-muted font-monospace bg-dark p-1 rounded d-block text-truncate">
+                        <code className="text-muted font-monospace  p-1 rounded d-block text-truncate">
                             {entry.key.substring(0, threshold)}...
                         </code>
                     </ListGroupItem>

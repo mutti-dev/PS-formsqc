@@ -56,7 +56,7 @@ function DuplicateValuesSection({ selectValues }) {
               <div key={dupIdx} className="mb-3 p-2 border rounded">
                 <div className="d-flex align-items-center mb-1">
                   <span className="text-muted me-2">Value:</span>
-                  <code className="bg-dark p-1 rounded">{dup.value}</code>
+                  <code className=" p-1 rounded">{dup.value}</code>
                 </div>
                 <div className="d-flex align-items-center">
                   <span className="text-muted me-2">Found in:</span>

@@ -16,7 +16,7 @@ function CollapsibleSection({ title, count, children, defaultOpen = true }) {
   return (
     <Card className="mb-3 border">
       <Card.Header
-        className="bg-dark cursor-pointer"
+        className=" cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="d-flex align-items-center justify-content-between">

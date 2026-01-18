@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Card, Button, Form, Alert, Badge, Spinner } from "react-bootstrap";
+import { compareFormsData } from "../utils/formComparatorUtil";
+
 
 export default function FormComparator() {
   const [sandboxJson, setSandboxJson] = useState("");
@@ -11,27 +13,7 @@ export default function FormComparator() {
   const [hasResults, setHasResults] = useState(false);
   const [error, setError] = useState("");
 
-  const extractFields = (components, fields = {}) => {
-    const ignoreTypes = ["container", "columns", "content"];
 
-    components.forEach((comp) => {
-      if (!ignoreTypes.includes(comp.type)) {
-        if (comp.key) {
-          fields[comp.key] = comp.label || "";
-        }
-      }
-
-      if (comp.components) {
-        extractFields(comp.components, fields);
-      }
-
-      if (comp.columns) {
-        comp.columns.forEach((col) => extractFields(col.components || [], fields));
-      }
-    });
-
-    return fields;
-  };
 
   const compareForms = async () => {
     if (!sandboxJson.trim() || !prodJson.trim()) {
@@ -41,52 +23,27 @@ export default function FormComparator() {
 
     setIsComparing(true);
     setError("");
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
+
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     try {
       const sandboxObj = JSON.parse(sandboxJson);
       const prodObj = JSON.parse(prodJson);
 
-      const sandboxFields = extractFields(sandboxObj.components || sandboxObj);
-      const prodFields = extractFields(prodObj.components || prodObj);
+      const { similar, missing, warnings } =
+        compareFormsData(sandboxObj, prodObj);
 
-      const sim = [];
-      const miss = [];
-      const warn = [];
-
-      Object.keys(prodFields).forEach((key) => {
-        if (sandboxFields[key]) {
-          if (prodFields[key] !== sandboxFields[key]) {
-            warn.push({
-              key,
-              prodLabel: prodFields[key],
-              sandboxLabel: sandboxFields[key]
-            });
-          } else {
-            sim.push({ key, label: prodFields[key] });
-          }
-        } else {
-          miss.push({ key, label: prodFields[key], type: 'Missing in Sandbox' });
-        }
-      });
-
-      Object.keys(sandboxFields).forEach((key) => {
-        if (!prodFields[key]) {
-          miss.push({ key, label: sandboxFields[key], type: 'Missing in Prod' });
-        }
-      });
-
-      setSimilar(sim);
-      setMissing(miss);
-      setWarnings(warn);
+      setSimilar(similar);
+      setMissing(missing);
+      setWarnings(warnings);
       setHasResults(true);
     } catch (e) {
       setError("Invalid JSON format! Please check your input.");
     }
-    
+
     setIsComparing(false);
   };
+
 
   const clearAll = () => {
     setSandboxJson("");
@@ -106,7 +63,7 @@ export default function FormComparator() {
             <Card.Header className="border-0 py-4">
               <div className="text-center">
                 <h1 className="display-5 fw-bold text-primary mb-2">Form Comparator</h1>
-              
+
               </div>
             </Card.Header>
             <Card.Body>
@@ -189,7 +146,7 @@ export default function FormComparator() {
               {hasResults && (
                 <>
                   <Card className="border mb-4">
-                    <Card.Header className="bg-dark">
+                    <Card.Header className="">
                       <Card.Title className="mb-0 fs-5 fw-semibold">Comparison Results</Card.Title>
                     </Card.Header>
                     <Card.Body>

@@ -55,7 +55,7 @@ function JsonStatsSection({ jsonStats, searchResults }) {
 
       {searchResults && searchResults.length > 0 && (
         <Card className="mt-3 border">
-          <Card.Header className="bg-dark">
+          <Card.Header className="">
             <Card.Title className="mb-0 fs-6 fw-semibold">
               Key Search Results
             </Card.Title>
