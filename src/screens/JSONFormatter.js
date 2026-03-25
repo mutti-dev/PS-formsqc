@@ -25,8 +25,8 @@ function JsonFormatter() {
   const [rawJson, setRawJson] = useState("");
   const [error, setError] = useState("");
   const [searchKeys, setSearchKeys] = useState("");
-  const [keyResults] = useState([]);
-  const [jsonStats] = useState(null);
+  const [keyResults, setKeyResults] = useState([]);
+  const [jsonStats, setJsonStats] = useState(null);
 
   const resetState = () => {
     setError("");
