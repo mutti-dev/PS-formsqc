@@ -36,12 +36,12 @@ export const exportToExcel = (data, hiddenTypes, selectValues = [], radioValues 
           // Extract Labels (e.g., "Male", "Female")
           optionLabels = found.values
             .map((opt) => opt.label || opt.value)
-            .join(", ");
+            .join(" || ");
           
           // Extract Values (e.g., "m", "f")
           optionValues = found.values
             .map((opt) => opt.value || opt.label)
-            .join(", ");
+            .join(" || ");
         }
       }
 
@@ -64,7 +64,7 @@ export const exportToExcel = (data, hiddenTypes, selectValues = [], radioValues 
   const max_width = exportData.reduce((w, r) => Math.max(w, r.Label.length), 10);
   ws["!cols"] = [{ wch: max_width }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 40 }, { wch: 40 }];
 
-  XLSX.writeFile(wb, `form-audit-${new Date().toISOString().split("T")[0]}.xlsx`);
+  XLSX.writeFile(wb, `form-mapping-${new Date().toISOString().split("T")[0]}.xlsx`);
 };
 
   export const exportJsonData = (data, jsonStats, searchResults, hiddenTypes) => {
