@@ -110,9 +110,9 @@ export default function JSONExtractor() {
       if (!formConfig) {
         throw new Error(
           "Could not find form configuration. Common causes:\n" +
-            "• JSON is wrapped in { config: \"...escaped JSON...\" }\n" +
-            "• It's inside a 'display' or 'submission' object\n" +
-            "• The key is not 'components'"
+          "• JSON is wrapped in { config: \"...escaped JSON...\" }\n" +
+          "• It's inside a 'display' or 'submission' object\n" +
+          "• The key is not 'components'"
         );
       }
 
@@ -478,8 +478,12 @@ export default function JSONExtractor() {
           {extractedData && (
             <>
               <div className="d-flex justify-content-end mb-3">
-                <Button variant="success" size="sm" onClick={() => exportToExcel(labels, hiddenTypes)}>
-                  Export Labels to Excel
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={() => exportToExcel(labels, hiddenTypes, selectValues, radioValues)}
+                >
+                  Export to Excel
                 </Button>
               </div>
 

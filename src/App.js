@@ -53,7 +53,7 @@ function App() {
               <Route path="/FormComparator" element={<FormComparator />} />
               <Route path="/Jsonformatter" element={<JsonFormatter />} />
               <Route path="/TextConverter" element={<TextConverter />} />
-              <Route path="*" element={<Navigate to="/extractor" replace />} />
+              <Route path="*" element={<Navigate to="/JsonExtractor" replace />} />
             </Routes>
           </main>
         </div>
