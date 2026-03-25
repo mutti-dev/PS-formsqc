@@ -47,7 +47,7 @@ export const parseDoublyEscapedJson = (jsonString) => {
   } catch (error) {
     try {
       const fixed = jsonString
-        .replace(/\\\"/g, '"')
+        .replace(/\\"/g, '"')
         .replace(/\\\\/g, '\\');
       
       return JSON.parse(fixed);
