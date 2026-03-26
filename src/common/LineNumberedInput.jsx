@@ -30,6 +30,7 @@ export default function LineNumberedInput({
 
   useEffect(() => {
     updateLineNumbers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Container, Row, Col, Card, Button, Form, Alert, Badge, Spinner, Nav, Tab } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Alert, Badge, Spinner, Nav, Tab } from "react-bootstrap";
 import { compareFormsData, getJsonDiff, getComparisonSummary } from "../utils/formComparatorUtil";
 import DiffViewer from "../common/DiffViewer";
 import LineNumberedInput from "../common/LineNumberedInput";
