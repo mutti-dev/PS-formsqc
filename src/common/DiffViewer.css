@@ -1,0 +1,332 @@
+.diff-viewer {
+  background-color: #f8f9fa;
+  padding: 0;
+}
+
+.diff-viewer.theme-dark {
+  background-color: #1e1e1e;
+}
+
+.diff-viewer.theme-light {
+  background-color: #f8f9fa;
+}
+
+.diff-line {
+  display: flex;
+  align-items: flex-start;
+  padding: 4px 8px;
+  border-bottom: 1px solid #e9ecef;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.theme-dark .diff-line {
+  border-bottom-color: #495057;
+}
+
+.theme-light .diff-line {
+  border-bottom-color: #e9ecef;
+}
+
+.diff-line.diff-same {
+  background-color: #fff;
+}
+
+.theme-dark .diff-line.diff-same {
+  background-color: #2d2d2d;
+  color: #e0e0e0;
+}
+
+.theme-light .diff-line.diff-same {
+  background-color: #fff;
+  color: #212529;
+}
+
+.diff-line.diff-added {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.theme-dark .diff-line.diff-added {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #66bb6a;
+}
+
+.theme-light .diff-line.diff-added {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.diff-line.diff-removed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.theme-dark .diff-line.diff-removed {
+  background-color: rgba(220, 53, 69, 0.15);
+  color: #ef5350;
+}
+
+.theme-light .diff-line.diff-removed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.diff-line.diff-modified {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.theme-dark .diff-line.diff-modified {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ffa726;
+}
+
+.theme-light .diff-line.diff-modified {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.diff-line .line-num {
+  display: inline-block;
+  width: 50px;
+  text-align: right;
+  color: #6c757d;
+  user-select: none;
+  margin-right: 8px;
+  border-right: 1px solid #dee2e6;
+  padding-right: 8px;
+  flex-shrink: 0;
+}
+
+.theme-dark .diff-line .line-num {
+  color: #858585;
+  border-right-color: #495057;
+}
+
+.theme-light .diff-line .line-num {
+  color: #6c757d;
+  border-right-color: #dee2e6;
+}
+
+.diff-line .diff-marker {
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+  font-weight: bold;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.diff-line .diff-content {
+  flex: 1;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 12px;
+}
+
+.removed-text {
+  background-color: rgba(220, 53, 69, 0.2);
+  text-decoration: line-through;
+  color: #dc3545;
+}
+
+.theme-dark .removed-text {
+  background-color: rgba(220, 53, 69, 0.3);
+  color: #ef5350;
+}
+
+.theme-light .removed-text {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+}
+
+.added-text {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.theme-dark .added-text {
+  background-color: rgba(40, 167, 69, 0.3);
+  color: #66bb6a;
+}
+
+.theme-light .added-text {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+/* Side by side view */
+.diff-line-side {
+  display: flex;
+  align-items: flex-start;
+  padding: 4px 8px;
+  border-bottom: 1px solid #dee2e6;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background-color: #fff;
+}
+
+.theme-dark .diff-line-side {
+  background-color: #2d2d2d;
+  border-bottom-color: #495057;
+  color: #e0e0e0;
+}
+
+.theme-light .diff-line-side {
+  background-color: #fff;
+  border-bottom-color: #dee2e6;
+  color: #212529;
+}
+
+.diff-line-side.diff-added {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.theme-dark .diff-line-side.diff-added {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #66bb6a;
+}
+
+.theme-light .diff-line-side.diff-added {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.diff-line-side.diff-removed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.theme-dark .diff-line-side.diff-removed {
+  background-color: rgba(220, 53, 69, 0.15);
+  color: #ef5350;
+}
+
+.theme-light .diff-line-side.diff-removed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.diff-line-side.diff-modified {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.theme-dark .diff-line-side.diff-modified {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ffa726;
+}
+
+.theme-light .diff-line-side.diff-modified {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.diff-line-side .line-num {
+  display: inline-block;
+  width: 40px;
+  text-align: right;
+  color: #6c757d;
+  user-select: none;
+  margin-right: 8px;
+  border-right: 1px solid #dee2e6;
+  padding-right: 8px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.theme-dark .diff-line-side .line-num {
+  color: #858585;
+  border-right-color: #495057;
+}
+
+.theme-light .diff-line-side .line-num {
+  color: #6c757d;
+  border-right-color: #dee2e6;
+}
+
+.diff-line-side .diff-content {
+  flex: 1;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 11px;
+}
+
+/* Color legend */
+.diff-legend {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  align-items: center;
+}
+
+.theme-dark .diff-legend {
+  background-color: #2d2d2d;
+  border-bottom-color: #495057;
+}
+
+.theme-light .diff-legend {
+  background-color: #f8f9fa;
+  border-bottom-color: #dee2e6;
+}
+
+.diff-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.theme-dark .diff-legend-item {
+  color: #e0e0e0;
+}
+
+.theme-light .diff-legend-item {
+  color: #212529;
+}
+
+.diff-legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+.legend-added {
+  background-color: #d4edda;
+}
+
+.theme-dark .legend-added {
+  background-color: rgba(40, 167, 69, 0.3);
+}
+
+.legend-removed {
+  background-color: #f8d7da;
+}
+
+.theme-dark .legend-removed {
+  background-color: rgba(220, 53, 69, 0.3);
+}
+
+.legend-modified {
+  background-color: #fff3cd;
+}
+
+.theme-dark .legend-modified {
+  background-color: rgba(255, 193, 7, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .diff-line .line-num {
+    width: 35px;
+    font-size: 11px;
+  }
+
+  .diff-line .diff-content {
+    font-size: 11px;
+  }
+}

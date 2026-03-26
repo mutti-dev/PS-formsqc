@@ -1,0 +1,134 @@
+.line-numbered-input-wrapper {
+  display: flex;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background-color: #fff;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.line-numbered-input-wrapper.theme-dark {
+  border-color: #495057;
+  background-color: #1e1e1e;
+}
+
+.line-numbered-input-wrapper.theme-light {
+  border-color: #dee2e6;
+  background-color: #fff;
+}
+
+.line-numbers {
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  padding: 8px 12px;
+  border-right: 2px solid #dee2e6;
+  user-select: none;
+  overflow: hidden;
+  text-align: right;
+  min-width: 45px;
+}
+
+.theme-dark .line-numbers {
+  background-color: #2d2d2d;
+  color: #858585;
+  border-right-color: #495057;
+}
+
+.theme-light .line-numbers {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border-right-color: #dee2e6;
+}
+
+.line-number {
+  height: 24px;
+  line-height: 24px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.line-numbered-textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 8px 12px;
+  resize: none;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: #fff;
+  color: #212529;
+}
+
+.theme-dark .line-numbered-textarea {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.theme-light .line-numbered-textarea {
+  background-color: #fff;
+  color: #212529;
+}
+
+.line-numbered-textarea::placeholder {
+  color: #adb5bd;
+}
+
+.theme-dark .line-numbered-textarea::placeholder {
+  color: #6c757d;
+}
+
+.theme-light .line-numbered-textarea::placeholder {
+  color: #adb5bd;
+}
+
+.line-numbered-textarea:focus {
+  background-color: #fff;
+  box-shadow: none;
+}
+
+.theme-dark .line-numbered-textarea:focus {
+  background-color: #1e1e1e;
+}
+
+.theme-light .line-numbered-textarea:focus {
+  background-color: #fff;
+}
+
+/* Scrollbar styling */
+.line-numbered-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.line-numbered-textarea::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.theme-dark .line-numbered-textarea::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.theme-light .line-numbered-textarea::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.line-numbered-textarea::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.line-numbered-textarea::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.theme-dark .line-numbered-textarea::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.theme-dark .line-numbered-textarea::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}

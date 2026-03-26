@@ -348,7 +348,7 @@ export default function JSONExtractor() {
     {
       accessorFn: row => row.type === "panel" ? row.title : row.label,
       id: "label",
-      header: "Label / Title",
+      header: "Label",
       enableSorting: true,
     },
     {
@@ -506,7 +506,7 @@ export default function JSONExtractor() {
 
                   {/* FEATURE-RICH TABLE */}
                   <Card className="mt-4">
-                    <Card.Header className=" text-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                       <div className="d-flex align-items-center gap-3">
                         <span className="fw-semibold">
                           Extracted Fields ({table.getRowModel().rows.length} shown / {labels.length} total)
