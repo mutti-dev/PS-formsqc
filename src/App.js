@@ -7,6 +7,7 @@ import WordConverter from './screens/WordConverter';
 import FormComparator from './screens/FormComparator';
 import TextConverter from './screens/TextConverter';
 import JsonFormatter from './screens/JSONFormatter';
+import AdvancedJSONComparator from './common/AdvancedJSONComparator';
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -49,6 +50,7 @@ function App() {
               <Route path="/JsonExtractor" element={<JSONExtractor />} />
               <Route path="/Converter" element={<WordConverter />} />
               <Route path="/FormComparator" element={<FormComparator theme={theme} />} />
+              <Route path="/AdvancedJSONComparator" element={<AdvancedJSONComparator theme={theme} />} />
               <Route path="/Jsonformatter" element={<JsonFormatter />} />
               <Route path="/TextConverter" element={<TextConverter />} />
               <Route path="*" element={<Navigate to="/JsonExtractor" replace />} />

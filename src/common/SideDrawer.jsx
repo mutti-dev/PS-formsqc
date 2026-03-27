@@ -15,7 +15,8 @@ export default function SideDrawer({ isOpen, setIsOpen, theme = 'dark', toggleTh
 
   const menuItems = [
     { path: "/JsonExtractor", name: "Form Review", icon: <FileEarmarkText /> },
-    { path: "/FormComparator", name: "Form Comparator", icon: <Files /> },
+    // { path: "/FormComparator", name: "Form Comparator", icon: <Files /> },
+    { path: "/AdvancedJSONComparator", name: "JSON Comparator Pro", icon: <CodeSlash /> },
     { path: "/Converter", name: "Word Converter", icon: <FileWord /> },
     { path: "/TextConverter", name: "API Maker", icon: <CodeSlash /> },
   ];
