@@ -246,7 +246,7 @@ const deepDiffArrays = (sourceArr, targetArr, ignoreList, path) => {
  * Parse JSONPath to get nested value
  */
 export const getValueByPath = (obj, path) => {
-  const parts = path.replace(/^root\./, "").split(/[\.\[\]]+/).filter(Boolean);
+  const parts = path.replace(/^root\./, "").split(/[.\[\]]+/).filter(Boolean);
   let current = obj;
 
   for (const part of parts) {
@@ -283,7 +283,7 @@ export const buildDiffTree = (diffs) => {
     root.stats.total++;
 
     // Create path hierarchy
-    const parts = diff.path.replace(/^root\./, "").split(/[\.\[\]]+/).filter(Boolean);
+    const parts = diff.path.replace(/^root\./, "").split(/[.\[\]]+/).filter(Boolean);
 
     let currentPath = "root";
     for (let i = 0; i < parts.length; i++) {

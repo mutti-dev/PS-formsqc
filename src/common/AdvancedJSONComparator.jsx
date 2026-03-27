@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   Card,
   Badge,
@@ -13,7 +13,6 @@ import {
 import {
   ChevronDown,
   ChevronRight,
-  Copy,
   ArrowCounterclockwise,
 } from "react-bootstrap-icons";
 import {
@@ -21,7 +20,6 @@ import {
   parseJSONSafe,
   calculateSummary,
   buildDiffTree,
-  getValueByPath,
   formatValue,
   getTypeName,
 } from "../utils/jsonDiffEngine";
@@ -167,7 +165,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // Utility Functions
   // ========================================================================
 
-  const copyToClipboard = useCallback((text, notify = true) => {
+  const _copyToClipboard = useCallback((text, notify = true) => {
     navigator.clipboard.writeText(text);
     if (notify) alert("Copied to clipboard!");
   }, []);
@@ -311,7 +309,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // ========================================================================
 
   const DiffItemDisplay = ({ diff }) => {
-    const [showFullValues, setShowFullValues] = useState(false);
+    const [_showFullValues, _setShowFullValues] = useState(false);
 
     return (
       <div className={`diff-item diff-${diff.type}`}>

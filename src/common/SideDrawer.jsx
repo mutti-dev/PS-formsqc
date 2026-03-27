@@ -5,7 +5,6 @@ import {
   JustifyLeft,
   JustifyRight,
   FileEarmarkText,
-  Files,
   FileWord,
   CodeSlash,
 } from "react-bootstrap-icons";
