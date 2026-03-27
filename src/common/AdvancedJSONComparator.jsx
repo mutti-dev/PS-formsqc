@@ -40,7 +40,8 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
 
   // Results State (memoized to prevent unnecessary recalculations)
   const [diffs, setDiffs] = useState([]);
-  const [tree, setTree] = useState(null);
+  const [setTree] = useState(null);
+
 
   // UI State
 //   const leftScrollRef = useRef(null);
