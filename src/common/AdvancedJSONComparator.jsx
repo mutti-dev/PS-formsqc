@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Card,
   Badge,
@@ -43,8 +43,8 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   const [tree, setTree] = useState(null);
 
   // UI State
-  const leftScrollRef = useRef(null);
-  const rightScrollRef = useRef(null);
+//   const leftScrollRef = useRef(null);
+//   const rightScrollRef = useRef(null);
   const [expandedPaths, setExpandedPaths] = useState(new Set(["root"]));
   const [viewMode, setViewMode] = useState("tree"); // tree or diff-list
 
@@ -119,17 +119,17 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // Synchronized Scrolling
   // ========================================================================
 
-  const handleLeftScroll = useCallback((e) => {
-    if (rightScrollRef.current) {
-      rightScrollRef.current.scrollTop = e.target.scrollTop;
-    }
-  }, []);
+//   const handleLeftScroll = useCallback((e) => {
+//     if (rightScrollRef.current) {
+//       rightScrollRef.current.scrollTop = e.target.scrollTop;
+//     }
+//   }, []);
 
-  const handleRightScroll = useCallback((e) => {
-    if (leftScrollRef.current) {
-      leftScrollRef.current.scrollTop = e.target.scrollTop;
-    }
-  }, []);
+//   const handleRightScroll = useCallback((e) => {
+//     if (leftScrollRef.current) {
+//       leftScrollRef.current.scrollTop = e.target.scrollTop;
+//     }
+//   }, []);
 
   // ========================================================================
   // Tree Navigation
@@ -165,10 +165,10 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // Utility Functions
   // ========================================================================
 
-  const _copyToClipboard = useCallback((text, notify = true) => {
-    navigator.clipboard.writeText(text);
-    if (notify) alert("Copied to clipboard!");
-  }, []);
+//   const _copyToClipboard = useCallback((text, notify = true) => {
+//     navigator.clipboard.writeText(text);
+//     if (notify) alert("Copied to clipboard!");
+//   }, []);
 
   const resetComparison = useCallback(() => {
     setSourceJson("");
@@ -309,7 +309,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // ========================================================================
 
   const DiffItemDisplay = ({ diff }) => {
-    const [_showFullValues, _setShowFullValues] = useState(false);
+    // const [_showFullValues, _setShowFullValues] = useState(false);
 
     return (
       <div className={`diff-item diff-${diff.type}`}>
