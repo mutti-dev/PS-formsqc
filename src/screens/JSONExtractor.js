@@ -54,6 +54,172 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+const RESERVED_COLUMNS = [
+  "ProgramDesire",
+  "CallTrackId",
+  "Comments",
+  "RawComments",
+  "hdnSaveAsTemplates",
+  "Caption",
+  "VictimId",
+  "FirstName",
+  "MiddleName",
+  "LastName",
+  "DOB",
+  "HiddenSSN",
+  "SSN",
+  "Street_Address",
+  "Apartment",
+  "City",
+  "ZipCode",
+  "County",
+  "State",
+  "StateShortName",
+  "Country",
+  "Mobile",
+  "PhoneNo",
+  "AlternateContactNo",
+  "Email",
+  "AlternateEmail",
+  "EmergencyContactName",
+  "EmergencyContactNo",
+  "EmergencyContactRelationship",
+  "EducationLevel",
+  "Veteran",
+  "Disabled",
+  "strHouseholdMarketRent",
+  "strHouseholdResidentRent",
+  "strBalanceDue",
+  "HouseholdLeasestart",
+  "HouseholdLeaseEnd",
+  "CareStartDate",
+  "CareEndDate",
+  "CareAmount",
+  "CaseNumber",
+  "ProjectPhaseId",
+  "StartDate",
+  "ProjectTemplateId",
+  "cmbProjectCaseLead",
+  "coLocation",
+  "PublishedFlag",
+  "CustomerId",
+  "IsHouseHold",
+  "RawStartDate",
+  "ResourceId",
+  "cmbProjectCategories",
+  "cmbProjectTeams",
+  "cmbProjectOwners",
+  "cmbProgramsTemplates",
+  "CaseId",
+  "ProjectId",
+  "IntakeStatusId",
+  "CreationTime",
+  "Creator",
+];
+
+const convertLabelToKey = (label) => {
+  if (!label) return "";
+  return label
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9_]/g, "");
+};
+
+const validateFormStructure = (labels, selectValues, radioValues, formConfig) => {
+  const issues = [];
+
+  labels.forEach((entry) => {
+    if (entry.type === "content" || entry.type === "columns") return;
+
+    const fieldLabel = entry.type === "panel" ? entry.title : entry.label;
+    const fieldKey = entry.key;
+
+    if (fieldLabel && fieldKey) {
+      const expectedKey = convertLabelToKey(fieldLabel);
+      if (expectedKey && fieldKey !== expectedKey) {
+        issues.push({
+          type: "label_key_mismatch",
+          severity: "warning",
+          field: fieldLabel,
+          key: fieldKey,
+          expected: expectedKey,
+          message: `Label and Key mismatch: "${fieldLabel}" should have key "${expectedKey}", not "${fieldKey}"`,
+        });
+      }
+    }
+
+    if (RESERVED_COLUMNS.includes(fieldKey)) {
+      issues.push({
+        type: "reserved_column",
+        severity: "error",
+        field: fieldLabel,
+        key: fieldKey,
+        message: `Field key "${fieldKey}" conflicts with reserved database column`,
+      });
+    }
+  });
+
+  selectValues.forEach((entry) => {
+    if (!entry.options || !Array.isArray(entry.options)) return;
+
+    const duplicateOptions = {};
+    entry.options.forEach((option) => {
+      const key = `${option.label}|${option.value}`;
+      if (duplicateOptions[key]) {
+        duplicateOptions[key].count++;
+      } else {
+        duplicateOptions[key] = {
+          count: 1,
+          label: option.label,
+          value: option.value,
+        };
+      }
+    });
+
+    Object.values(duplicateOptions).forEach((opt) => {
+      if (opt.count > 1) {
+        issues.push({
+          type: "duplicate_select_option",
+          severity: "warning",
+          field: entry.label,
+          message: `Select field "${entry.label}" has duplicate option: label="${opt.label}", value="${opt.value}"`,
+        });
+      }
+    });
+  });
+
+  radioValues.forEach((entry) => {
+    if (!entry.values || !Array.isArray(entry.values)) return;
+
+    const duplicateOptions = {};
+    entry.values.forEach((option) => {
+      const key = `${option.label}|${option.value}`;
+      if (duplicateOptions[key]) {
+        duplicateOptions[key].count++;
+      } else {
+        duplicateOptions[key] = {
+          count: 1,
+          label: option.label,
+          value: option.value,
+        };
+      }
+    });
+
+    Object.values(duplicateOptions).forEach((opt) => {
+      if (opt.count > 1) {
+        issues.push({
+          type: "duplicate_radio_option",
+          severity: "warning",
+          field: entry.label,
+          message: `Radio field "${entry.label}" has duplicate option: label="${opt.label}", value="${opt.value}"`,
+        });
+      }
+    });
+  });
+
+  return issues;
+};
+
 export default function JSONExtractor() {
   const [jsonInput, setJsonInput] = useState("");
   const [searchKeys, setSearchKeys] = useState("");
@@ -72,6 +238,7 @@ export default function JSONExtractor() {
 
   const [extractedData, setExtractedData] = useState(null);
   const [fullParsedJson, setFullParsedJson] = useState(null);
+  const [validationIssues, setValidationIssues] = useState([]);
 
   const addStep = (step, success = true, details = "") => {
     setParsingSteps((prev) => [
@@ -85,6 +252,7 @@ export default function JSONExtractor() {
     setFullParsedJson(null);
     setError("");
     setParsingSteps([]);
+    setValidationIssues([]);
   };
 
   const handleExtract = async () => {
@@ -195,6 +363,24 @@ export default function JSONExtractor() {
           `${searchResults.filter(r => r.found).length}/${keys.length} keys found`
         );
       }
+
+      addStep("Validating form structure and field integrity");
+      const issues = validateFormStructure(labels, selectValues, radioValues, formConfig);
+      const errorIssues = issues.filter(i => i.severity === "error");
+      if (errorIssues.length > 0) {
+        addStep(
+          "Form structure validation",
+          false,
+          `Found ${errorIssues.length} critical issue(s)`
+        );
+      } else {
+        addStep(
+          "Form structure validation",
+          true,
+          issues.length > 0 ? `Found ${issues.length} warning(s)` : "No issues found"
+        );
+      }
+      setValidationIssues(issues);
 
       addStep("Extraction completed!", true, "Results ready below");
 
@@ -486,6 +672,49 @@ export default function JSONExtractor() {
                   Export to Excel
                 </Button>
               </div>
+
+              {validationIssues.length > 0 && (
+                <Card className="mb-4 border-danger">
+                  <Card.Header className="bg-danger bg-opacity-10">
+                    <Card.Title className="mb-0">Form Validation Issues</Card.Title>
+                  </Card.Header>
+                  <Card.Body>
+                    {validationIssues.filter(i => i.severity === "error").length > 0 && (
+                      <div className="mb-4">
+                        <h6 className="text-danger fw-bold mb-3">
+                          Errors ({validationIssues.filter(i => i.severity === "error").length})
+                        </h6>
+                        <div className="list-group">
+                          {validationIssues.filter(i => i.severity === "error").map((issue, idx) => (
+                            <div key={idx} className="list-group-item bg-danger bg-opacity-10">
+                              <div className="fw-bold text-danger">{issue.message}</div>
+                              {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
+                              {issue.key && <div className="small text-muted">Key: <code>{issue.key}</code></div>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {validationIssues.filter(i => i.severity === "warning").length > 0 && (
+                      <div>
+                        <h6 className="text-warning fw-bold mb-3">
+                          Warnings ({validationIssues.filter(i => i.severity === "warning").length})
+                        </h6>
+                        <div className="list-group">
+                          {validationIssues.filter(i => i.severity === "warning").map((issue, idx) => (
+                            <div key={idx} className="list-group-item bg-warning bg-opacity-10">
+                              <div className="fw-bold text-warning">{issue.message}</div>
+                              {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
+                              {issue.expected && <div className="small text-muted">Expected: <code>{issue.expected}</code></div>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              )}
 
               <Row>
                 <Col>

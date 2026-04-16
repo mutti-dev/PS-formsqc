@@ -1,14 +1,6 @@
-/* ============================================================================
-   Advanced JSON Comparator Styles
-   ============================================================================ */
-
 .advanced-json-comparator {
   padding: 20px 0;
 }
-
-/* ============================================================================
-   Summary Dashboard
-   ============================================================================ */
 
 .summary-dashboard {
   margin-bottom: 24px;
@@ -71,7 +63,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Individual card styles */
 .summary-card:nth-child(1) {
   background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
 }
@@ -92,9 +83,26 @@
   background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
 }
 
-/* ============================================================================
-   Tree View Styles
-   ============================================================================ */
+/* Individual card styles */
+.summary-card:nth-child(1) {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+.summary-card:nth-child(2) {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.summary-card:nth-child(3) {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
+.summary-card:nth-child(4) {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.summary-card:nth-child(5) {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+}
 
 .tree-view {
   font-family: "Courier New", monospace;
@@ -198,9 +206,300 @@
   margin-bottom: 8px;
 }
 
-/* ============================================================================
-   Diff Item Styles
-   ============================================================================ */
+.grouped-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.change-group {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.change-group-added {
+  border-color: #2ecc71;
+  background-color: rgba(46, 204, 113, 0.05);
+}
+
+.change-group-removed {
+  border-color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.05);
+}
+
+.change-group-modified {
+  border-color: #f39c12;
+  background-color: rgba(243, 156, 18, 0.05);
+}
+
+.change-group-header {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.change-group-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.change-icon {
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.change-group-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.change-group-added .change-group-badge {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.change-group-removed .change-group-badge {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.change-group-modified .change-group-badge {
+  background-color: #f39c12;
+  color: white;
+}
+
+.change-items {
+  padding: 12px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.change-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.change-items::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.change-items::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 150, 255, 0.4);
+  border-radius: 3px;
+}
+
+.change-items::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 150, 255, 0.6);
+}
+
+.change-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.15s;
+}
+
+.change-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  transform: translateX(2px);
+}
+
+.change-item:last-child {
+  border-bottom: none;
+}
+
+.change-path-section {
+  display: flex;
+  align-items: center;
+}
+
+.change-path {
+  background-color: rgba(0, 0, 0, 0.08);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  word-break: break-all;
+  color: #64b5f6;
+}
+
+.theme-light .change-path {
+  background-color: rgba(25, 118, 210, 0.15);
+  color: #1976d2;
+}
+
+.change-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.value-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: #666;
+  min-width: 50px;
+  opacity: 0.8;
+}
+
+.value-content {
+  flex: 1;
+  min-width: 150px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  word-break: break-all;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.value-content.added-value {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #51cf66;
+}
+
+.theme-light .value-content.added-value {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: #2e7d32;
+}
+
+.value-content.removed-value {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #ff6b6b;
+}
+
+.theme-light .value-content.removed-value {
+  background-color: rgba(231, 76, 60, 0.15);
+  color: #d32f2f;
+}
+
+.value-type {
+  font-size: 10px;
+  font-weight: 600;
+  background-color: rgba(100, 150, 255, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.theme-light .value-type {
+  background-color: rgba(25, 118, 210, 0.2);
+  color: #1976d2;
+}
+
+.change-comparison {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.change-before,
+.change-after {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comparison-label {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  opacity: 0.8;
+}
+
+.comparison-value {
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  word-break: break-all;
+  background-color: rgba(0, 0, 0, 0.05);
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.comparison-value.old-value {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #ff6b6b;
+}
+
+.theme-light .comparison-value.old-value {
+  background-color: rgba(231, 76, 60, 0.15);
+  color: #d32f2f;
+}
+
+.comparison-value.new-value {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #51cf66;
+}
+
+.theme-light .comparison-value.new-value {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: #2e7d32;
+}
+
+.change-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: #999;
+  height: 30px;
+}
+
+.no-changes-alert {
+  padding: 20px;
+  text-align: center;
+  background-color: rgba(46, 204, 113, 0.1);
+  border: 2px dashed #2ecc71;
+  border-radius: 8px;
+  color: #2ecc71;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .change-comparison {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .change-arrow {
+    display: none;
+  }
+
+  .change-path {
+    font-size: 11px;
+  }
+
+  .value-content {
+    min-width: 100%;
+  }
+}
 
 .diff-item {
   margin-bottom: 12px;
@@ -326,10 +625,6 @@
   color: #1976d2;
 }
 
-/* ============================================================================
-   Diff List View
-   ============================================================================ */
-
 .diff-list {
   max-height: 600px;
   overflow-y: auto;
@@ -353,10 +648,6 @@
 .diff-list::-webkit-scrollbar-thumb:hover {
   background-color: rgba(100, 150, 255, 0.7);
 }
-
-/* ============================================================================
-   Side-by-Side Synchronized View
-   ============================================================================ */
 
 .sync-scroll-container {
   display: grid;
@@ -414,9 +705,52 @@
   color: #64b5f6;
 }
 
-/* ============================================================================
-   Responsive Design
-   ============================================================================ */
+.list-group-item {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
+  padding: 12px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  word-break: break-word;
+}
+
+.list-group-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.list-group-item code {
+  font-weight: 600;
+  font-family: "Courier New", monospace;
+  word-break: break-all;
+  display: block;
+  overflow-wrap: break-word;
+}
+
+.list-group-item .badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .list-group-item {
+    padding: 10px;
+  }
+
+  .list-group-item code {
+    font-size: 0.85em;
+  }
+
+  .list-group-item .d-flex {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .list-group-item .badge {
+    align-self: flex-start;
+  }
+}
 
 @media (max-width: 1024px) {
   .summary-grid {
@@ -461,10 +795,6 @@
   }
 }
 
-/* ============================================================================
-   Additional Utility Styles
-   ============================================================================ */
-
 .breadcrumb-path {
   font-size: 11px;
   color: #999;
@@ -478,7 +808,6 @@
   padding: 3px 8px;
 }
 
-/* Animation for comparisons */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -496,13 +825,11 @@
   animation: slideIn 0.3s ease-out;
 }
 
-/* Code highlighting */
 code {
   font-family: "Courier New", "Courier", monospace;
   font-size: 0.95em;
 }
 
-/* Input styling */
 .advanced-json-comparator textarea {
   font-family: "Courier New", monospace !important;
   font-size: 13px !important;
@@ -513,7 +840,6 @@ code {
   box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.2);
 }
 
-/* Buttons */
 .advanced-json-comparator .btn {
   border-radius: 6px;
   font-weight: 500;
@@ -525,21 +851,18 @@ code {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Loading spinner */
 .spinner-border {
   width: 16px !important;
   height: 16px !important;
   border-width: 2px !important;
 }
 
-/* Alert styling */
 .alert {
   border-radius: 6px;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Card styling */
 .card {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -569,10 +892,6 @@ code {
 .theme-light .card-header {
   background-color: rgba(100, 150, 255, 0.05);
 }
-
-/* ============================================================================
-   Print Styles
-   ============================================================================ */
 
 @media print {
   .advanced-json-comparator .btn,

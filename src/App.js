@@ -51,7 +51,7 @@ function App() {
               <Route path="/Converter" element={<WordConverter />} />
               <Route path="/FormComparator" element={<FormComparator theme={theme} />} />
               <Route path="/AdvancedJSONComparator" element={<AdvancedJSONComparator theme={theme} />} />
-              <Route path="/Jsonformatter" element={<JsonFormatter />} />
+              {/* <Route path="/Jsonformatter" element={<JsonFormatter />} /> */}
               <Route path="/TextConverter" element={<TextConverter />} />
               <Route path="*" element={<Navigate to="/JsonExtractor" replace />} />
             </Routes>

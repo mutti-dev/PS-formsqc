@@ -109,32 +109,7 @@ export default function WordConverter() {
                     </Button>
                   </div>
 
-                  <h5 className="text-center text-muted mb-3">
-                    {result.length} options generated
-                  </h5>
-
-                  <div className="table-responsive mb-4">
-                    <Table striped bordered hover size="sm">
-                      <thead className="table-dark">
-                        <tr>
-                          <th>#</th>
-                          <th>Label (Original)</th>
-                          <th>Value (Converted)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {result.map((item, i) => (
-                          <tr key={i}>
-                            <td className="text-center">{i + 1}</td>
-                            <td>{item.label}</td>
-                            <td>
-                              <code>{item.value || "(empty)"}</code>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  </div>
+                  
 
                   <Card>
                     <Card.Header className="fw-semibold">Ready-to-Use JSON</Card.Header>
