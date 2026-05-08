@@ -1,0 +1,35 @@
+Prompt:
+
+I'm attaching a form document. Please analyze it and create an Excel file with the following exact columns in this order:
+Label | Key | KeyLength | Type | Format | Option Labels | Option Values
+Column rules:
+
+Label — the human-readable field name as it appears on the form (e.g. "Date of Birth")
+Key — a programmatic key derived from the Label: replace spaces with underscores, remove all special characters except letters/numbers/underscores (e.g. "Date_of_Birth")
+KeyLength — the character count of the Key (e.g. 13)
+Type — the Form.io field type. Use only these values: textfield, textarea, number, checkbox, datetime, select, radio, email, phoneNumber, currency, signature, content, panel, button
+Format — only fill this for datetime fields (e.g. MM/dd/yyyy), leave blank for all other types
+Option Labels — for select and radio fields only: the display options separated by || (e.g. Yes || No || Maybe). Leave blank for all other types.
+Option Values — for select and radio fields only: the data values separated by || (e.g. yes || no || maybe). If values are the same as labels, repeat them. Leave blank for all other types.
+
+Type mapping guide:
+
+Single-line text input → textfield
+Multi-line / paragraph text → textarea
+Numeric input → number
+Yes/No tick box (single) → checkbox
+Date or date+time picker → datetime
+Dropdown with multiple choices → select
+Multiple choice (pick one, shown as buttons/dots) → radio
+Email address field → email
+Phone number field → phoneNumber
+Dollar/currency amount → currency
+Signature box → signature
+Section heading or instructional text → content
+A collapsible group/section of fields → panel
+Submit or action button → button
+
+Output: Produce the result as a downloadable .xlsx file with one row per field, in the order the fields appear in the document. Do not include any extra columns or sheets.
+
+
+Just attach your PDF or Word file with this prompt and it will produce the Excel in exactly the format your import feature expects.

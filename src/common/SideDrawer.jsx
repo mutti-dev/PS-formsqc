@@ -7,18 +7,20 @@ import {
   FileEarmarkText,
   FileWord,
   CodeSlash,
-  BarChart
+  BarChart,
+  Robot,
 } from "react-bootstrap-icons";
 
 export default function SideDrawer({ isOpen, setIsOpen, theme = 'dark', toggleTheme }) {
   const location = useLocation();
 
   const menuItems = [
-    { path: "/JsonExtractor", name: "Form Review", icon: <FileEarmarkText /> },
+    { path: "/JsonExtractor", name: "Form Review",          icon: <FileEarmarkText /> },
     // { path: "/FormComparator", name: "Form Comparator", icon: <Files /> },
     { path: "/AdvancedJSONComparator", name: "JSON Comparator Pro", icon: <BarChart /> },
-    { path: "/Converter", name: "Word Converter", icon: <FileWord /> },
-    { path: "/TextConverter", name: "API Maker", icon: <CodeSlash /> },
+    { path: "/Converter",      name: "Word Converter",       icon: <FileWord /> },
+    { path: "/TextConverter",  name: "API Maker",            icon: <CodeSlash /> },
+    { path: "/AIPrompt",       name: "AI Prompt",            icon: <Robot /> },
   ];
 
   return (

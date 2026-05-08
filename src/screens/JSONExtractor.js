@@ -30,6 +30,7 @@ import {
 } from "../utils/jsonUtils";
 
 import { exportToExcel } from "../utils/exportUtils";
+import { importFromExcel } from "../utils/importutils";
 
 import {
   DuplicateLabelsSection,
@@ -238,6 +239,12 @@ export default function JSONExtractor() {
   const [showDebug, setShowDebug] = useState(false);
   const [showValidationIssues, setShowValidationIssues] = useState(true);
 
+  // --- Import from Excel state ---
+  const [importWarnings, setImportWarnings] = useState([]);
+  const [isImporting, setIsImporting]       = useState(false);
+  const importFileRef                        = React.useRef(null);
+  // --------------------------------
+
   const [extractedData, setExtractedData] = useState(null);
   const [fullParsedJson, setFullParsedJson] = useState(null);
   const [validationIssues, setValidationIssues] = useState([]);
@@ -256,6 +263,33 @@ export default function JSONExtractor() {
     setParsingSteps([]);
     setValidationIssues([]);
   };
+
+  // --- Import from Excel handler ---
+  const handleImportExcel = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset the input so the same file can be re-selected if needed
+    e.target.value = "";
+
+    setImportWarnings([]);
+    setIsImporting(true);
+    resetResults();
+
+    try {
+      const { formJson, warnings } = await importFromExcel(file);
+
+      const formatted = JSON.stringify(formJson, null, 2);
+      setJsonInput(formatted);
+
+      if (warnings.length > 0) setImportWarnings(warnings);
+    } catch (err) {
+      setError("Import failed: " + err.message);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+  // ----------------------------------
 
   const handleExtract = async () => {
     if (!jsonInput.trim()) {
@@ -631,6 +665,31 @@ export default function JSONExtractor() {
                 <Button variant="outline-secondary" onClick={clearAll}>
                   Clear All
                 </Button>
+
+                {/* --- Import from Excel --- */}
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  ref={importFileRef}
+                  style={{ display: "none" }}
+                  onChange={handleImportExcel}
+                />
+                <Button
+                  variant="outline-info"
+                  onClick={() => importFileRef.current?.click()}
+                  disabled={isImporting}
+                >
+                  {isImporting ? (
+                    <>
+                      <Spinner size="sm" className="me-2" />
+                      Importing...
+                    </>
+                  ) : (
+                    "Import from Excel"
+                  )}
+                </Button>
+                {/* ------------------------ */}
+
                 <Form.Control
                   type="number"
                   min="50"
@@ -723,6 +782,15 @@ export default function JSONExtractor() {
                       ))}
                   </Card.Body>
                 </Card>
+              )}
+
+              {importWarnings.length > 0 && (
+                <Alert variant="warning" dismissible onClose={() => setImportWarnings([])}>
+                  <Alert.Heading>Import completed with warnings</Alert.Heading>
+                  <ul className="mb-0">
+                    {importWarnings.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </Alert>
               )}
 
               {error && <Alert variant="danger">{error}</Alert>}
