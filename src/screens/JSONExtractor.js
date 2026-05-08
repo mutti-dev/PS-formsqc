@@ -125,7 +125,7 @@ const convertLabelToKey = (label) => {
     .replace(/[^a-zA-Z0-9_]/g, "");
 };
 
-const validateFormStructure = (labels, selectValues, radioValues, formConfig) => {
+const validateFormStructure = (labels, selectValues, radioValues, formConfig, formType = "Form") => {
   const issues = [];
 
   labels.forEach((entry) => {
@@ -148,7 +148,7 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig) =>
       }
     }
 
-    if (RESERVED_COLUMNS.includes(fieldKey)) {
+    if (formType === "Intake" && RESERVED_COLUMNS.includes(fieldKey)) {
       issues.push({
         type: "reserved_column",
         severity: "error",
@@ -224,6 +224,7 @@ export default function JSONExtractor() {
   const [jsonInput, setJsonInput] = useState("");
   const [searchKeys, setSearchKeys] = useState("");
   const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
+  const [formType, setFormType] = useState("Form");
   const [hiddenTypes, setHiddenTypes] = useState([
     "columns",
     "content",
@@ -235,6 +236,7 @@ export default function JSONExtractor() {
   const [error, setError] = useState("");
   const [parsingSteps, setParsingSteps] = useState([]);
   const [showDebug, setShowDebug] = useState(false);
+  const [showValidationIssues, setShowValidationIssues] = useState(true);
 
   const [extractedData, setExtractedData] = useState(null);
   const [fullParsedJson, setFullParsedJson] = useState(null);
@@ -365,7 +367,7 @@ export default function JSONExtractor() {
       }
 
       addStep("Validating form structure and field integrity");
-      const issues = validateFormStructure(labels, selectValues, radioValues, formConfig);
+      const issues = validateFormStructure(labels, selectValues, radioValues, formConfig, formType);
       const errorIssues = issues.filter(i => i.severity === "error");
       if (errorIssues.length > 0) {
         addStep(
@@ -604,6 +606,15 @@ export default function JSONExtractor() {
               </Form.Group>
 
               <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <Form.Select
+                  value={formType}
+                  onChange={(e) => setFormType(e.target.value)}
+                  style={{ width: "120px" }}
+                  size="sm"
+                >
+                  <option value="Form">Form</option>
+                  <option value="Intake">Intake</option>
+                </Form.Select>
                 <Button onClick={handleExtract} disabled={isLoading || !jsonInput.trim()}>
                   {isLoading ? (
                     <>
@@ -635,10 +646,31 @@ export default function JSONExtractor() {
               {parsingSteps.length > 0 && (
                 <Card className="mb-3 border">
                   <Card.Header className="d-flex justify-content-between align-items-center">
-                    <span className="fw-semibold">Validation Steps</span>
-                    <Button variant="link" className="text-white" size="sm" onClick={() => setShowDebug(!showDebug)}>
-                      {showDebug ? "Hide" : "Show"} Details
-                    </Button>
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="fw-semibold">Validation Steps</span>
+                      {validationIssues.length > 0 && (
+                        <Badge bg={validationIssues.filter(i => i.severity === "error").length > 0 ? "danger" : "warning"}>
+                          {validationIssues.filter(i => i.severity === "error").length > 0
+                            ? `${validationIssues.filter(i => i.severity === "error").length} Error(s)`
+                            : `${validationIssues.length} Warning(s)`}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="d-flex gap-2">
+                      {validationIssues.length > 0 && (
+                        <Button
+                          variant="link"
+                          className="text-white"
+                          size="sm"
+                          onClick={() => setShowValidationIssues(!showValidationIssues)}
+                        >
+                          {showValidationIssues ? "Hide" : "Show"} Issues
+                        </Button>
+                      )}
+                      <Button variant="link" className="text-white" size="sm" onClick={() => setShowDebug(!showDebug)}>
+                        {showDebug ? "Hide" : "Show"} Details
+                      </Button>
+                    </div>
                   </Card.Header>
                   <Card.Body>
                     <ProgressBar
@@ -646,6 +678,42 @@ export default function JSONExtractor() {
                       variant={parsingSteps.at(-1)?.success ? "success" : "danger"}
                       className="mb-3"
                     />
+                    {showValidationIssues && validationIssues.length > 0 && (
+                      <div className="mb-3 pb-3 border-bottom">
+                        {validationIssues.filter(i => i.severity === "error").length > 0 && (
+                          <div className="mb-3">
+                            <h6 className="text-danger fw-bold mb-2">
+                              Errors ({validationIssues.filter(i => i.severity === "error").length})
+                            </h6>
+                            <div className="list-group">
+                              {validationIssues.filter(i => i.severity === "error").map((issue, idx) => (
+                                <div key={idx} className="list-group-item bg-danger bg-opacity-10 py-2">
+                                  <div className="fw-bold text-danger small">{issue.message}</div>
+                                  {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
+                                  {issue.key && <div className="small text-muted">Key: <code>{issue.key}</code></div>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {validationIssues.filter(i => i.severity === "warning").length > 0 && (
+                          <div>
+                            <h6 className="text-warning fw-bold mb-2">
+                              Warnings ({validationIssues.filter(i => i.severity === "warning").length})
+                            </h6>
+                            <div className="list-group">
+                              {validationIssues.filter(i => i.severity === "warning").map((issue, idx) => (
+                                <div key={idx} className="list-group-item bg-warning bg-opacity-10 py-2">
+                                  <div className="fw-bold text-warning small">{issue.message}</div>
+                                  {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
+                                  {issue.expected && <div className="small text-muted">Expected: <code>{issue.expected}</code></div>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {showDebug &&
                       parsingSteps.map((step, i) => (
                         <div key={i} className={`small ${step.success ? "text-success" : "text-danger"}`}>
@@ -673,48 +741,7 @@ export default function JSONExtractor() {
                 </Button>
               </div>
 
-              {validationIssues.length > 0 && (
-                <Card className="mb-4 border-danger">
-                  <Card.Header className="bg-danger bg-opacity-10">
-                    <Card.Title className="mb-0">Form Validation Issues</Card.Title>
-                  </Card.Header>
-                  <Card.Body>
-                    {validationIssues.filter(i => i.severity === "error").length > 0 && (
-                      <div className="mb-4">
-                        <h6 className="text-danger fw-bold mb-3">
-                          Errors ({validationIssues.filter(i => i.severity === "error").length})
-                        </h6>
-                        <div className="list-group">
-                          {validationIssues.filter(i => i.severity === "error").map((issue, idx) => (
-                            <div key={idx} className="list-group-item bg-danger bg-opacity-10">
-                              <div className="fw-bold text-danger">{issue.message}</div>
-                              {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
-                              {issue.key && <div className="small text-muted">Key: <code>{issue.key}</code></div>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
-                    {validationIssues.filter(i => i.severity === "warning").length > 0 && (
-                      <div>
-                        <h6 className="text-warning fw-bold mb-3">
-                          Warnings ({validationIssues.filter(i => i.severity === "warning").length})
-                        </h6>
-                        <div className="list-group">
-                          {validationIssues.filter(i => i.severity === "warning").map((issue, idx) => (
-                            <div key={idx} className="list-group-item bg-warning bg-opacity-10">
-                              <div className="fw-bold text-warning">{issue.message}</div>
-                              {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
-                              {issue.expected && <div className="small text-muted">Expected: <code>{issue.expected}</code></div>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              )}
 
               <Row>
                 <Col>
