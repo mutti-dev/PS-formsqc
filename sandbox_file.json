@@ -5,10 +5,11 @@
   "type": "container",
   "input": true,
   "components": [
+
     {
       "html": "<h2 style=\"text-align:center;\"><span style=\"background-color:rgba(255,255,255,0.64);color:rgb(9,37,75);\">Family Support Services</span></h2><h3 style=\"text-align:center;\"><span class=\"text-big\" style=\"background-color:rgba(255,255,255,0.64);color:rgb(9,37,75);\"><strong>Resident Service Tracker</strong></span></h3>",
       "label": "Content",
-      "refreshOnChange": false,
+      "refreshOnChange": true,
       "key": "Content",
       "type": "content",
       "input": false,
