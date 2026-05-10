@@ -11,8 +11,6 @@ import {
   Spinner,
 } from "react-bootstrap";
 import {
-  ChevronDown,
-  ChevronRight,
   ArrowCounterclockwise,
 
 } from "react-bootstrap-icons";
@@ -20,7 +18,6 @@ import {
   deepDiffObjects,
   parseJSONSafe,
   calculateSummary,
-  buildDiffTree,
   formatValue,
   getTypeName,
 } from "../utils/jsonDiffEngine";
@@ -35,12 +32,12 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   const [ignoreKeys, setIgnoreKeys] = useState("timestamp,id,uuid");
   const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState("");
-  const [hoveredPath, setHoveredPath] = useState(null);
+  const [setHoveredPath] = useState(null);
 
   const [diffs, setDiffs] = useState([]);
   const [keyComparison, setKeyComparison] = useState(null);
 
-  const [expandedPaths, setExpandedPaths] = useState(new Set(["root"]));
+  const [setExpandedPaths] = useState(new Set(["root"]));
   const [filterChanges] = useState({
     added: true,
     removed: true,
