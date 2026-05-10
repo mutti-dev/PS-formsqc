@@ -26,7 +26,6 @@ import {
 } from "../utils/jsonDiffEngine";
 import {
   compareFormKeys,
-  detectPotentialRenames,
 } from "../utils/keyComparisonUtil";
 import "./AdvancedJSONComparator.css";
 
