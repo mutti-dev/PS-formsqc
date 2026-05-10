@@ -38,12 +38,10 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   const [hoveredPath, setHoveredPath] = useState(null);
 
   const [diffs, setDiffs] = useState([]);
-  const [tree, setTree] = useState(null);
   const [keyComparison, setKeyComparison] = useState(null);
 
   const [expandedPaths, setExpandedPaths] = useState(new Set(["root"]));
-  const [viewMode, setViewMode] = useState("grouped");
-  const [filterChanges, setFilterChanges] = useState({
+  const [filterChanges] = useState({
     added: true,
     removed: true,
     modified: true,
@@ -60,14 +58,11 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     return calculateSummary(diffs);
   }, [diffs]);
 
-  const treeData = useMemo(() => {
-    return buildDiffTree(diffs);
-  }, [diffs]);
+
 
   const performComparison = useCallback(async () => {
     setError("");
     setDiffs([]);
-    setTree(null);
     setKeyComparison(null);
 
     if (!sourceJson.trim() || !targetJson.trim()) {
@@ -128,19 +123,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     });
   }, []);
 
-  const expandAll = useCallback(() => {
-    const allPaths = new Set();
-    const traverse = (node) => {
-      allPaths.add(node.path);
-      node.children?.forEach(traverse);
-    };
-    traverse(treeData);
-    setExpandedPaths(allPaths);
-  }, [treeData]);
 
-  const collapseAll = useCallback(() => {
-    setExpandedPaths(new Set(["root"]));
-  }, []);
 
   const resetComparison = useCallback(() => {
     setSourceJson("");
@@ -151,123 +134,9 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     setKeyComparison(null);
   }, []);
 
-  const renderSummaryDashboard = () => (
-    <div className={`summary-dashboard theme-${theme}`}>
-      <div className="summary-grid">
-        <div className="summary-card">
-          <div className="summary-icon added">[ADDED]</div>
-          <div className="summary-content">
-            <div className="summary-value">{summary.added}</div>
-            <div className="summary-label">Added</div>
-          </div>
-        </div>
 
-        <div className="summary-card">
-          <div className="summary-icon removed">[REMOVED]</div>
-          <div className="summary-content">
-            <div className="summary-value">{summary.removed}</div>
-            <div className="summary-label">Removed</div>
-          </div>
-        </div>
 
-        <div className="summary-card">
-          <div className="summary-icon modified">[MODIFIED]</div>
-          <div className="summary-content">
-            <div className="summary-value">{summary.modified}</div>
-            <div className="summary-label">Modified</div>
-          </div>
-        </div>
 
-        <div className="summary-card">
-          <div className="summary-icon total">[TOTAL]</div>
-          <div className="summary-content">
-            <div className="summary-value">{summary.total}</div>
-            <div className="summary-label">Total Changes</div>
-          </div>
-        </div>
-
-        {summary.ignored > 0 && (
-          <div className="summary-card">
-            <div className="summary-icon ignored">[IGNORED]</div>
-            <div className="summary-content">
-              <div className="summary-value">{summary.ignored}</div>
-              <div className="summary-label">Ignored</div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderTreeNode = (node, depth = 0) => {
-    const isExpanded = expandedPaths.has(node.path);
-    const hasChildren = node.children && node.children.length > 0;
-    const hasDiffs = node.diffs && node.diffs.length > 0;
-    const isRoot = node.type === "root";
-
-    return (
-      <div key={node.path} className={`tree-node depth-${depth}`}>
-        <div
-          className={`tree-node-header ${
-            hoveredPath === node.path ? "hovered" : ""
-          }`}
-          onMouseEnter={() => setHoveredPath(node.path)}
-          onMouseLeave={() => setHoveredPath(null)}
-        >
-          {hasChildren && (
-            <button
-              className="tree-toggle"
-              onClick={() => toggleExpanded(node.path)}
-              title={isExpanded ? "Collapse" : "Expand"}
-            >
-              {isExpanded ? (
-                <ChevronDown size={16} />
-              ) : (
-                <ChevronRight size={16} />
-              )}
-            </button>
-          )}
-          {!hasChildren && <span className="tree-toggle-spacer"></span>}
-
-          <span className="tree-key">{isRoot ? "root" : node.key}</span>
-
-          {node.stats.total > 0 && (
-            <span className="tree-stats">
-              {node.stats.added > 0 && (
-                <Badge bg="success" className="ms-1">
-                  +{node.stats.added}
-                </Badge>
-              )}
-              {node.stats.removed > 0 && (
-                <Badge bg="danger" className="ms-1">
-                  -{node.stats.removed}
-                </Badge>
-              )}
-              {node.stats.modified > 0 && (
-                <Badge bg="warning" className="ms-1">
-                  ~{node.stats.modified}
-                </Badge>
-              )}
-            </span>
-          )}
-        </div>
-
-        {isExpanded && hasDiffs && (
-          <div className="tree-diffs">
-            {node.diffs.map((diff, idx) => (
-              <DiffItemDisplay key={`${node.path}-${idx}`} diff={diff} />
-            ))}
-          </div>
-        )}
-
-        {isExpanded && hasChildren && (
-          <div className="tree-children">
-            {node.children.map((child) => renderTreeNode(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const renderKeyComparisonSection = () => {
     if (!keyComparison) return null;
