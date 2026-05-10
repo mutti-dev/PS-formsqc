@@ -17,7 +17,6 @@ import {
 import {
   deepDiffObjects,
   parseJSONSafe,
-  calculateSummary,
   formatValue,
   getTypeName,
 } from "../utils/jsonDiffEngine";
@@ -32,17 +31,12 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   const [ignoreKeys, setIgnoreKeys] = useState("timestamp,id,uuid");
   const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState("");
-  const [setHoveredPath] = useState(null);
+  const [hoveredPath, setHoveredPath] = useState(null);
 
   const [diffs, setDiffs] = useState([]);
   const [keyComparison, setKeyComparison] = useState(null);
 
-  const [setExpandedPaths] = useState(new Set(["root"]));
-  const [filterChanges] = useState({
-    added: true,
-    removed: true,
-    modified: true,
-  });
+  const [expandedPaths, setExpandedPaths] = useState(new Set(["root"]));
 
   const ignoreList = useMemo(() => {
     return ignoreKeys
@@ -50,10 +44,6 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
       .map((k) => k.trim())
       .filter(Boolean);
   }, [ignoreKeys]);
-
-  const summary = useMemo(() => {
-    return calculateSummary(diffs);
-  }, [diffs]);
 
 
 
@@ -106,21 +96,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     } finally {
       setIsComparing(false);
     }
-  }, [sourceJson, targetJson, ignoreList]);
-
-  const toggleExpanded = useCallback((path) => {
-    setExpandedPaths((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
-  }, []);
-
-
+  }, [sourceJson, targetJson, ignoreList, setExpandedPaths]);
 
   const resetComparison = useCallback(() => {
     setSourceJson("");
@@ -129,7 +105,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     setError("");
     setHoveredPath(null);
     setKeyComparison(null);
-  }, []);
+  }, [setHoveredPath]);
 
 
 
@@ -243,175 +219,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     );
   };
 
-  const renderGroupedChanges = () => {
-    const grouped = {
-      added: diffs.filter((d) => d.type === "added"),
-      removed: diffs.filter((d) => d.type === "removed"),
-      modified: diffs.filter((d) => d.type === "modified"),
-      ignored: diffs.filter((d) => d.type === "ignored"),
-    };
 
-    return (
-      <div className="grouped-changes">
-        {filterChanges.added && grouped.added.length > 0 && (
-          <div className="change-group change-group-added">
-            <div className="change-group-header">
-              <h5 className="change-group-title">
-                <span className="change-icon">[ADD]</span>
-                Added Fields ({grouped.added.length})
-              </h5>
-              <span className="change-group-badge">New</span>
-            </div>
-            <div className="change-items">
-              {grouped.added.map((diff, idx) => (
-                <div key={idx} className="change-item">
-                  <div className="change-path-section">
-                    <code className="change-path">{diff.path}</code>
-                  </div>
-                  <div className="change-value">
-                    <span className="value-label">Value:</span>
-                    <span className="value-content added-value">
-                      {formatValue(diff.target, 100)}
-                    </span>
-                    <span className="value-type">{getTypeName(diff.target)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {filterChanges.removed && grouped.removed.length > 0 && (
-          <div className="change-group change-group-removed">
-            <div className="change-group-header">
-              <h5 className="change-group-title">
-                <span className="change-icon">[REM]</span>
-                Removed Fields ({grouped.removed.length})
-              </h5>
-              <span className="change-group-badge alert-danger">Removed</span>
-            </div>
-            <div className="change-items">
-              {grouped.removed.map((diff, idx) => (
-                <div key={idx} className="change-item">
-                  <div className="change-path-section">
-                    <code className="change-path">{diff.path}</code>
-                  </div>
-                  <div className="change-value">
-                    <span className="value-label">Was:</span>
-                    <span className="value-content removed-value">
-                      {formatValue(diff.source, 100)}
-                    </span>
-                    <span className="value-type">{getTypeName(diff.source)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {filterChanges.modified && grouped.modified.length > 0 && (
-          <div className="change-group change-group-modified">
-            <div className="change-group-header">
-              <h5 className="change-group-title">
-                <span className="change-icon">[MOD]</span>
-                Modified Fields ({grouped.modified.length})
-              </h5>
-              <span className="change-group-badge alert-warning">Changed</span>
-            </div>
-            <div className="change-items">
-              {grouped.modified.map((diff, idx) => (
-                <div key={idx} className="change-item">
-                  <div className="change-path-section">
-                    <code className="change-path">{diff.path}</code>
-                  </div>
-                  <div className="change-comparison">
-                    <div className="change-before">
-                      <div className="comparison-label">From:</div>
-                      <div className="comparison-value old-value">
-                        {formatValue(diff.source, 100)}
-                      </div>
-                      <span className="value-type">{getTypeName(diff.source)}</span>
-                    </div>
-                    <div className="change-arrow">"---"</div>
-                    <div className="change-after">
-                      <div className="comparison-label">To:</div>
-                      <div className="comparison-value new-value">
-                        {formatValue(diff.target, 100)}
-                      </div>
-                      <span className="value-type">{getTypeName(diff.target)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {Object.values(grouped)
-          .slice(0, 3)
-          .every((g) => g.length === 0) && (
-          <div className="no-changes-alert">
-            <p>No changes detected</p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const DiffItemDisplay = ({ diff }) => {
-    return (
-      <div className={`diff-item diff-${diff.type}`}>
-        <div className="diff-path">
-          <code>{diff.path}</code>
-        </div>
-
-        <div className="diff-values">
-          {diff.type === "modified" && (
-            <>
-              <div className="diff-value-pair">
-                <span className="diff-label">From:</span>
-                <span className="diff-old-value">
-                  {formatValue(diff.source, 50)}
-                </span>
-                <span className="diff-type-badge">
-                  {getTypeName(diff.source)}
-                </span>
-              </div>
-              <div className="diff-value-pair">
-                <span className="diff-label">To:</span>
-                <span className="diff-new-value">
-                  {formatValue(diff.target, 50)}
-                </span>
-                <span className="diff-type-badge">
-                  {getTypeName(diff.target)}
-                </span>
-              </div>
-            </>
-          )}
-
-          {diff.type === "added" && (
-            <div className="diff-value-pair">
-              <span className="diff-label">Added:</span>
-              <span className="diff-new-value">
-                {formatValue(diff.target, 50)}
-              </span>
-              <span className="diff-type-badge">{getTypeName(diff.target)}</span>
-            </div>
-          )}
-
-          {diff.type === "removed" && (
-            <div className="diff-value-pair">
-              <span className="diff-label">Removed:</span>
-              <span className="diff-old-value">
-                {formatValue(diff.source, 50)}
-              </span>
-              <span className="diff-type-badge">{getTypeName(diff.source)}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <Container fluid className={`advanced-json-comparator theme-${theme}`}>

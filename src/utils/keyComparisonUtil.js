@@ -55,7 +55,6 @@ export const compareFormKeys = (sandboxForm, productionForm) => {
     } else {
       const sandboxData = sandboxKeys[key];
       const sandboxLabel = typeof sandboxData === 'string' ? sandboxData : sandboxData.label;
-      const sandboxType = typeof sandboxData === 'string' ? 'unknown' : sandboxData.type;
       
       if (sandboxLabel !== prodLabel) {
         results.changedKeys.push({
