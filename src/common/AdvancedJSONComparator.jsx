@@ -17,8 +17,8 @@ import {
 import {
   deepDiffObjects,
   parseJSONSafe,
-  formatValue,
-  getTypeName,
+  // formatValue,
+  // getTypeName,
 } from "../utils/jsonDiffEngine";
 import {
   compareFormKeys,
@@ -32,11 +32,13 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState("");
   const [hoveredPath, setHoveredPath] = useState(null);
+  console.log(hoveredPath)
 
   const [diffs, setDiffs] = useState([]);
   const [keyComparison, setKeyComparison] = useState(null);
 
   const [expandedPaths, setExpandedPaths] = useState(new Set(["root"]));
+  console.log(expandedPaths)
 
   const ignoreList = useMemo(() => {
     return ignoreKeys
