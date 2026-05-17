@@ -65,7 +65,7 @@ export default function SideDrawer({ isOpen, setIsOpen, theme = 'dark', toggleTh
           <div style={{ height: "60px" }} className="d-flex align-items-center">
             {isOpen && (
               <div className="w-100" style={{ color: theme === 'dark' ? '#fff' : '#000' }}>
-                <h6 className="fw-bold mb-0">Form QC Tool</h6>
+                <h6 className="fw-bold mb-0">Form QC Tool V2</h6>
               </div>
             )}
           </div>
