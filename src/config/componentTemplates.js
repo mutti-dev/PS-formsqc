@@ -60,25 +60,33 @@ const TEMPLATES = {
     key,
     type: "textarea",
     input: true,
-  
+
   }),
 
-//   {
-//   "label": "Text Area",
-//   "autoExpand": false,
-//   "tableView": true,
-//   "key": "Text_Area",
-//   "type": "textarea",
-//   "input": true
-// }
+  //   {
+  //   "label": "Text Area",
+  //   "autoExpand": false,
+  //   "tableView": true,
+  //   "key": "Text_Area",
+  //   "type": "textarea",
+  //   "input": true
+  // }
 
   number: ({ label, key }) => ({
     label,
-    tableView: true,
+    mask: false,
+    tableView: false,
+    delimiter: false,
+    requireDecimal: false,
+    inputFormat: "plain",
+    truncateMultipleSpaces: false,
     key,
     type: "number",
     input: true,
   }),
+
+
+
 
   checkbox: ({ label, key }) => ({
     label,
@@ -86,19 +94,49 @@ const TEMPLATES = {
     key,
     type: "checkbox",
     input: true,
-    defaultValue: false,
+
   }),
+
+  // datetime: ({ label, key, format }) => ({
+  //   label,
+  //   tableView: false,
+  //   datePicker: {
+  //     disableWeekends: false,
+  //     disableWeekdays: false,
+  //   },
+  //   enableTime: false,
+  //   enableMinDateInput: false,
+  //   enableMaxDateInput: false,
+  //   key,
+  //   type: "datetime",
+  //   input: true,
+  //   widget: {
+  //     type: "calendar",
+  //     displayInTimezone: "viewer",
+  //     locale: "en",
+  //     useLocaleSettings: false,
+  //     allowInput: true,
+  //     mode: "single",
+  //     enableTime: false,
+  //     noCalendar: false,
+  //     format: format || "MM-dd-yyyy",
+  //     hourIncrement: 1,
+  //     minuteIncrement: 1,
+  //     time_24hr: false,
+  //     minDate: null,
+  //     disableWeekends: false,
+  //     disableWeekdays: false,
+  //     maxDate: null,
+  //   },
+  // }),
 
   datetime: ({ label, key, format }) => ({
     label,
-    format: format || "MM/dd/yyyy",
-    placeholder: format || "MM/dd/yyyy",
     tableView: false,
     datePicker: {
       disableWeekends: false,
-      disableWeekdays: false,
+      disableWeekdays: false
     },
-    enableTime: false,
     enableMinDateInput: false,
     enableMaxDateInput: false,
     key,
@@ -111,16 +149,16 @@ const TEMPLATES = {
       useLocaleSettings: false,
       allowInput: true,
       mode: "single",
-      enableTime: false,
+      enableTime: true,
       noCalendar: false,
-      format: format || "MM/dd/yyyy",
+      format: format || "MM-dd-yyyy",
       hourIncrement: 1,
       minuteIncrement: 1,
       time_24hr: false,
       minDate: null,
       disableWeekends: false,
       disableWeekdays: false,
-      maxDate: null,
+      maxDate: null
     },
   }),
 
@@ -148,8 +186,8 @@ const TEMPLATES = {
   }),
 
   content: ({ label, key }) => ({
-    html: "",
-    label,
+    html: label,
+    label: "Content",
     refreshOnChange: false,
     key,
     type: "content",
@@ -190,7 +228,6 @@ const TEMPLATES = {
   phoneNumber: ({ label, key }) => ({
     label,
     tableView: true,
-    inputMask: "(999) 999-9999",
     key,
     type: "phoneNumber",
     input: true,
@@ -198,12 +235,16 @@ const TEMPLATES = {
 
   currency: ({ label, key }) => ({
     label,
+    mask:false,
+    spellcheck:false,
     tableView: false,
     currency: "USD",
     inputFormat: "plain",
+    truncateMultipleSpaces: false,
     key,
     type: "currency",
     input: true,
+    delimiter:true
   }),
 
   signature: ({ label, key }) => ({
