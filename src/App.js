@@ -7,7 +7,7 @@ import WordConverter from './screens/WordConverter';
 import FormComparator from './screens/FormComparator';
 import TextConverter from './screens/TextConverter';
 import JsonFormatter from './screens/JSONFormatter';
-import AdvancedJSONComparator from './common/AdvancedJSONComparator';
+// import AdvancedJSONComparator from './common/AdvancedJSONComparator';
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
