@@ -6,10 +6,6 @@
  * When importing from Excel, each row is matched to its type and
  * merged with the template here. The "label", "key", and any
  * option values from the Excel row always override the template.
- *
- * To customise a component (e.g. add validation, change widget
- * settings, add a placeholder), edit the relevant template below.
- * New field types can be added by following the same pattern.
  */
 
 // ---------------------------------------------------------------------------
@@ -19,8 +15,7 @@
 /**
  * Parses the "Option Labels" and "Option Values" Excel columns back
  * into a Form.io values array: [{ label, value }, ...]
- *
- * Both columns use " || " as the separator (matching exportUtils.js).
+ * Both columns use " || " as the separator.
  */
 export const parseOptions = (optionLabels = "", optionValues = "") => {
   const labels = optionLabels
@@ -35,13 +30,33 @@ export const parseOptions = (optionLabels = "", optionValues = "") => {
 
   return labels.map((label, i) => ({
     label,
-    value: values[i] ?? label, // fall back to label if value column is shorter
+    value: values[i] ?? label,
   }));
 };
 
 // ---------------------------------------------------------------------------
+// Columns wrapper builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds a Form.io "columns" layout component.
+ *
+ * @param {string} key - Unique key for this wrapper (e.g. "Columns", "Columns2")
+ * @param {Array}  columnSlots - Array of slot objects, each shaped:
+ *   { components: [...], width: 6, offset: 0, push: 0, pull: 0, size: "md", currentWidth: 6 }
+ * @returns {object} Form.io columns component
+ */
+export const buildColumnsWrapper = (key, columnSlots) => ({
+  label: "Columns",
+  columns: columnSlots,
+  key,
+  type: "columns",
+  input: false,
+  tableView: false,
+});
+
+// ---------------------------------------------------------------------------
 // Base templates per type
-// Edit these to match whatever defaults your Form.io project expects.
 // ---------------------------------------------------------------------------
 
 const TEMPLATES = {
@@ -60,17 +75,7 @@ const TEMPLATES = {
     key,
     type: "textarea",
     input: true,
-
   }),
-
-  //   {
-  //   "label": "Text Area",
-  //   "autoExpand": false,
-  //   "tableView": true,
-  //   "key": "Text_Area",
-  //   "type": "textarea",
-  //   "input": true
-  // }
 
   number: ({ label, key }) => ({
     label,
@@ -85,82 +90,47 @@ const TEMPLATES = {
     input: true,
   }),
 
-
-
-
   checkbox: ({ label, key }) => ({
     label,
     tableView: false,
     key,
     type: "checkbox",
     input: true,
-
   }),
-
-  // datetime: ({ label, key, format }) => ({
-  //   label,
-  //   tableView: false,
-  //   datePicker: {
-  //     disableWeekends: false,
-  //     disableWeekdays: false,
-  //   },
-  //   enableTime: false,
-  //   enableMinDateInput: false,
-  //   enableMaxDateInput: false,
-  //   key,
-  //   type: "datetime",
-  //   input: true,
-  //   widget: {
-  //     type: "calendar",
-  //     displayInTimezone: "viewer",
-  //     locale: "en",
-  //     useLocaleSettings: false,
-  //     allowInput: true,
-  //     mode: "single",
-  //     enableTime: false,
-  //     noCalendar: false,
-  //     format: format || "MM-dd-yyyy",
-  //     hourIncrement: 1,
-  //     minuteIncrement: 1,
-  //     time_24hr: false,
-  //     minDate: null,
-  //     disableWeekends: false,
-  //     disableWeekdays: false,
-  //     maxDate: null,
-  //   },
-  // }),
 
   datetime: ({ label, key, format }) => ({
-    label,
-    tableView: false,
-    datePicker: {
-      disableWeekends: false,
-      disableWeekdays: false
-    },
-    enableMinDateInput: false,
-    enableMaxDateInput: false,
-    key,
-    type: "datetime",
-    input: true,
-    widget: {
-      type: "calendar",
-      displayInTimezone: "viewer",
-      locale: "en",
-      useLocaleSettings: false,
-      allowInput: true,
-      mode: "single",
-      enableTime: true,
-      noCalendar: false,
-      format: format || "MM-dd-yyyy",
-      hourIncrement: 1,
-      minuteIncrement: 1,
-      time_24hr: false,
-      minDate: null,
-      disableWeekends: false,
-      disableWeekdays: false,
-      maxDate: null
-    },
-  }),
+  datePicker: {
+    disableWeekdays: false,
+    disableWeekends: false,
+  },
+  enableMaxDateInput: false,
+  enableMinDateInput: false,
+  enableTime: false,
+  format: format || "MM-dd-yyyy",
+  input: true,
+  key,
+  label,
+  tableView: false,
+  type: "datetime",
+  widget: {
+    allowInput: true,
+    disableWeekdays: false,
+    disableWeekends: false,
+    displayInTimezone: "viewer",
+    enableTime: false,
+    format: format || "MM-dd-yyyy",
+    hourIncrement: 1,
+    locale: "en",
+    maxDate: null,
+    minDate: null,
+    minuteIncrement: 1,
+    mode: "single",
+    noCalendar: false,
+    time_24hr: false,
+    type: "calendar",
+    useLocaleSettings: false,
+  },
+}),
 
   select: ({ label, key, optionLabels, optionValues }) => ({
     label,
@@ -196,7 +166,7 @@ const TEMPLATES = {
   }),
 
   panel: ({ label, key }) => ({
-    title: label,   // panels use "title" as their display text
+    title: label,
     collapsible: true,
     key,
     type: "panel",
@@ -204,6 +174,21 @@ const TEMPLATES = {
     collapsed: false,
     input: false,
     tableView: false,
+    components: [],
+  }),
+
+  datagrid: ({ label, key }) => ({
+    label,
+    reorder: false,
+    addAnotherPosition: "bottom",
+    layoutFixed: false,
+    enableRowGroups: false,
+    initEmpty: false,
+    hideLabel: true,
+    tableView: false,
+    key,
+    type: "datagrid",
+    input: true,
     components: [],
   }),
 
@@ -235,8 +220,8 @@ const TEMPLATES = {
 
   currency: ({ label, key }) => ({
     label,
-    mask:false,
-    spellcheck:false,
+    mask: false,
+    spellcheck: false,
     tableView: false,
     currency: "USD",
     inputFormat: "plain",
@@ -244,7 +229,7 @@ const TEMPLATES = {
     key,
     type: "currency",
     input: true,
-    delimiter:true
+    delimiter: true,
   }),
 
   signature: ({ label, key }) => ({
@@ -260,25 +245,16 @@ const TEMPLATES = {
 // Public API
 // ---------------------------------------------------------------------------
 
-/**
- * Returns all type names that have a registered template.
- * Useful for showing the user which types are supported on import.
- */
 export const getSupportedTypes = () => Object.keys(TEMPLATES);
 
 /**
- * Builds a single Form.io component object from a flat field descriptor.
- *
- * @param {object} field - Properties extracted from an Excel row:
- *   { label, key, type, format, optionLabels, optionValues }
- * @returns {object} Form.io component JSON
+ * Builds a single Form.io component from a flat field descriptor.
  */
 export const buildComponent = (field) => {
   const { type } = field;
   const builder = TEMPLATES[type];
 
   if (!builder) {
-    // Unknown type: produce a minimal textfield and mark it
     console.warn(`[componentTemplates] Unknown type "${type}" — falling back to textfield`);
     return TEMPLATES.textfield({ ...field, label: `[${type}] ${field.label}` });
   }

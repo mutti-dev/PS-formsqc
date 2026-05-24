@@ -177,8 +177,59 @@ export const searchKeysInObject = (obj, keysToFind) => {
   return results;
 };
 
+/**
+ * Strips the trailing submit button from a components array.
+ * Matches any component where type === "button" and key === "submit"
+ * at the END of the array (only removes it if it's the last item).
+ */
+const stripTrailingSubmitButton = (components) => {
+  if (!Array.isArray(components) || components.length === 0) return components;
+  const last = components[components.length - 1];
+  if (last && last.type === "button" && last.key === "submit") {
+    return components.slice(0, -1);
+  }
+  return components;
+};
+
+/**
+ * Unwraps the outer { name, config: { components } } shell that some
+ * exports produce, and strips the trailing submit button.
+ *
+ * Handles these shapes:
+ *   { name: "...", config: { components: [...] } }   ← object config
+ *   { name: "...", config: "{ \"components\": [...] }" } ← string config
+ *   Any other shape → returned as-is (already unwrapped)
+ */
+const unwrapConfigShell = (obj) => {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return obj;
+
+  // Detect the wrapper: must have a "config" key that contains "components"
+  let configObj = null;
+
+  if (obj.config && typeof obj.config === "object" && Array.isArray(obj.config.components)) {
+    configObj = obj.config;
+  } else if (obj.config && typeof obj.config === "string") {
+    try {
+      const parsed = JSON.parse(obj.config);
+      if (parsed && Array.isArray(parsed.components)) {
+        configObj = parsed;
+      }
+    } catch {
+      // not parseable — leave as-is
+    }
+  }
+
+  if (!configObj) return obj; // no wrapper detected
+
+  return stripTrailingSubmitButton(configObj.components);
+};
+
 export const formatJsonString = (jsonObj) => {
-  return JSON.stringify(jsonObj, null, 2);
+  const cleaned = unwrapConfigShell(jsonObj);
+  if (Array.isArray(cleaned)) {
+    return cleaned.map(item => JSON.stringify(item, null, 2)).join(",\n");
+  }
+  return JSON.stringify(cleaned, null, 2);
 };
 
 export const isValidJson = (jsonString) => {

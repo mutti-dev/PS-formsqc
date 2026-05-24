@@ -256,18 +256,25 @@ export const extractSurveyValues = (jsonData) => {
       if (Array.isArray(obj)) {
         obj.forEach(traverse);
       } else {
-        if (obj.type === "survey" && Array.isArray(obj.questions)) {
-          const values = obj.questions.map((q) => ({
-            label: q.label,
-            value: q.value,
-          }));
+        if (obj.type === "survey") {
+          // questions = the rows (things being rated), e.g. "How satisfied are you?"
+          const questions = Array.isArray(obj.questions)
+            ? obj.questions.map((q) => ({ label: q.label, value: q.value }))
+            : [];
 
-          const duplicates = findDuplicateValues(values);
+          // values = the rating columns (answer options), e.g. "Excellent / Good / Poor"
+          const ratingValues = Array.isArray(obj.values)
+            ? obj.values.map((v) => ({ label: v.label, value: v.value }))
+            : [];
+
+          // Detect duplicate values inside the rating columns
+          const duplicates = findDuplicateValues(ratingValues);
 
           surveyItems.push({
             label: obj.label || "Unknown",
             key: obj.key || "Unknown",
-            questions: values,
+            questions,
+            values: ratingValues,
             duplicateValues: duplicates.length ? duplicates : null,
           });
         }

@@ -1,19 +1,27 @@
 import React, { useState } from "react";
-import { Container, Card, Button, Badge, Alert } from "react-bootstrap";
+import { Container, Card, Button, Alert } from "react-bootstrap";
 import { ClipboardCheck, Clipboard } from "react-bootstrap-icons";
 
 const PROMPT = `I'm attaching a form document. Please analyze it and create an Excel file with the following exact columns in this order:
 
-Label | Key | KeyLength | Type | Format | Option Labels | Option Values
+Label | Key | KeyLength | Type | Format | Option Labels | Option Values | Parent
 
 Column rules:
 - Label — the human-readable field name as it appears on the form (e.g. "Date of Birth")
-- Key — a programmatic key derived from the Label: replace spaces with underscores, remove all special characters except letters/numbers/underscores (e.g. "Date_of_Birth")
+- Key — a programmatic key derived from the Label: replace spaces with underscores, remove all special characters except letters/numbers/underscores (e.g. "Date_of_Birth"). It should not be greater than 120 characters. the key of Datagrid should have the key word (Data_Grid). e.g('Child_Information_Data_Grid')
 - KeyLength — the character count of the Key (e.g. 13)
-- Type — the Form.io field type. Use only these values: textfield, textarea, number, checkbox, datetime, select, radio, email, phoneNumber, currency, signature, content, panel, button
-- Format — only fill this for datetime fields (e.g. MM/dd/yyyy), leave blank for all other types
+- Type — the Form.io field type. Use only these values: textfield, textarea, number, checkbox, datetime, select, radio, email, phoneNumber, currency, signature, content, panel, datagrid
+- Format — only fill this for datetime fields (e.g. MM-dd-yyyy), leave blank for all other types
 - Option Labels — for select and radio fields only: the display options separated by " || " (e.g. Yes || No || Maybe). Leave blank for all other types.
-- Option Values — for select and radio fields only: the data values separated by " || " (e.g. yes || no || maybe). If values are the same as labels, repeat them. Leave blank for all other types.
+- Option Values — for select and radio fields only: the data values separated by " || " (e.g. Yes || No || Maybe). If values are the same as labels, repeat them. replace spaces with underscores, remove all special characters except letters/numbers/underscores (e.g. "I_Agree_to_terms_and_Condition").Leave blank for all other types.
+- Parent — the Key of the panel or datagrid this field belongs to. Leave blank for top-level components (panels, datagrids, content blocks, buttons). Every regular field must have a Parent.
+
+Hierarchy rules:
+- Panels and datagrids are top-level containers — their Parent column is blank.
+- Every field inside a panel or datagrid must have the Parent column set to the Key of its parent panel/datagrid.
+- Fields inside a panel will be automatically laid out in a 2-column grid (left + right, 6 width each).
+- Fields inside a datagrid are placed directly as rows (no column layout).
+- A datagrid can be a child of a panel — set its Parent to the panel's Key.
 
 Type mapping guide:
 - Single-line text input → textfield
@@ -29,26 +37,12 @@ Type mapping guide:
 - Signature box → signature
 - Section heading or instructional text → content
 - A collapsible group/section of fields → panel
+- A repeatable table of rows → datagrid
 - Submit or action button → button
 
 Output: Produce the result as a downloadable .xlsx file with one row per field, in the order the fields appear in the document. Do not include any extra columns or sheets.`;
 
-const TYPE_EXAMPLES = [
-  { type: "textfield",   description: "Single-line text input" },
-  { type: "textarea",    description: "Multi-line / paragraph text" },
-  { type: "number",      description: "Numeric input" },
-  { type: "checkbox",    description: "Single yes/no tick box" },
-  { type: "datetime",    description: "Date or date+time picker" },
-  { type: "select",      description: "Dropdown with multiple choices" },
-  { type: "radio",       description: "Pick-one button group" },
-  { type: "email",       description: "Email address field" },
-  { type: "phoneNumber", description: "Phone number field" },
-  { type: "currency",    description: "Dollar / currency amount" },
-  { type: "signature",   description: "Signature box" },
-  { type: "content",     description: "Section heading or instructions" },
-  { type: "panel",       description: "Collapsible group of fields" },
-  { type: "button",      description: "Submit or action button" },
-];
+
 
 export default function AIPrompt() {
   const [copied, setCopied] = useState(false);
@@ -125,88 +119,10 @@ export default function AIPrompt() {
       </Card>
 
       {/* Type reference */}
-      <Card className="shadow-sm border-0 mb-4">
-        <Card.Header>
-          <h5 className="fw-semibold mb-0">Supported Field Types</h5>
-        </Card.Header>
-        <Card.Body>
-          <div className="d-flex flex-wrap gap-2">
-            {TYPE_EXAMPLES.map(({ type, description }) => (
-              <div
-                key={type}
-                className="d-flex align-items-center gap-2 rounded px-3 py-2 border"
-                style={{ minWidth: "220px" }}
-                title={description}
-              >
-                <Badge bg="info" className="font-monospace">{type}</Badge>
-                <span className="small text-muted">{description}</span>
-              </div>
-            ))}
-          </div>
-        </Card.Body>
-      </Card>
+      
 
       {/* Excel format reference */}
-      <Card className="shadow-sm border-0 mb-4">
-        <Card.Header>
-          <h5 className="fw-semibold mb-0">Expected Excel Format</h5>
-        </Card.Header>
-        <Card.Body className="p-0">
-          <div className="table-responsive">
-            <table className="table table-bordered table-sm mb-0 font-monospace small">
-              <thead className="table-dark">
-                <tr>
-                  <th>Label</th>
-                  <th>Key</th>
-                  <th>KeyLength</th>
-                  <th>Type</th>
-                  <th>Format</th>
-                  <th>Option Labels</th>
-                  <th>Option Values</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Full Name</td>
-                  <td>Full_Name</td>
-                  <td>9</td>
-                  <td>textfield</td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>Date of Birth</td>
-                  <td>Date_of_Birth</td>
-                  <td>13</td>
-                  <td>datetime</td>
-                  <td>MM/dd/yyyy</td>
-                  <td></td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td>Gender</td>
-                  <td>Gender</td>
-                  <td>6</td>
-                  <td>radio</td>
-                  <td></td>
-                  <td>Male || Female || Other</td>
-                  <td>Male || Female || Other</td>
-                </tr>
-                <tr>
-                  <td>Program Type</td>
-                  <td>Program_Type</td>
-                  <td>12</td>
-                  <td>select</td>
-                  <td></td>
-                  <td>Option A || Option B</td>
-                  <td>option_a || option_b</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Card.Body>
-      </Card>
+      
 
       {copied && (
         <Alert
