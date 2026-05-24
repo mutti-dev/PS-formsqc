@@ -350,12 +350,12 @@ export default function JSONExtractor() {
 
       addStep("Checking for disallowed components");
       const surveys = findComponentsByType(formConfig, "survey");
-      const datagrids = findComponentsByType(formConfig, "datagrid");
+      // const datagrids = findComponentsByType(formConfig, "datagrid");
       const editgrids = findComponentsByType(formConfig, "editgrid");
 
       const disallowedErrors = [];
       if (surveys.length > 0) disallowedErrors.push(`${surveys.length} survey component(s)`);
-      if (datagrids.length > 0) disallowedErrors.push(`${datagrids.length} datagrid(s)`);
+      // if (datagrids.length > 0) disallowedErrors.push(`${datagrids.length} datagrid(s)`);
       if (editgrids.length > 0) disallowedErrors.push(`${editgrids.length} editgrid(s)`);
 
       if (disallowedErrors.length > 0) {

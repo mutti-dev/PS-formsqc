@@ -40,7 +40,12 @@ Type mapping guide:
 - A repeatable table of rows → datagrid
 - Submit or action button → button
 
-Output: Produce the result as a downloadable .xlsx file with one row per field, in the order the fields appear in the document. Do not include any extra columns or sheets.`;
+Output: Produce the result as a downloadable .xlsx file with one row per field, in the order the fields appear in the document. Do not include any extra columns or sheets.
+
+Please note that no field have same label and Key. make it meaningful according to document uploaded
+
+`;
+
 
 
 
