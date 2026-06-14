@@ -6,29 +6,94 @@ export const extractKeysAndLabels = (formObj) => {
 
     if (Array.isArray(obj)) {
       obj.forEach((item) => {
-        if (item.key && typeof item.key === "string") {
-          keysMap[item.key] = {
+        if (item && item.key && typeof item.key === "string") {
+          const entry = {
             label: item.label || "",
-            type: item.type || "unknown"
+            type: item.type || "unknown",
           };
+
+          // Capture options for select, radio, selectboxes
+          if (
+            ["select", "radio", "selectboxes"].includes(item.type) &&
+            item.data?.values &&
+            Array.isArray(item.data.values)
+          ) {
+            entry.options = item.data.values.map((v) => ({
+              label: v.label || "",
+              value: v.value || "",
+            }));
+          }
+
+          keysMap[item.key] = entry;
         }
-        traverse(item.components);
-        traverse(item.columns);
+
+        traverse(item?.components);
+
+        // columns is an array of column objects, each with a components array
+        if (Array.isArray(item?.columns)) {
+          item.columns.forEach((col) => traverse(col?.components));
+        }
       });
     } else if (typeof obj === "object" && obj !== null) {
       if (obj.key && typeof obj.key === "string") {
-        keysMap[obj.key] = {
+        const entry = {
           label: obj.label || "",
-          type: obj.type || "unknown"
+          type: obj.type || "unknown",
         };
+
+        if (
+          ["select", "radio", "selectboxes"].includes(obj.type) &&
+          obj.data?.values &&
+          Array.isArray(obj.data.values)
+        ) {
+          entry.options = obj.data.values.map((v) => ({
+            label: v.label || "",
+            value: v.value || "",
+          }));
+        }
+
+        keysMap[obj.key] = entry;
       }
+
       traverse(obj.components);
-      traverse(obj.columns);
+
+      if (Array.isArray(obj.columns)) {
+        obj.columns.forEach((col) => traverse(col?.components));
+      }
     }
   };
 
   traverse(formObj.components || formObj);
   return keysMap;
+};
+
+/**
+ * Compare two option arrays and return added/removed/changed option entries.
+ * Keyed by `value` since labels can change.
+ */
+const compareOptions = (prodOptions = [], sandboxOptions = []) => {
+  const prodMap = Object.fromEntries(prodOptions.map((o) => [o.value, o.label]));
+  const sandboxMap = Object.fromEntries(sandboxOptions.map((o) => [o.value, o.label]));
+
+  const removedOptions = [];
+  const addedOptions = [];
+  const changedOptions = [];
+
+  Object.entries(prodMap).forEach(([value, prodLabel]) => {
+    if (!(value in sandboxMap)) {
+      removedOptions.push({ value, oldLabel: prodLabel });
+    } else if (sandboxMap[value] !== prodLabel) {
+      changedOptions.push({ value, oldLabel: prodLabel, newLabel: sandboxMap[value] });
+    }
+  });
+
+  Object.entries(sandboxMap).forEach(([value, sandboxLabel]) => {
+    if (!(value in prodMap)) {
+      addedOptions.push({ value, newLabel: sandboxLabel });
+    }
+  });
+
+  return { removedOptions, addedOptions, changedOptions };
 };
 
 export const compareFormKeys = (sandboxForm, productionForm) => {
@@ -42,9 +107,10 @@ export const compareFormKeys = (sandboxForm, productionForm) => {
   };
 
   Object.entries(prodKeys).forEach(([key, prodData]) => {
-    const prodLabel = typeof prodData === 'string' ? prodData : prodData.label;
-    const prodType = typeof prodData === 'string' ? 'unknown' : prodData.type;
-    
+    const prodLabel = typeof prodData === "string" ? prodData : prodData.label;
+    const prodType = typeof prodData === "string" ? "unknown" : prodData.type;
+    const prodOptions = prodData.options || [];
+
     if (!(key in sandboxKeys)) {
       results.removedKeys.push({
         key,
@@ -54,24 +120,50 @@ export const compareFormKeys = (sandboxForm, productionForm) => {
       });
     } else {
       const sandboxData = sandboxKeys[key];
-      const sandboxLabel = typeof sandboxData === 'string' ? sandboxData : sandboxData.label;
-      
-      if (sandboxLabel !== prodLabel) {
+      const sandboxLabel = typeof sandboxData === "string" ? sandboxData : sandboxData.label;
+      const sandboxOptions = sandboxData.options || [];
+
+      const sandboxType = typeof sandboxData === "string" ? "unknown" : sandboxData.type;
+
+      const hasLabelChange = sandboxLabel !== prodLabel;
+      const hasTypeChange = sandboxType !== prodType;
+
+      // Compare options if both sides have them or one side added/removed all
+      const optionDiff =
+        prodOptions.length > 0 || sandboxOptions.length > 0
+          ? compareOptions(prodOptions, sandboxOptions)
+          : null;
+
+      const hasOptionChanges =
+        optionDiff &&
+        (optionDiff.removedOptions.length > 0 ||
+          optionDiff.addedOptions.length > 0 ||
+          optionDiff.changedOptions.length > 0);
+
+      if (hasLabelChange || hasTypeChange || hasOptionChanges) {
+        const issuesParts = [];
+        if (hasLabelChange) issuesParts.push("Label changed");
+        if (hasTypeChange) issuesParts.push("Type changed");
+        if (hasOptionChanges) issuesParts.push("Options changed");
+
         results.changedKeys.push({
           key,
           oldLabel: prodLabel,
           newLabel: sandboxLabel,
-          type: prodType,
-          issue: "Label changed",
+          oldType: prodType,
+          newType: sandboxType,
+          hasTypeChange,
+          issue: issuesParts.join(", "),
+          ...(optionDiff && { optionDiff }),
         });
       }
     }
   });
 
   Object.entries(sandboxKeys).forEach(([key, sandboxData]) => {
-    const sandboxLabel = typeof sandboxData === 'string' ? sandboxData : sandboxData.label;
-    const sandboxType = typeof sandboxData === 'string' ? 'unknown' : sandboxData.type;
-    
+    const sandboxLabel = typeof sandboxData === "string" ? sandboxData : sandboxData.label;
+    const sandboxType = typeof sandboxData === "string" ? "unknown" : sandboxData.type;
+
     if (!(key in prodKeys)) {
       results.addedKeys.push({
         key,

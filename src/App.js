@@ -7,7 +7,7 @@ import WordConverter from './screens/WordConverter';
 import FormComparator from './screens/FormComparator';
 import TextConverter from './screens/TextConverter';
 
-import AdvancedJSONComparator from './common/AdvancedJSONComparator';
+import AdvancedJSONComparator from './screens/AdvancedJSONComparator';
 import AIPrompt from './screens/AIPrompt';
 
 function App() {
