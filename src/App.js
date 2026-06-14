@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import SideDrawer from './common/SideDrawer';
 import JSONExtractor from './screens/JSONExtractor';
 import WordConverter from './screens/WordConverter';
-import FormComparator from './screens/FormComparator';
+
 import TextConverter from './screens/TextConverter';
 
 import AdvancedJSONComparator from './screens/AdvancedJSONComparator';
@@ -50,9 +50,9 @@ function App() {
             <Routes>
               <Route path="/JsonExtractor" element={<JSONExtractor />} />
               <Route path="/Converter" element={<WordConverter />} />
-              <Route path="/FormComparator" element={<FormComparator theme={theme} />} />
+
               <Route path="/AdvancedJSONComparator" element={<AdvancedJSONComparator theme={theme} />} />
-              {/* <Route path="/Jsonformatter" element={<JsonFormatter />} /> */}
+   
               <Route path="/TextConverter" element={<TextConverter />} />
               <Route path="/AIPrompt" element={<AIPrompt />} />
               <Route path="*" element={<Navigate to="/JsonExtractor" replace />} />

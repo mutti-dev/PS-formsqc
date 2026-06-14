@@ -17,25 +17,19 @@ import {
 import {
   compareFormKeys,
 } from "../utils/keyComparisonUtil";
-import "./AdvancedJSONComparator.css";
+import "../css/AdvancedJSONComparator.css";
 
 export default function AdvancedJSONComparator({ theme = "dark" }) {
   const [sourceJson, setSourceJson] = useState("");
   const [targetJson, setTargetJson] = useState("");
-  // const [ignoreKeys, setIgnoreKeys] = useState("timestamp,id,uuid");
   const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState("");
   // const [hoveredPath, setHoveredPath] = useState(null);
   const [diffs, setDiffs] = useState([]);
   const [keyComparison, setKeyComparison] = useState(null);
-  // const [expandedPaths, setExpandedPaths] = useState(new Set(["root"]));
 
-  // const ignoreList = useMemo(() => {
-  //   return ignoreKeys
-  //     .split(",")
-  //     .map((k) => k.trim())
-  //     .filter(Boolean);
-  // }, [ignoreKeys]);
+
+
 
   const performComparison = useCallback(async () => {
     setError("");
@@ -87,14 +81,6 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     }
   }, [sourceJson, targetJson]);
 
-  // const resetComparison = useCallback(() => {
-  //   setSourceJson("");
-  //   setTargetJson("");
-  //   setDiffs([]);
-  //   setError("");
-  //   setHoveredPath(null);
-  //   setKeyComparison(null);
-  // }, [setHoveredPath]);
 
   // ---------------------------------------------------------------------------
   // Option diff renderer — shown inside Modified items for select/radio fields
