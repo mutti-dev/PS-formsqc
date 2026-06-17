@@ -889,7 +889,7 @@ export default function JSONExtractor() {
                       {validationIssues.length > 0 && (
                         <Button
                           variant="link"
-                          className="text-white"
+                          
                           size="sm"
                           onClick={() => setShowValidationIssues(!showValidationIssues)}
                         >
@@ -898,7 +898,7 @@ export default function JSONExtractor() {
                       )}
                       <Button
                         variant="link"
-                        className="text-white"
+                        
                         size="sm"
                         onClick={() => setShowDebug(!showDebug)}
                       >
