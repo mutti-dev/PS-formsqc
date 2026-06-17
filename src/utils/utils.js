@@ -1,9 +1,17 @@
+// ============================================================
+// Label → Key conversion (shared convention)
+// ============================================================
+export const convertLabelToKey = (label) => {
+  if (!label) return "";
+  return label
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9_]/g, "");
+};
 
-
-
-
-
-
+// ============================================================
+// extractLabelsFromJSON
+// ============================================================
 export function extractLabelsFromJSON(json, currentPath = [], results = []) {
   if (json && typeof json === "object") {
     if (json.label && json.type) {
@@ -11,7 +19,7 @@ export function extractLabelsFromJSON(json, currentPath = [], results = []) {
         label: json.label,
         key: json.key,
         type: json.type,
-        path: [...currentPath],  // Clone path
+        path: [...currentPath],
       };
       if (json.type === "datetime" && json.format) {
         entry.format = json.format;
@@ -22,7 +30,7 @@ export function extractLabelsFromJSON(json, currentPath = [], results = []) {
       results.push(entry);
     }
 
-    Object.keys(json).forEach((key, index) => {
+    Object.keys(json).forEach((key) => {
       const prop = json[key];
       if (Array.isArray(prop)) {
         prop.forEach((item, idx) => {
@@ -36,48 +44,33 @@ export function extractLabelsFromJSON(json, currentPath = [], results = []) {
   return results;
 }
 
-
-
-
-
+// ============================================================
+// extractConditions
+// ============================================================
 export function extractConditions(json) {
   const results = [];
 
   function traverse(obj, path = []) {
     if (obj && typeof obj === "object") {
-
-      // ✅ Handle simple conditional object
       if (
         obj.conditional &&
         typeof obj.conditional === "object" &&
         obj.conditional.when
       ) {
         const { show, when, eq } = obj.conditional;
-
         results.push({
           key: obj.key || "unknown",
           label: obj.label || obj.title || "Unnamed",
           path: [...path],
-          conditions: [
-            {
-              type: "simpleConditional",
-              show,
-              when,
-              eq,
-            },
-          ],
+          conditions: [{ type: "simpleConditional", show, when, eq }],
           affectedFields: [when],
         });
       }
 
-      // Continue traversal
       Object.keys(obj).forEach((key) => {
         const prop = obj[key];
-
         if (Array.isArray(prop)) {
-          prop.forEach((item, idx) =>
-            traverse(item, [...path, key, idx])
-          );
+          prop.forEach((item, idx) => traverse(item, [...path, key, idx]));
         } else if (typeof prop === "object" && prop !== null) {
           traverse(prop, [...path, key]);
         }
@@ -89,56 +82,75 @@ export function extractConditions(json) {
   return results;
 }
 
-
-
-
+// ============================================================
+// findDuplicateValues (internal helper)
+// ============================================================
 const findDuplicateValues = (values) => {
   const valueMap = {};
   values.forEach(({ label, value }) => {
     if (!valueMap[value]) valueMap[value] = [];
     valueMap[value].push(label);
   });
-
-  // Collect only those values that have multiple labels
   return Object.entries(valueMap)
     .filter(([_, labels]) => labels.length > 1)
     .map(([value, labels]) => ({ value, labels }));
 };
 
+// ============================================================
+// Mismatch detection for select / radio option values
+// Checks: convertLabelToKey(option.label) !== option.value
+// ============================================================
+const findOptionMismatches = (values) => {
+  return values
+    .filter((v) => {
+      const expected = convertLabelToKey(v.label);
+      return expected && v.value !== expected;
+    })
+    .map((v) => ({
+      label: v.label,
+      value: v.value,
+      expected: convertLabelToKey(v.label),
+    }));
+};
 
-
+// ============================================================
+// extractSelectValues
+// ============================================================
 export const extractSelectValues = (jsonData) => {
   const selectItems = [];
 
-  const traverse = (obj) => {
+  const traverse = (obj, path = []) => {
     if (obj && typeof obj === "object") {
       if (Array.isArray(obj)) {
-        obj.forEach(traverse);
+        obj.forEach((item, idx) => traverse(item, [...path, idx]));
       } else {
         if (obj.type === "select" && obj.data?.values) {
           const values = obj.data.values.map((v) => ({
             label: v.label,
             value: v.value,
           }));
-
-          const duplicates = findDuplicateValues(values);
-
           selectItems.push({
             label: obj.label || "Unknown",
             key: obj.key || "Unknown",
+            path: [...path],         // path to the select component itself
             values,
-            duplicateValues: duplicates.length ? duplicates : null,
+            duplicateValues: findDuplicateValues(values) || null,
+            mismatchedValues: findOptionMismatches(values),
           });
         }
-
-        Object.values(obj).forEach(traverse);
+        Object.entries(obj).forEach(([k, v]) => {
+          if (Array.isArray(v)) {
+            v.forEach((item, idx) => traverse(item, [...path, k, idx]));
+          } else if (v && typeof v === "object") {
+            traverse(v, [...path, k]);
+          }
+        });
       }
     }
   };
 
   try {
-    const parsed =
-      typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+    const parsed = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
     traverse(parsed);
   } catch (e) {
     console.error("Error parsing JSON for select values:", e);
@@ -147,7 +159,9 @@ export const extractSelectValues = (jsonData) => {
   return selectItems;
 };
 
-// 🟢 Main: Extract SURVEY components and detect duplicate values
+// ============================================================
+// extractSurveyValues
+// ============================================================
 export const extractSurveyValues = (jsonData) => {
   const surveyItems = [];
 
@@ -157,19 +171,13 @@ export const extractSurveyValues = (jsonData) => {
         obj.forEach(traverse);
       } else {
         if (obj.type === "survey") {
-          // questions = the rows (things being rated), e.g. "How satisfied are you?"
           const questions = Array.isArray(obj.questions)
             ? obj.questions.map((q) => ({ label: q.label, value: q.value }))
             : [];
-
-          // values = the rating columns (answer options), e.g. "Excellent / Good / Poor"
           const ratingValues = Array.isArray(obj.values)
             ? obj.values.map((v) => ({ label: v.label, value: v.value }))
             : [];
-
-          // Detect duplicate values inside the rating columns
           const duplicates = findDuplicateValues(ratingValues);
-
           surveyItems.push({
             label: obj.label || "Unknown",
             key: obj.key || "Unknown",
@@ -178,15 +186,13 @@ export const extractSurveyValues = (jsonData) => {
             duplicateValues: duplicates.length ? duplicates : null,
           });
         }
-
         Object.values(obj).forEach(traverse);
       }
     }
   };
 
   try {
-    const parsed =
-      typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+    const parsed = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
     traverse(parsed);
   } catch (e) {
     console.error("Error parsing JSON for survey values:", e);
@@ -195,46 +201,38 @@ export const extractSurveyValues = (jsonData) => {
   return surveyItems;
 };
 
-
-
-// Extract RADIO components and detect duplicate values
+// ============================================================
+// extractRadioValues
+// ============================================================
 export const extractRadioValues = (jsonData) => {
   const radioItems = [];
 
-  const findDuplicateValues = (values) => {
-    const valueMap = {};
-    values.forEach(({ label, value }) => {
-      if (!valueMap[value]) valueMap[value] = [];
-      valueMap[value].push(label);
-    });
-
-    return Object.entries(valueMap)
-      .filter(([_, labels]) => labels.length > 1)
-      .map(([value, labels]) => ({ value, labels }));
-  };
-
-  const traverse = (obj) => {
+  const traverse = (obj, path = []) => {
     if (obj && typeof obj === "object") {
       if (Array.isArray(obj)) {
-        obj.forEach(traverse);
+        obj.forEach((item, idx) => traverse(item, [...path, idx]));
       } else {
         if (obj.type === "radio" && Array.isArray(obj.values)) {
           const values = obj.values.map((v) => ({
             label: v.label,
-            value: v.value || v.label, // fallback if value missing
+            value: v.value || v.label,
           }));
-
-          const duplicates = findDuplicateValues(values);
-
           radioItems.push({
             label: obj.label || "Unknown Radio",
             key: obj.key || "unknown_key",
+            path: [...path],         // path to the radio component itself
             values,
-            duplicateValues: duplicates.length ? duplicates : null,
+            duplicateValues: findDuplicateValues(values) || null,
+            mismatchedValues: findOptionMismatches(values),
           });
         }
-
-        Object.values(obj).forEach(traverse);
+        Object.entries(obj).forEach(([k, v]) => {
+          if (Array.isArray(v)) {
+            v.forEach((item, idx) => traverse(item, [...path, k, idx]));
+          } else if (v && typeof v === "object") {
+            traverse(v, [...path, k]);
+          }
+        });
       }
     }
   };
@@ -249,7 +247,9 @@ export const extractRadioValues = (jsonData) => {
   return radioItems;
 };
 
-// Deep compare two arrays of extracted entries (by label) and return report differences.
+// ============================================================
+// deepCompareJSON
+// ============================================================
 export function deepCompareJSON(data1, data2) {
   let report = [];
   const map1 = {};
@@ -257,7 +257,6 @@ export function deepCompareJSON(data1, data2) {
   const map2 = {};
   data2.forEach((item) => (map2[item.label] = item.type));
 
-  // Find keys in data1 missing or different in data2
   Object.keys(map1).forEach((key) => {
     if (!(key in map2)) {
       report.push({ issue: "Missing in JSON 2", details: key });
@@ -269,7 +268,6 @@ export function deepCompareJSON(data1, data2) {
     }
   });
 
-  // Find keys in data2 that are missing in JSON1
   Object.keys(map2).forEach((key) => {
     if (!(key in map1)) {
       report.push({ issue: "Missing in JSON 1", details: key });
@@ -279,9 +277,9 @@ export function deepCompareJSON(data1, data2) {
   return report;
 }
 
-// utils/textUtils.js
-
-// ✅ Copy text to clipboard (with fallback)
+// ============================================================
+// copyToClipboard
+// ============================================================
 export const copyToClipboard = (text) => {
   if (!text) return;
   try {
@@ -296,21 +294,15 @@ export const copyToClipboard = (text) => {
   }
 };
 
-// ✅ Standard conversion
 export const convertText = (input) => {
   if (!input) return "";
   return input
-    .replace(/[^a-zA-Z0-9]+/g, "_") // replace non-alphanumeric with "_"
-    .replace(/^(\d+)/, ""); // remove leading numbers
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^(\d+)/, "");
 };
 
-// ✅ Limited characters conversion (with trimming & length limit)
 export const limitText = (input, maxLength = 110) => {
   let converted = convertText(input);
-
-  // Remove leading/trailing underscores
   converted = converted.replace(/^_+|_+$/g, "");
-
-  // Limit to maxLength characters
   return converted.slice(0, maxLength);
 };

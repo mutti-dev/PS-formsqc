@@ -5,6 +5,7 @@ import {
   extractSurveyValues,
   extractRadioValues,
   extractConditions,
+  convertLabelToKey,
 } from "../utils/utils";
 import {
   Container,
@@ -56,82 +57,26 @@ import {
 } from "@tanstack/react-table";
 
 const RESERVED_COLUMNS = [
-  "ProgramDesire",
-  "CallTrackId",
-  "Comments",
-  "RawComments",
-  "hdnSaveAsTemplates",
-  "Caption",
-  "VictimId",
-  "FirstName",
-  "MiddleName",
-  "LastName",
-  "DOB",
-  "HiddenSSN",
-  "SSN",
-  "Street_Address",
-  "Apartment",
-  "City",
-  "ZipCode",
-  "County",
-  "State",
-  "StateShortName",
-  "Country",
-  "Mobile",
-  "PhoneNo",
-  "AlternateContactNo",
-  "Email",
-  "AlternateEmail",
-  "EmergencyContactName",
-  "EmergencyContactNo",
-  "EmergencyContactRelationship",
-  "EducationLevel",
-  "Veteran",
-  "Disabled",
-  "strHouseholdMarketRent",
-  "strHouseholdResidentRent",
-  "strBalanceDue",
-  "HouseholdLeasestart",
-  "HouseholdLeaseEnd",
-  "CareStartDate",
-  "CareEndDate",
-  "CareAmount",
-  "CaseNumber",
-  "ProjectPhaseId",
-  "StartDate",
-  "ProjectTemplateId",
-  "cmbProjectCaseLead",
-  "coLocation",
-  "PublishedFlag",
-  "CustomerId",
-  "IsHouseHold",
-  "RawStartDate",
-  "ResourceId",
-  "cmbProjectCategories",
-  "cmbProjectTeams",
-  "cmbProjectOwners",
-  "cmbProgramsTemplates",
-  "CaseId",
-  "ProjectId",
-  "IntakeStatusId",
-  "CreationTime",
-  "Creator",
+  "ProgramDesire","CallTrackId","Comments","RawComments","hdnSaveAsTemplates",
+  "Caption","VictimId","FirstName","MiddleName","LastName","DOB","HiddenSSN",
+  "SSN","Street_Address","Apartment","City","ZipCode","County","State",
+  "StateShortName","Country","Mobile","PhoneNo","AlternateContactNo","Email",
+  "AlternateEmail","EmergencyContactName","EmergencyContactNo",
+  "EmergencyContactRelationship","EducationLevel","Veteran","Disabled",
+  "strHouseholdMarketRent","strHouseholdResidentRent","strBalanceDue",
+  "HouseholdLeasestart","HouseholdLeaseEnd","CareStartDate","CareEndDate",
+  "CareAmount","CaseNumber","ProjectPhaseId","StartDate","ProjectTemplateId",
+  "cmbProjectCaseLead","coLocation","PublishedFlag","CustomerId","IsHouseHold",
+  "RawStartDate","ResourceId","cmbProjectCategories","cmbProjectTeams",
+  "cmbProjectOwners","cmbProgramsTemplates","CaseId","ProjectId",
+  "IntakeStatusId","CreationTime","Creator",
 ];
-
-const convertLabelToKey = (label) => {
-  if (!label) return "";
-  return label
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_]/g, "");
-};
 
 const validateFormStructure = (labels, selectValues, radioValues, formConfig, formType = "Form") => {
   const issues = [];
 
   labels.forEach((entry) => {
     if (entry.type === "content" || entry.type === "columns") return;
-
     const fieldLabel = entry.type === "panel" ? entry.title : entry.label;
     const fieldKey = entry.key;
 
@@ -162,21 +107,13 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig, fo
 
   selectValues.forEach((entry) => {
     if (!entry.options || !Array.isArray(entry.options)) return;
-
     const duplicateOptions = {};
     entry.options.forEach((option) => {
       const key = `${option.label}|${option.value}`;
-      if (duplicateOptions[key]) {
-        duplicateOptions[key].count++;
-      } else {
-        duplicateOptions[key] = {
-          count: 1,
-          label: option.label,
-          value: option.value,
-        };
-      }
+      duplicateOptions[key] = duplicateOptions[key]
+        ? { ...duplicateOptions[key], count: duplicateOptions[key].count + 1 }
+        : { count: 1, label: option.label, value: option.value };
     });
-
     Object.values(duplicateOptions).forEach((opt) => {
       if (opt.count > 1) {
         issues.push({
@@ -191,21 +128,13 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig, fo
 
   radioValues.forEach((entry) => {
     if (!entry.values || !Array.isArray(entry.values)) return;
-
     const duplicateOptions = {};
     entry.values.forEach((option) => {
       const key = `${option.label}|${option.value}`;
-      if (duplicateOptions[key]) {
-        duplicateOptions[key].count++;
-      } else {
-        duplicateOptions[key] = {
-          count: 1,
-          label: option.label,
-          value: option.value,
-        };
-      }
+      duplicateOptions[key] = duplicateOptions[key]
+        ? { ...duplicateOptions[key], count: duplicateOptions[key].count + 1 }
+        : { count: 1, label: option.label, value: option.value };
     });
-
     Object.values(duplicateOptions).forEach((opt) => {
       if (opt.count > 1) {
         issues.push({
@@ -221,17 +150,82 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig, fo
   return issues;
 };
 
+// ─────────────────────────────────────────────────────────────
+// Deep path helpers
+// ─────────────────────────────────────────────────────────────
+
+/** Read a value from a nested object using a path array */
+const getByPath = (obj, path) => {
+  let cur = obj;
+  for (const seg of path) {
+    if (cur == null) return undefined;
+    cur = cur[seg];
+  }
+  return cur;
+};
+
+/** Immutably set a value in a nested object using a path array */
+const setByPath = (obj, path, value) => {
+  if (path.length === 0) return value;
+  const [head, ...tail] = path;
+  if (Array.isArray(obj)) {
+    const copy = [...obj];
+    copy[head] = setByPath(copy[head], tail, value);
+    return copy;
+  }
+  return { ...obj, [head]: setByPath(obj[head], tail, value) };
+};
+
+/**
+ * Walk every node in the JSON tree and update conditional.when
+ * from oldKey to newKey.
+ */
+/**
+ * Walk every node and replace conditional.when === oldKey with newKey.
+ * Returns { updated: <new obj>, patches: [{fieldKey, fieldLabel, oldWhen, newWhen}] }
+ */
+const updateConditionalsInJson = (obj, oldKey, newKey, patches = []) => {
+  if (!obj || typeof obj !== "object") return { updated: obj, patches };
+
+  if (Array.isArray(obj)) {
+    const updatedArr = obj.map((item) => {
+      const res = updateConditionalsInJson(item, oldKey, newKey, patches);
+      return res.updated;
+    });
+    return { updated: updatedArr, patches };
+  }
+
+  const result = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (k === "conditional" && v && typeof v === "object" && v.when === oldKey) {
+      result[k] = { ...v, when: newKey };
+      patches.push({
+        fieldKey:   obj.key   || "unknown",
+        fieldLabel: obj.label || obj.title || "Unnamed",
+        oldWhen:    oldKey,
+        newWhen:    newKey,
+      });
+    } else if (v && typeof v === "object") {
+      const res = updateConditionalsInJson(v, oldKey, newKey, patches);
+      result[k] = res.updated;
+    } else {
+      result[k] = v;
+    }
+  }
+  return { updated: result, patches };
+};
+
+// ─────────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────────
+
 export default function JSONExtractor() {
   const [jsonInput, setJsonInput] = useState("");
   const [searchKeys, setSearchKeys] = useState("");
   const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
   const [formType, setFormType] = useState("Form");
   const [hiddenTypes, setHiddenTypes] = useState([
-    "columns",
-    "content",
-    "container",
-    "panel",
-    "button",
+    "columns","content","container","panel","button",
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -239,15 +233,21 @@ export default function JSONExtractor() {
   const [showDebug, setShowDebug] = useState(false);
   const [showValidationIssues, setShowValidationIssues] = useState(true);
 
-  // --- Import from Excel state ---
   const [importWarnings, setImportWarnings] = useState([]);
-  const [isImporting, setIsImporting]       = useState(false);
-  const importFileRef                        = React.useRef(null);
-  // --------------------------------
+  const [isImporting, setIsImporting] = useState(false);
+  const importFileRef    = React.useRef(null);
+  // Stores the extracted formConfig object so all path-based edits
+  // are relative to it, not to the raw fullParsedJson wrapper.
+  const formConfigRef    = React.useRef(null);
+  // Stores the path from fullParsedJson root → formConfig node,
+  // so we can write the updated formConfig back into the wrapper.
+  const formConfigPathRef = React.useRef([]);
 
   const [extractedData, setExtractedData] = useState(null);
   const [fullParsedJson, setFullParsedJson] = useState(null);
   const [validationIssues, setValidationIssues] = useState([]);
+  // Tracks which conditional.when fields were auto-patched in the last key fix
+  const [conditionalPatches, setConditionalPatches] = useState([]);
 
   const addStep = (step, success = true, details = "") => {
     setParsingSteps((prev) => [
@@ -264,24 +264,17 @@ export default function JSONExtractor() {
     setValidationIssues([]);
   };
 
-  // --- Import from Excel handler ---
+  // ── Import from Excel ────────────────────────────────────
   const handleImportExcel = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Reset the input so the same file can be re-selected if needed
     e.target.value = "";
-
     setImportWarnings([]);
     setIsImporting(true);
     resetResults();
-
     try {
       const { formJson, warnings } = await importFromExcel(file);
-
-      const formatted = JSON.stringify(formJson, null, 2);
-      setJsonInput(formatted);
-
+      setJsonInput(JSON.stringify(formJson, null, 2));
       if (warnings.length > 0) setImportWarnings(warnings);
     } catch (err) {
       setError("Import failed: " + err.message);
@@ -289,14 +282,13 @@ export default function JSONExtractor() {
       setIsImporting(false);
     }
   };
-  // ----------------------------------
 
+  // ── Extract ──────────────────────────────────────────────
   const handleExtract = async () => {
     if (!jsonInput.trim()) {
       setError("Please paste your JSON data first.");
       return;
     }
-
     resetResults();
     setIsLoading(true);
 
@@ -319,29 +311,27 @@ export default function JSONExtractor() {
           "• The key is not 'components'"
         );
       }
-
       if (!formConfig.components || !Array.isArray(formConfig.components)) {
         throw new Error("Form configuration found but missing 'components' array.");
       }
       addStep("Form configuration located", true, `${formConfig.components.length} top-level components found`);
 
-      // NON-BLOCKING VALIDATIONS
       addStep("Validating container structure");
       const containers = findComponentsByType(formConfig, "container");
       const containerErrors = [];
-
       if (containers.length !== 1) {
         containerErrors.push(`Expected exactly 1 container, found ${containers.length}`);
       } else {
         const mainContainer = containers[0];
         if (mainContainer.label !== "Container" || mainContainer.key !== "Container") {
-          containerErrors.push(`Container must have label/key = 'Container'. Got: label="${mainContainer.label}", key="${mainContainer.key}"`);
+          containerErrors.push(
+            `Container must have label/key = 'Container'. Got: label="${mainContainer.label}", key="${mainContainer.key}"`
+          );
         }
         if (formConfig !== mainContainer) {
           containerErrors.push("The root object should be the Container itself");
         }
       }
-
       if (containerErrors.length > 0) {
         addStep("Container validation", false, containerErrors.join("; "));
       } else {
@@ -350,21 +340,16 @@ export default function JSONExtractor() {
 
       addStep("Checking for disallowed components");
       const surveys = findComponentsByType(formConfig, "survey");
-      // const datagrids = findComponentsByType(formConfig, "datagrid");
       const editgrids = findComponentsByType(formConfig, "editgrid");
-
       const disallowedErrors = [];
       if (surveys.length > 0) disallowedErrors.push(`${surveys.length} survey component(s)`);
-      // if (datagrids.length > 0) disallowedErrors.push(`${datagrids.length} datagrid(s)`);
       if (editgrids.length > 0) disallowedErrors.push(`${editgrids.length} editgrid(s)`);
-
       if (disallowedErrors.length > 0) {
         addStep("Disallowed components check", false, `Found: ${disallowedErrors.join(", ")}`);
       } else {
         addStep("Disallowed components check", true, "No disallowed components found");
       }
 
-      // CONTINUE EXTRACTION
       addStep("Extracting field labels and keys");
       const labels = extractLabelsFromJSON(formConfig, [], []);
       addStep("Label extraction", true, `${labels.length} fields extracted`);
@@ -372,7 +357,11 @@ export default function JSONExtractor() {
       addStep("Parsing full JSON for analysis");
       const parsedFull = deepParse(JSON.parse(jsonInput));
       setFullParsedJson(parsedFull);
-      const depth = Math.max(1, ...Object.values(parsedFull).map(v => calculateDepth(v, 1)));
+      const depth = Math.max(1, ...Object.values(parsedFull).map((v) => calculateDepth(v, 1)));
+
+      // Record formConfig and its path inside parsedFull so edits stay in sync
+      formConfigRef.current     = formConfig;
+      formConfigPathRef.current = findPathToFormConfig(parsedFull, formConfig);
 
       addStep("Extracting dropdown/radio/survey options");
       const selectValues = extractSelectValues(formConfig);
@@ -391,31 +380,27 @@ export default function JSONExtractor() {
       let searchResults = [];
       if (searchKeys.trim()) {
         addStep("Searching for specified keys");
-        const keys = searchKeys.split(",").map(k => k.trim()).filter(Boolean);
+        const keys = searchKeys.split(",").map((k) => k.trim()).filter(Boolean);
         searchResults = searchKeysInObject(parsedFull, keys);
         addStep(
           "Key search completed",
           true,
-          `${searchResults.filter(r => r.found).length}/${keys.length} keys found`
+          `${searchResults.filter((r) => r.found).length}/${keys.length} keys found`
         );
       }
 
       addStep("Validating form structure and field integrity");
       const issues = validateFormStructure(labels, selectValues, radioValues, formConfig, formType);
-      const errorIssues = issues.filter(i => i.severity === "error");
-      if (errorIssues.length > 0) {
-        addStep(
-          "Form structure validation",
-          false,
-          `Found ${errorIssues.length} critical issue(s)`
-        );
-      } else {
-        addStep(
-          "Form structure validation",
-          true,
-          issues.length > 0 ? `Found ${issues.length} warning(s)` : "No issues found"
-        );
-      }
+      const errorIssues = issues.filter((i) => i.severity === "error");
+      addStep(
+        "Form structure validation",
+        errorIssues.length === 0,
+        errorIssues.length > 0
+          ? `Found ${errorIssues.length} critical issue(s)`
+          : issues.length > 0
+          ? `Found ${issues.length} warning(s)`
+          : "No issues found"
+      );
       setValidationIssues(issues);
 
       addStep("Extraction completed!", true, "Results ready below");
@@ -446,29 +431,157 @@ export default function JSONExtractor() {
 
   const findComponentsByType = (obj, type, results = []) => {
     if (obj.type === type) results.push(obj);
-    if (obj.components) obj.components.forEach(comp => findComponentsByType(comp, type, results));
-    if (obj.columns) obj.columns.forEach(col => col.components && col.components.forEach(comp => findComponentsByType(comp, type, results)));
+    if (obj.components)
+      obj.components.forEach((comp) => findComponentsByType(comp, type, results));
+    if (obj.columns)
+      obj.columns.forEach(
+        (col) => col.components && col.components.forEach((comp) => findComponentsByType(comp, type, results))
+      );
     return results;
   };
 
-  const updateJsonField = (path, field, newValue) => {
-    const updatedJson = { ...fullParsedJson };
-    let current = updatedJson;
-    for (let i = 0; i < path.length - 1; i++) current = current[path[i]];
-    current[path[path.length - 1]][field] = newValue;
-    setFullParsedJson(updatedJson);
-    setJsonInput(formatJsonString(updatedJson));
-    const newFormConfig = extractFormJson(JSON.stringify(updatedJson));
-    const newLabels = extractLabelsFromJSON(newFormConfig, [], []);
-    setExtractedData(prev => ({ ...prev, labels: newLabels }));
+  /**
+   * Walk parsedFull to find the path array that leads to the formConfig node.
+   * Uses reference equality — formConfig must be the exact object from parsedFull.
+   * Returns [] if formConfig IS parsedFull (no wrapping).
+   */
+  const findPathToFormConfig = (root, target) => {
+    if (root === target) return [];
+    const search = (obj, path) => {
+      if (!obj || typeof obj !== "object") return null;
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          if (obj[i] === target) return [...path, i];
+          const found = search(obj[i], [...path, i]);
+          if (found) return found;
+        }
+      } else {
+        for (const [k, v] of Object.entries(obj)) {
+          if (v === target) return [...path, k];
+          const found = search(v, [...path, k]);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return search(root, []) || [];
   };
 
   const calculateDepth = (obj, current = 0) => {
     if (!obj || typeof obj !== "object") return current;
-    if (Array.isArray(obj)) return obj.length > 0 ? Math.max(...obj.map(item => calculateDepth(item, current + 1))) : current;
-    return Object.values(obj).length > 0 ? Math.max(...Object.values(obj).map(v => calculateDepth(v, current + 1))) : current;
+    if (Array.isArray(obj))
+      return obj.length > 0
+        ? Math.max(...obj.map((item) => calculateDepth(item, current + 1)))
+        : current;
+    return Object.values(obj).length > 0
+      ? Math.max(...Object.values(obj).map((v) => calculateDepth(v, current + 1)))
+      : current;
   };
 
+  // ─────────────────────────────────────────────────────────
+  // Central JSON update — rebuilds fullParsedJson, jsonInput,
+  // extractedData after any edit.
+  // ─────────────────────────────────────────────────────────
+  /**
+   * updatedFormConfig — the already-modified formConfig node.
+   * Writes it back into fullParsedJson at formConfigPathRef, then
+   * refreshes all derived state.
+   */
+  const applyJsonUpdate = (updatedFormConfig, patches = []) => {
+    formConfigRef.current = updatedFormConfig;
+
+    // Write the updated formConfig back into the full JSON wrapper
+    const cfgPath   = formConfigPathRef.current;
+    const newFull   = cfgPath.length === 0
+      ? updatedFormConfig
+      : setByPath(fullParsedJson, cfgPath, updatedFormConfig);
+
+    setFullParsedJson(newFull);
+    setJsonInput(formatJsonString(newFull));
+    setConditionalPatches(patches);
+
+    const newLabels     = extractLabelsFromJSON(updatedFormConfig, [], []);
+    const newSelect     = extractSelectValues(updatedFormConfig);
+    const newRadio      = extractRadioValues(updatedFormConfig);
+    const newSurvey     = extractSurveyValues(updatedFormConfig);
+    const newConditions = extractConditions(updatedFormConfig);
+
+    setExtractedData((prev) => ({
+      ...prev,
+      labels:       newLabels,
+      selectValues: newSelect,
+      radioValues:  newRadio,
+      surveyValues: newSurvey,
+      conditions:   newConditions,
+    }));
+  };
+
+  // ── Update a field's label or key ────────────────────────
+  // Also auto-updates conditional.when when the key changes.
+  const updateJsonField = (path, field, newValue) => {
+    const base = formConfigRef.current;
+    let updated = setByPath(base, [...path, field], newValue);
+    let patches = [];
+
+    if (field === "key") {
+      const oldKey = getByPath(base, [...path, "key"]);
+      if (oldKey && oldKey !== newValue) {
+        const res = updateConditionalsInJson(updated, oldKey, newValue);
+        updated = res.updated;
+        patches = res.patches;
+      }
+    }
+
+    applyJsonUpdate(updated, patches);
+  };
+
+  // ── Update a select/radio option's label or value ────────
+  // path     = path to the component (e.g. ["components", 0, ...])
+  // optIdx   = index inside data.values (select) or values (radio)
+  // field    = "label" | "value"
+  // newValue = new string
+  // kind     = "select" | "radio"
+  const updateOptionField = (path, optIdx, field, newValue, kind) => {
+    const base      = formConfigRef.current;
+    const valuesKey = kind === "select" ? ["data", "values"] : ["values"];
+    const optPath   = [...path, ...valuesKey, optIdx, field];
+
+    let updated = setByPath(base, optPath, newValue);
+    let patches = [];
+
+    if (field === "value") {
+      const oldValue = getByPath(base, [...path, ...valuesKey, optIdx, "value"]);
+      if (oldValue && oldValue !== newValue) {
+        const res = updateConditionalsInJson(updated, oldValue, newValue);
+        updated = res.updated;
+        patches = res.patches;
+      }
+    }
+
+    applyJsonUpdate(updated, patches);
+  };
+
+  // ── Fix-key button for a field ───────────────────────────
+  const fixFieldKey = (path, labelField) => {
+    const node     = getByPath(formConfigRef.current, path);
+    const label    = node?.[labelField] || "";
+    const fixedKey = convertLabelToKey(label);
+    if (!fixedKey) return;
+    updateJsonField(path, "key", fixedKey);
+  };
+
+  // ── Fix-key button for a select/radio option ─────────────
+  const fixOptionKey = (path, optIdx, kind) => {
+    const valuesKey = kind === "select" ? ["data", "values"] : ["values"];
+    const optPath   = [...path, ...valuesKey, optIdx];
+    const option    = getByPath(formConfigRef.current, optPath);
+    if (!option) return;
+    const fixedValue = convertLabelToKey(option.label);
+    if (!fixedValue) return;
+    updateOptionField(path, optIdx, "value", fixedValue, kind);
+  };
+
+  // ── Format / clear ───────────────────────────────────────
   const handleFormat = () => {
     if (!isValidJson(jsonInput)) {
       setError("Cannot format: Invalid JSON syntax");
@@ -490,21 +603,23 @@ export default function JSONExtractor() {
   };
 
   const toggleType = (type) => {
-    setHiddenTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+    setHiddenTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
   };
 
   const {
-    labels = [],
+    labels       = [],
     selectValues = [],
-    radioValues = [],
+    radioValues  = [],
     surveyValues = [],
-    conditions = [],
+    conditions   = [],
     searchResults = [],
-    jsonStats = {},
+    jsonStats    = {},
   } = extractedData || {};
 
   const filteredLabels = useMemo(() => {
-    return labels.filter(entry => {
+    return labels.filter((entry) => {
       if (hiddenTypes.includes(entry.type)) return false;
       const term = searchKeys.toLowerCase();
       return (
@@ -516,14 +631,17 @@ export default function JSONExtractor() {
     });
   }, [labels, hiddenTypes, searchKeys]);
 
-  const longKeys = useMemo(() => labels.filter(e => e.key && e.key.length > keyLengthThreshold), [labels, keyLengthThreshold]);
+  const longKeys = useMemo(
+    () => labels.filter((e) => e.key && e.key.length > keyLengthThreshold),
+    [labels, keyLengthThreshold]
+  );
 
   const duplicateLabels = useMemo(() => {
     const map = {};
-    labels.forEach(entry => {
+    labels.forEach((entry) => {
       if (entry.type === "content" || entry.type === "columns") return;
       const label = entry.type === "panel" ? entry.title : entry.label;
-      if (label && label.trim() !== "") map[label] = (map[label] || 0) + 1;
+      if (label?.trim()) map[label] = (map[label] || 0) + 1;
     });
     return Object.entries(map)
       .filter(([_, count]) => count > 1)
@@ -532,89 +650,139 @@ export default function JSONExtractor() {
 
   const duplicateKeys = useMemo(() => {
     const map = {};
-    labels.forEach(entry => {
+    labels.forEach((entry) => {
       if (entry.type === "content" || entry.type === "columns") return;
-      if (entry.key && entry.key.trim() !== "") map[entry.key] = (map[entry.key] || 0) + 1;
+      if (entry.key?.trim()) map[entry.key] = (map[entry.key] || 0) + 1;
     });
     return Object.entries(map)
       .filter(([_, count]) => count > 1)
       .map(([key, count]) => ({ key, count }));
   }, [labels]);
 
-  const uniqueTypes = [...new Set(labels.map(e => e.type))];
+  const uniqueTypes = [...new Set(labels.map((e) => e.type))];
 
-  // TANSTACK TABLE SETUP
+  // ── TanStack table ───────────────────────────────────────
   const [globalFilter, setGlobalFilter] = useState("");
+  const [columnSizing, setColumnSizing] = useState({});
 
-  const columns = useMemo(() => [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <input
-          type="checkbox"
-          checked={table.getIsAllRowsSelected()}
-          indeterminate={table.getIsSomeRowsSelected()}
-          onChange={table.getToggleAllRowsSelectedHandler()}
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={row.getIsSelected()}
-          onChange={row.getToggleSelectedHandler()}
-        />
-      ),
-      enableSorting: false,
-      size: 50,
-    },
-    {
-      accessorFn: row => row.type === "panel" ? row.title : row.label,
-      id: "label",
-      header: "Label",
-      enableSorting: true,
-    },
-    {
-      accessorKey: "key",
-      id: "key",
-      header: "Key",
-      enableSorting: true,
-    },
-    {
-      accessorFn: row => row.key?.length || 0,
-      id: "length",
-      header: "Key Length",
-      enableSorting: true,
-    },
-    {
-      accessorKey: "type",
-      id: "type",
-      header: "Type",
-      enableSorting: true,
-    },
-    {
-      accessorFn: row => row.format || "-",
-      id: "format",
-      header: "Format",
-      enableSorting: false,
-    },
-  ], []);
+  const columns = useMemo(
+    () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <input
+            type="checkbox"
+            checked={table.getIsAllRowsSelected()}
+            indeterminate={table.getIsSomeRowsSelected()}
+            onChange={table.getToggleAllRowsSelectedHandler()}
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={row.getIsSelected()}
+            onChange={row.getToggleSelectedHandler()}
+          />
+        ),
+        enableSorting: false,
+        enableResizing: false,
+        size: 40,
+      },
+      {
+        accessorFn: (row) => (row.type === "panel" ? row.title : row.label),
+        id: "label",
+        header: "Label",
+        enableSorting: true,
+        enableResizing: true,
+        size: 220,
+      },
+      {
+        accessorKey: "key",
+        id: "key",
+        header: "Key",
+        enableSorting: true,
+        enableResizing: true,
+        size: 220,
+      },
+      {
+        accessorFn: (row) => row.key?.length || 0,
+        id: "length",
+        header: "Key Length",
+        enableSorting: true,
+        enableResizing: true,
+        size: 100,
+      },
+      {
+        accessorKey: "type",
+        id: "type",
+        header: "Type",
+        enableSorting: true,
+        enableResizing: true,
+        size: 110,
+      },
+      {
+        accessorFn: (row) => row.format || "-",
+        id: "format",
+        header: "Format",
+        enableSorting: false,
+        enableResizing: true,
+        size: 100,
+      },
+      {
+        id: "actions",
+        header: "Fix Key",
+        enableSorting: false,
+        enableResizing: false,
+        cell: ({ row }) => {
+          const entry     = row.original;
+          const labelField = entry.type === "panel" ? "title" : "label";
+          const label     = entry[labelField] || "";
+          const expected  = convertLabelToKey(label);
+          const isMismatch = expected && entry.key !== expected;
+          if (!isMismatch) return null;
+          return (
+            <Button
+              size="sm"
+              variant="outline-warning"
+              title={`Fix to: ${expected}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                fixFieldKey(entry.path, labelField);
+              }}
+            >
+              Fix → <code className="ms-1">{expected}</code>
+            </Button>
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fullParsedJson, keyLengthThreshold]
+  );
 
   const table = useReactTable({
     data: filteredLabels,
     columns,
-    state: { globalFilter },
+    state: { globalFilter, columnSizing },
     onGlobalFilterChange: setGlobalFilter,
+    onColumnSizingChange: setColumnSizing,
+    columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
     enableMultiRowSelection: true,
+    enableColumnResizing: true,
   });
 
+  // ─────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────
   return (
     <Container fluid className="min-vh-100">
       <Row className="justify-content-center">
         <Col>
+          {/* ── Input card ── */}
           <Card className="shadow-sm border-0 mb-4">
             <Card.Header className="py-4">
               <h1 className="display-5 fw-bold text-center text-primary mb-0">
@@ -649,24 +817,23 @@ export default function JSONExtractor() {
                   <option value="Form">Form</option>
                   <option value="Intake">Intake</option>
                 </Form.Select>
+
                 <Button onClick={handleExtract} disabled={isLoading || !jsonInput.trim()}>
                   {isLoading ? (
-                    <>
-                      <Spinner size="sm" className="me-2" />
-                      Extracting...
-                    </>
+                    <><Spinner size="sm" className="me-2" />Extracting...</>
                   ) : (
                     "Extract & Validate"
                   )}
                 </Button>
+
                 <Button variant="outline-primary" onClick={handleFormat} disabled={!jsonInput.trim()}>
                   Format JSON
                 </Button>
+
                 <Button variant="outline-secondary" onClick={clearAll}>
                   Clear All
                 </Button>
 
-                {/* --- Import from Excel --- */}
                 <input
                   type="file"
                   accept=".xlsx"
@@ -680,15 +847,11 @@ export default function JSONExtractor() {
                   disabled={isImporting}
                 >
                   {isImporting ? (
-                    <>
-                      <Spinner size="sm" className="me-2" />
-                      Importing...
-                    </>
+                    <><Spinner size="sm" className="me-2" />Importing...</>
                   ) : (
                     "Import from Excel"
                   )}
                 </Button>
-                {/* ------------------------ */}
 
                 <Form.Control
                   type="number"
@@ -702,15 +865,22 @@ export default function JSONExtractor() {
                 <Form.Label className="mb-0 text-nowrap">Key Limit</Form.Label>
               </div>
 
+              {/* Parsing steps */}
               {parsingSteps.length > 0 && (
                 <Card className="mb-3 border">
                   <Card.Header className="d-flex justify-content-between align-items-center">
                     <div className="d-flex align-items-center gap-2">
                       <span className="fw-semibold">Validation Steps</span>
                       {validationIssues.length > 0 && (
-                        <Badge bg={validationIssues.filter(i => i.severity === "error").length > 0 ? "danger" : "warning"}>
-                          {validationIssues.filter(i => i.severity === "error").length > 0
-                            ? `${validationIssues.filter(i => i.severity === "error").length} Error(s)`
+                        <Badge
+                          bg={
+                            validationIssues.filter((i) => i.severity === "error").length > 0
+                              ? "danger"
+                              : "warning"
+                          }
+                        >
+                          {validationIssues.filter((i) => i.severity === "error").length > 0
+                            ? `${validationIssues.filter((i) => i.severity === "error").length} Error(s)`
                             : `${validationIssues.length} Warning(s)`}
                         </Badge>
                       )}
@@ -726,58 +896,90 @@ export default function JSONExtractor() {
                           {showValidationIssues ? "Hide" : "Show"} Issues
                         </Button>
                       )}
-                      <Button variant="link" className="text-white" size="sm" onClick={() => setShowDebug(!showDebug)}>
+                      <Button
+                        variant="link"
+                        className="text-white"
+                        size="sm"
+                        onClick={() => setShowDebug(!showDebug)}
+                      >
                         {showDebug ? "Hide" : "Show"} Details
                       </Button>
                     </div>
                   </Card.Header>
                   <Card.Body>
                     <ProgressBar
-                      now={(parsingSteps.filter(s => s.success).length / parsingSteps.length) * 100}
+                      now={
+                        (parsingSteps.filter((s) => s.success).length / parsingSteps.length) * 100
+                      }
                       variant={parsingSteps.at(-1)?.success ? "success" : "danger"}
                       className="mb-3"
                     />
+
                     {showValidationIssues && validationIssues.length > 0 && (
                       <div className="mb-3 pb-3 border-bottom">
-                        {validationIssues.filter(i => i.severity === "error").length > 0 && (
+                        {validationIssues.filter((i) => i.severity === "error").length > 0 && (
                           <div className="mb-3">
                             <h6 className="text-danger fw-bold mb-2">
-                              Errors ({validationIssues.filter(i => i.severity === "error").length})
+                              Errors ({validationIssues.filter((i) => i.severity === "error").length})
                             </h6>
                             <div className="list-group">
-                              {validationIssues.filter(i => i.severity === "error").map((issue, idx) => (
-                                <div key={idx} className="list-group-item bg-danger bg-opacity-10 py-2">
-                                  <div className="fw-bold text-danger small">{issue.message}</div>
-                                  {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
-                                  {issue.key && <div className="small text-muted">Key: <code>{issue.key}</code></div>}
-                                </div>
-                              ))}
+                              {validationIssues
+                                .filter((i) => i.severity === "error")
+                                .map((issue, idx) => (
+                                  <div key={idx} className="list-group-item bg-danger bg-opacity-10 py-2">
+                                    <div className="fw-bold text-danger small">{issue.message}</div>
+                                    {issue.field && (
+                                      <div className="small text-muted mt-1">Field: {issue.field}</div>
+                                    )}
+                                    {issue.key && (
+                                      <div className="small text-muted">
+                                        Key: <code>{issue.key}</code>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                             </div>
                           </div>
                         )}
-                        {validationIssues.filter(i => i.severity === "warning").length > 0 && (
+                        {validationIssues.filter((i) => i.severity === "warning").length > 0 && (
                           <div>
                             <h6 className="text-warning fw-bold mb-2">
-                              Warnings ({validationIssues.filter(i => i.severity === "warning").length})
+                              Warnings ({validationIssues.filter((i) => i.severity === "warning").length})
                             </h6>
                             <div className="list-group">
-                              {validationIssues.filter(i => i.severity === "warning").map((issue, idx) => (
-                                <div key={idx} className="list-group-item bg-warning bg-opacity-10 py-2">
-                                  <div className="fw-bold text-warning small">{issue.message}</div>
-                                  {issue.field && <div className="small text-muted mt-1">Field: {issue.field}</div>}
-                                  {issue.expected && <div className="small text-muted">Expected: <code>{issue.expected}</code></div>}
-                                </div>
-                              ))}
+                              {validationIssues
+                                .filter((i) => i.severity === "warning")
+                                .map((issue, idx) => (
+                                  <div key={idx} className="list-group-item bg-warning bg-opacity-10 py-2">
+                                    <div className="fw-bold text-warning small">{issue.message}</div>
+                                    {issue.field && (
+                                      <div className="small text-muted mt-1">Field: {issue.field}</div>
+                                    )}
+                                    {issue.expected && (
+                                      <div className="small text-muted">
+                                        Expected: <code>{issue.expected}</code>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                             </div>
                           </div>
                         )}
                       </div>
                     )}
+
                     {showDebug &&
                       parsingSteps.map((step, i) => (
-                        <div key={i} className={`small ${step.success ? "text-success" : "text-danger"}`}>
-                          <strong>{step.success ? "✓" : "✗"} {step.step}</strong>
-                          {step.details && <span className="ms-2 text-muted">— {step.details}</span>}
+                        <div
+                          key={i}
+                          className={`small ${step.success ? "text-success" : "text-danger"}`}
+                        >
+                          <strong>
+                            {step.success ? "✓" : "✗"} {step.step}
+                          </strong>
+                          {step.details && (
+                            <span className="ms-2 text-muted">— {step.details}</span>
+                          )}
                         </div>
                       ))}
                   </Card.Body>
@@ -788,7 +990,9 @@ export default function JSONExtractor() {
                 <Alert variant="warning" dismissible onClose={() => setImportWarnings([])}>
                   <Alert.Heading>Import completed with warnings</Alert.Heading>
                   <ul className="mb-0">
-                    {importWarnings.map((w, i) => <li key={i}>{w}</li>)}
+                    {importWarnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
                   </ul>
                 </Alert>
               )}
@@ -797,23 +1001,27 @@ export default function JSONExtractor() {
             </Card.Body>
           </Card>
 
+          {/* ── Results ── */}
           {extractedData && (
             <>
               <div className="d-flex justify-content-end mb-3">
                 <Button
                   variant="success"
                   size="sm"
-                  onClick={() => exportToExcel(labels, hiddenTypes, selectValues, radioValues)}
+                  onClick={() =>
+                    exportToExcel(labels, hiddenTypes, selectValues, radioValues)
+                  }
                 >
                   Export to Excel
                 </Button>
               </div>
 
-
-
               <Row>
                 <Col>
-                  <JsonStatsSection jsonStats={jsonStats} searchResults={searchResults.length > 0 ? searchResults : null} />
+                  <JsonStatsSection
+                    jsonStats={jsonStats}
+                    searchResults={searchResults.length > 0 ? searchResults : null}
+                  />
 
                   <DuplicateLabelsSection duplicateLabels={duplicateLabels} />
                   <DuplicateAPISection duplicateKeys={duplicateKeys} />
@@ -821,28 +1029,51 @@ export default function JSONExtractor() {
                   <DuplicateValuesSection selectValues={selectValues} />
                   <DuplicateRadioValuesSection radioValues={radioValues} />
                   <DuplicateSurveyValuesSection surveyValues={surveyValues} />
-                  <SelectComponentsSection selectValues={selectValues} />
-                  <RadioComponentsSection radioValues={radioValues} />
+
+                  {/* Select with inline editing + fix-key */}
+                  <SelectComponentsSection
+                    selectValues={selectValues}
+                    onUpdateOption={(path, optIdx, field, value) =>
+                      updateOptionField(path, optIdx, field, value, "select")
+                    }
+                    onFixOptionKey={(path, optIdx) => fixOptionKey(path, optIdx, "select")}
+                  />
+
+                  {/* Radio with inline editing + fix-key */}
+                  <RadioComponentsSection
+                    radioValues={radioValues}
+                    onUpdateOption={(path, optIdx, field, value) =>
+                      updateOptionField(path, optIdx, field, value, "radio")
+                    }
+                    onFixOptionKey={(path, optIdx) => fixOptionKey(path, optIdx, "radio")}
+                  />
+
                   <SurveyComponentsSection surveyValues={surveyValues} />
-                  <ConditionsSection conditions={conditions} />
-                  <TypeFilterSection uniqueTypes={uniqueTypes} hiddenTypes={hiddenTypes} onToggle={toggleType} />
+                  <ConditionsSection conditions={conditions} conditionalPatches={conditionalPatches} />
+                  <TypeFilterSection
+                    uniqueTypes={uniqueTypes}
+                    hiddenTypes={hiddenTypes}
+                    onToggle={toggleType}
+                  />
 
-
-                  {/* FEATURE-RICH TABLE */}
+                  {/* ── Fields table ── */}
                   <Card className="mt-4">
                     <Card.Header className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                       <div className="d-flex align-items-center gap-3">
                         <span className="fw-semibold">
-                          Extracted Fields ({table.getRowModel().rows.length} shown / {labels.length} total)
+                          Extracted Fields ({table.getRowModel().rows.length} shown /{" "}
+                          {labels.length} total)
                         </span>
                         {table.getSelectedRowModel().rows.length > 0 && (
                           <Button
                             size="sm"
                             variant="warning"
                             onClick={() => {
-                              const selected = table.getSelectedRowModel().rows.map(r => r.original);
+                              const selected = table
+                                .getSelectedRowModel()
+                                .rows.map((r) => r.original);
                               const json = JSON.stringify(
-                                selected.map(r => ({
+                                selected.map((r) => ({
                                   label: r.type === "panel" ? r.title : r.label,
                                   key: r.key,
                                   type: r.type,
@@ -863,11 +1094,14 @@ export default function JSONExtractor() {
                         <InputGroup.Text>🔍</InputGroup.Text>
                         <Form.Control
                           value={globalFilter ?? ""}
-                          onChange={e => setGlobalFilter(e.target.value)}
+                          onChange={(e) => setGlobalFilter(e.target.value)}
                           placeholder="Search all columns..."
                         />
                         {globalFilter && (
-                          <Button variant="outline-secondary" onClick={() => setGlobalFilter("")}>
+                          <Button
+                            variant="outline-secondary"
+                            onClick={() => setGlobalFilter("")}
+                          >
                             ×
                           </Button>
                         )}
@@ -878,41 +1112,82 @@ export default function JSONExtractor() {
                       <div className="table-responsive">
                         <table className="table table-striped table-hover mb-0 align-middle">
                           <thead className="table-dark">
-                            {table.getHeaderGroups().map(headerGroup => (
+                            {table.getHeaderGroups().map((headerGroup) => (
                               <tr key={headerGroup.id}>
-                                {headerGroup.headers.map(header => (
+                                {headerGroup.headers.map((header) => (
                                   <th
                                     key={header.id}
-                                    style={{ width: header.getSize(), cursor: header.column.getCanSort() ? "pointer" : "default" }}
+                                    style={{
+                                      width: header.getSize(),
+                                      minWidth: header.getSize(),
+                                      maxWidth: header.getSize(),
+                                      position: "relative",
+                                      cursor: header.column.getCanSort() ? "pointer" : "default",
+                                      userSelect: "none",
+                                    }}
                                     onClick={header.column.getToggleSortingHandler()}
                                   >
                                     <div className="d-flex justify-content-between align-items-center">
-                                      {flexRender(header.column.columnDef.header, header.getContext())}
+                                      {flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext()
+                                      )}
                                       {header.column.getIsSorted() && (
-                                        <span>{header.column.getIsSorted() === "asc" ? "↑" : "↓"}</span>
+                                        <span>
+                                          {header.column.getIsSorted() === "asc" ? "↑" : "↓"}
+                                        </span>
                                       )}
                                     </div>
-                                    {header.column.id !== "select" && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline-light"
-                                        className="mt-2 w-100"
-                                        onClick={() => {
-                                          const values = table.getRowModel().rows
-                                            .map(row => {
-                                              if (header.column.id === "label")
-                                                return row.original.type === "panel" ? row.original.title : row.original.label;
-                                              return row.getValue(header.column.id);
-                                            })
-                                            .filter(v => v != null && v !== "")
-                                            .join("\n");
-                                          navigator.clipboard.writeText(values);
-                                          alert(`Copied all "${header.column.columnDef.header}" values!`);
+                                    {header.column.id !== "select" &&
+                                      header.column.id !== "actions" && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline-light"
+                                          className="mt-2 w-100"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const values = table
+                                              .getRowModel()
+                                              .rows.map((row) => {
+                                                if (header.column.id === "label")
+                                                  return row.original.type === "panel"
+                                                    ? row.original.title
+                                                    : row.original.label;
+                                                return row.getValue(header.column.id);
+                                              })
+                                              .filter((v) => v != null && v !== "")
+                                              .join("\n");
+                                            navigator.clipboard.writeText(values);
+                                            alert(
+                                              `Copied all "${header.column.columnDef.header}" values!`
+                                            );
+                                          }}
+                                        >
+                                          Copy
+                                        </Button>
+                                      )}
+
+                                    {/* Drag handle for column resizing */}
+                                    {header.column.getCanResize() && (
+                                      <div
+                                        onMouseDown={header.getResizeHandler()}
+                                        onTouchStart={header.getResizeHandler()}
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{
+                                          position: "absolute",
+                                          right: 0,
+                                          top: 0,
+                                          height: "100%",
+                                          width: "5px",
+                                          cursor: "col-resize",
+                                          background: header.column.getIsResizing()
+                                            ? "rgba(255,255,255,0.5)"
+                                            : "transparent",
+                                          userSelect: "none",
+                                          touchAction: "none",
                                         }}
-                                      >
-                                        Copy Column
-                                        <i class="bi bi-clipboard"></i>
-                                      </Button>
+                                        title="Drag to resize column"
+                                      />
                                     )}
                                   </th>
                                 ))}
@@ -922,49 +1197,94 @@ export default function JSONExtractor() {
                           <tbody>
                             {table.getRowModel().rows.length === 0 ? (
                               <tr>
-                                <td colSpan={columns.length} className="text-center py-4 text-muted">
+                                <td
+                                  colSpan={columns.length}
+                                  className="text-center py-4 text-muted"
+                                >
                                   No fields match your search
                                 </td>
                               </tr>
                             ) : (
-                              table.getRowModel().rows.map(row => (
-                                <tr key={row.id} className={row.getIsSelected() ? "table-primary" : ""}>
-                                  {row.getVisibleCells().map(cell => (
+                              table.getRowModel().rows.map((row) => (
+                                <tr
+                                  key={row.id}
+                                  className={row.getIsSelected() ? "table-primary" : ""}
+                                >
+                                  {row.getVisibleCells().map((cell) => (
                                     <td
                                       key={cell.id}
                                       onClick={() => {
+                                        if (
+                                          cell.column.id === "select" ||
+                                          cell.column.id === "actions"
+                                        )
+                                          return;
                                         const value = cell.getValue();
-                                        const text = typeof value === "string" ? value : String(value || "");
-                                        if (text && text !== "-" && !cell.column.id === "select") {
+                                        const text =
+                                          typeof value === "string"
+                                            ? value
+                                            : String(value || "");
+                                        if (text && text !== "-") {
                                           navigator.clipboard.writeText(text);
                                           alert(`Copied: ${text}`);
                                         }
                                       }}
                                       style={{ cursor: "pointer" }}
-                                      title="Click to copy"
+                                      title={
+                                        cell.column.id !== "select" &&
+                                        cell.column.id !== "actions"
+                                          ? "Click to copy"
+                                          : undefined
+                                      }
                                     >
                                       {cell.column.id === "label" ? (
                                         <Form.Control
-                                          value={row.original.type === "panel" ? row.original.title : row.original.label}
-                                          onChange={e => updateJsonField(row.original.path, row.original.type === "panel" ? "title" : "label", e.target.value)}
-                                          onClick={e => e.stopPropagation()}
+                                          value={
+                                            row.original.type === "panel"
+                                              ? row.original.title
+                                              : row.original.label
+                                          }
+                                          onChange={(e) =>
+                                            updateJsonField(
+                                              row.original.path,
+                                              row.original.type === "panel" ? "title" : "label",
+                                              e.target.value
+                                            )
+                                          }
+                                          onClick={(e) => e.stopPropagation()}
                                         />
                                       ) : cell.column.id === "key" ? (
                                         <Form.Control
                                           value={row.original.key || ""}
-                                          onChange={e => updateJsonField(row.original.path, "key", e.target.value)}
+                                          onChange={(e) =>
+                                            updateJsonField(
+                                              row.original.path,
+                                              "key",
+                                              e.target.value
+                                            )
+                                          }
                                           className="font-monospace small"
-                                          onClick={e => e.stopPropagation()}
+                                          onClick={(e) => e.stopPropagation()}
                                         />
                                       ) : cell.column.id === "length" ? (
-                                        <Badge bg={row.original.key?.length > keyLengthThreshold ? "danger" : "success"}>
+                                        <Badge
+                                          bg={
+                                            row.original.key?.length > keyLengthThreshold
+                                              ? "danger"
+                                              : "success"
+                                          }
+                                        >
                                           {row.original.key?.length || 0}
-                                          {row.original.key?.length > keyLengthThreshold && " ⚠️"}
+                                          {row.original.key?.length > keyLengthThreshold &&
+                                            " ⚠️"}
                                         </Badge>
                                       ) : cell.column.id === "type" ? (
                                         <Badge bg="info">{row.original.type}</Badge>
                                       ) : (
-                                        flexRender(cell.column.columnDef.cell, cell.getContext())
+                                        flexRender(
+                                          cell.column.columnDef.cell,
+                                          cell.getContext()
+                                        )
                                       )}
                                     </td>
                                   ))}
