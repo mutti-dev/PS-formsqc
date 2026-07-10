@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   extractLabelsFromJSON,
   extractSelectValues,
@@ -227,6 +227,29 @@ export default function JSONExtractor() {
   const [hiddenTypes, setHiddenTypes] = useState([
     "columns","content","container","panel","button",
   ]);
+
+  const STORAGE_KEY = "JSONExtractorDraft";
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setJsonInput(saved);
+    } catch (err) {
+      console.warn("Unable to load extractor draft", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (jsonInput) {
+        localStorage.setItem(STORAGE_KEY, jsonInput);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (err) {
+      console.warn("Unable to save extractor draft", err);
+    }
+  }, [jsonInput]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [parsingSteps, setParsingSteps] = useState([]);
@@ -600,6 +623,11 @@ export default function JSONExtractor() {
     setJsonInput("");
     setSearchKeys("");
     resetResults();
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      console.warn("Unable to clear extractor draft", err);
+    }
   };
 
   const toggleType = (type) => {

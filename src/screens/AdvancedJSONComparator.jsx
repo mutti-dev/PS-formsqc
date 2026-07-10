@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Card,
   Badge,
@@ -19,6 +19,11 @@ import {
 } from "../utils/keyComparisonUtil";
 import "../css/AdvancedJSONComparator.css";
 
+const STORAGE_KEYS = {
+  source: "AdvancedJSONComparatorSource",
+  target: "AdvancedJSONComparatorTarget",
+};
+
 export default function AdvancedJSONComparator({ theme = "dark" }) {
   const [sourceJson, setSourceJson] = useState("");
   const [targetJson, setTargetJson] = useState("");
@@ -27,6 +32,55 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // const [hoveredPath, setHoveredPath] = useState(null);
   const [diffs, setDiffs] = useState([]);
   const [keyComparison, setKeyComparison] = useState(null);
+
+  useEffect(() => {
+    try {
+      const savedSource = localStorage.getItem(STORAGE_KEYS.source);
+      const savedTarget = localStorage.getItem(STORAGE_KEYS.target);
+      if (savedSource) setSourceJson(savedSource);
+      if (savedTarget) setTargetJson(savedTarget);
+    } catch (err) {
+      console.warn("Unable to load comparator draft", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (sourceJson) {
+        localStorage.setItem(STORAGE_KEYS.source, sourceJson);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.source);
+      }
+    } catch (err) {
+      console.warn("Unable to save source draft", err);
+    }
+  }, [sourceJson]);
+
+  useEffect(() => {
+    try {
+      if (targetJson) {
+        localStorage.setItem(STORAGE_KEYS.target, targetJson);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.target);
+      }
+    } catch (err) {
+      console.warn("Unable to save target draft", err);
+    }
+  }, [targetJson]);
+
+  const clearDraft = () => {
+    setSourceJson("");
+    setTargetJson("");
+    setDiffs([]);
+    setKeyComparison(null);
+    setError("");
+    try {
+      localStorage.removeItem(STORAGE_KEYS.source);
+      localStorage.removeItem(STORAGE_KEYS.target);
+    } catch (err) {
+      console.warn("Unable to clear comparator draft", err);
+    }
+  };
 
 
 
@@ -348,7 +402,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
             </Col>
           </Row>
 
-          <div className="mt-3 d-flex gap-2">
+          <div className="mt-3 d-flex flex-wrap gap-2">
             <Button
               variant="primary"
               onClick={performComparison}
@@ -368,8 +422,13 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
                 "Compare JSONs"
               )}
             </Button>
-
-           
+            <Button
+              variant="outline-secondary"
+              onClick={clearDraft}
+              disabled={isComparing && !sourceJson && !targetJson}
+            >
+              Clear Draft
+            </Button>
           </div>
 
           {error && (
