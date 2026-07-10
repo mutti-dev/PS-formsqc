@@ -28,7 +28,7 @@ export default function SideDrawer({
     },
     {
       path: "/AdvancedJSONComparator",
-      name: "JSON Comparator Pro",
+      name: "Compare Json",
       icon: <BarChart />,
     },
     {

@@ -51,7 +51,7 @@ export const parseDoublyEscapedJson = (jsonString) => {
         .replace(/\\\\/g, '\\');
       
       return JSON.parse(fixed);
-    } catch (fallbackError) {
+    } catch {
       throw new Error(`Failed to parse doubly escaped JSON: ${error.message}`);
     }
   }
@@ -59,20 +59,31 @@ export const parseDoublyEscapedJson = (jsonString) => {
 
 export const extractFormJson = (input) => {
   try {
+    const normalizeInput = () => {
+      if (input && typeof input === 'object' && !Array.isArray(input)) {
+        return input;
+      }
+
+      if (typeof input === 'string') {
+        return JSON.parse(input);
+      }
+
+      return input;
+    };
+
     const strategies = [
-      () => JSON.parse(input),
+      () => normalizeInput(),
       () => {
-        const parsed = JSON.parse(input);
-        if (parsed.config && typeof parsed.config === 'string') {
-          return parseDoublyEscapedJson(input);
+        const parsed = normalizeInput();
+        if (parsed && parsed.config && typeof parsed.config === 'string') {
+          return parseDoublyEscapedJson(typeof input === 'string' ? input : JSON.stringify(parsed));
         }
         return parsed;
       },
       () => {
-        const cleaned = input
-          .replace(/\\\\"/g, '"')
-          .replace(/\\"/g, '"')
-          .replace(/\\\\/g, '\\');
+        const cleaned = typeof input === 'string'
+          ? input.replace(/\\/g, '"').replace(/"/g, '"').replace(/\\/g, '\\')
+          : JSON.stringify(input).replace(/\\/g, '"').replace(/"/g, '"').replace(/\\/g, '\\');
         return JSON.parse(cleaned);
       }
     ];

@@ -82,6 +82,98 @@ export function extractConditions(json) {
   return results;
 }
 
+const updateConditionReferenceValue = (value, oldValue, newValue) => {
+  if (typeof value !== "string") return value;
+
+  if (value === oldValue) return newValue;
+
+  const pathSegments = value.split(".");
+  if (pathSegments[pathSegments.length - 1] === oldValue) {
+    pathSegments[pathSegments.length - 1] = newValue;
+    return pathSegments.join(".");
+  }
+
+  const escapedOldValue = oldValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pathPattern = new RegExp(`(^|\\.)${escapedOldValue}(\\.|$)`);
+  if (pathPattern.test(value)) {
+    return value.replace(pathPattern, `$1${newValue}$2`);
+  }
+
+  return value;
+};
+
+const matchesConditionalReference = (value, referenceKey) => {
+  if (typeof value !== "string" || !referenceKey) return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  const segments = trimmed.split(".");
+  return trimmed === referenceKey || segments[segments.length - 1] === referenceKey;
+};
+
+export const updateConditionReferencesInJson = (
+  obj,
+  oldValue,
+  newValue,
+  fields = ["when"],
+  patches = [],
+  options = {}
+) => {
+  if (!obj || typeof obj !== "object") {
+    return { updated: obj, patches };
+  }
+
+  if (Array.isArray(obj)) {
+    const updatedArr = obj.map((item) => {
+      const res = updateConditionReferencesInJson(item, oldValue, newValue, fields, patches, options);
+      return res.updated;
+    });
+    return { updated: updatedArr, patches };
+  }
+
+  const result = {};
+  let changed = false;
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === "conditional" && value && typeof value === "object") {
+      const nextConditional = { ...value };
+      const shouldUpdateThisCondition = !options.referenceKey || matchesConditionalReference(nextConditional.when, options.referenceKey);
+
+      if (fields.includes("when") && shouldUpdateThisCondition) {
+        const updatedWhen = updateConditionReferenceValue(nextConditional.when, oldValue, newValue);
+        if (updatedWhen !== nextConditional.when) {
+          nextConditional.when = updatedWhen;
+          changed = true;
+        }
+      }
+      if (fields.includes("eq") && shouldUpdateThisCondition) {
+        if (nextConditional.eq === oldValue) {
+          nextConditional.eq = newValue;
+          changed = true;
+        }
+      }
+      result[key] = nextConditional;
+    } else if (value && typeof value === "object") {
+      const res = updateConditionReferencesInJson(value, oldValue, newValue, fields, patches, options);
+      result[key] = res.updated;
+    } else {
+      result[key] = value;
+    }
+  }
+
+  if (changed) {
+    patches.push({
+      fieldKey: obj.key || "unknown",
+      fieldLabel: obj.label || obj.title || "Unnamed",
+      oldWhen: fields.includes("when") ? oldValue : undefined,
+      newWhen: fields.includes("when") ? newValue : undefined,
+      oldEq: fields.includes("eq") ? oldValue : undefined,
+      newEq: fields.includes("eq") ? newValue : undefined,
+    });
+  }
+
+  return { updated: result, patches };
+};
+
 // ============================================================
 // findDuplicateValues (internal helper)
 // ============================================================

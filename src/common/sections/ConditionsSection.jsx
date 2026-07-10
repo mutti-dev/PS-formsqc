@@ -23,15 +23,42 @@ function ConditionsSection({ conditions, conditionalPatches = [] }) {
     return map;
   }, [conditionalPatches]);
 
+  const dependencyMap = useMemo(() => {
+    if (!conditions || !Array.isArray(conditions)) return [];
+
+    return conditions.flatMap((cond) => {
+      const targetLabel = cond.label || cond.key || "Unnamed";
+      const targetKey = cond.key || "unknown";
+      return (cond.conditions || []).flatMap((c) => {
+        if (c.type === "simpleConditional" && c.when) {
+          return [
+            {
+              source: c.when,
+              target: targetKey,
+              targetLabel,
+              show: c.show,
+              eq: c.eq,
+            },
+          ];
+        }
+
+        return [];
+      });
+    });
+  }, [conditions]);
+
   const filteredConditions = useMemo(() => {
-    if (!searchTerm) return conditions;
+    if (!searchTerm) return conditions || [];
     const lower = searchTerm.toLowerCase();
-    return conditions.filter(
-      (cond) =>
-        cond.label.toLowerCase().includes(lower) ||
-        cond.key.toLowerCase().includes(lower) ||
-        JSON.stringify(cond.conditions).toLowerCase().includes(lower)
-    );
+    return (conditions || []).filter((cond) => {
+      const label = (cond.label || cond.key || "Unnamed").toLowerCase();
+      const key = (cond.key || "").toLowerCase();
+      return (
+        label.includes(lower) ||
+        key.includes(lower) ||
+        JSON.stringify(cond.conditions || []).toLowerCase().includes(lower)
+      );
+    });
   }, [conditions, searchTerm]);
 
   if (!conditions || conditions.length === 0) return null;
@@ -60,6 +87,36 @@ function ConditionsSection({ conditions, conditionalPatches = [] }) {
         value={searchTerm}
         onSearch={setSearchTerm}
       />
+
+      {dependencyMap.length > 0 && (
+        <Card className="mb-3 border-primary">
+          <Card.Header className="fw-semibold small">Dependency map</Card.Header>
+          <Card.Body>
+            <div className="small text-muted mb-2">
+              Fields that control other fields are shown below.
+            </div>
+            <div className="d-flex flex-column gap-2">
+              {dependencyMap.map((entry, index) => (
+                <div
+                  key={`${entry.source}-${entry.target}-${index}`}
+                  className="d-flex flex-wrap align-items-center gap-2 p-2 rounded border bg-body-secondary"
+                >
+                  <Badge bg="secondary" className="font-monospace">
+                    {entry.source}
+                  </Badge>
+                  <span className="text-muted">→</span>
+                  <Badge bg="primary" className="font-monospace">
+                    {entry.targetLabel}
+                  </Badge>
+                  <span className="small text-muted">
+                    {entry.show ? "shows" : "hides"} when {entry.source} = {String(entry.eq)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card.Body>
+        </Card>
+      )}
 
       <div className="table-responsive">
         <Table bordered hover className="align-middle mb-0 table-sm">

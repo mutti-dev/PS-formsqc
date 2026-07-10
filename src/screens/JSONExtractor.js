@@ -6,6 +6,7 @@ import {
   extractRadioValues,
   extractConditions,
   convertLabelToKey,
+  updateConditionReferencesInJson,
 } from "../utils/utils";
 import {
   Container,
@@ -177,42 +178,12 @@ const setByPath = (obj, path, value) => {
 };
 
 /**
- * Walk every node in the JSON tree and update conditional.when
- * from oldKey to newKey.
+ * Walk every node in the JSON tree and update condition references.
+ * When a field key changes, update conditional.when references.
+ * When a select/radio option value changes, update conditional.eq references.
  */
-/**
- * Walk every node and replace conditional.when === oldKey with newKey.
- * Returns { updated: <new obj>, patches: [{fieldKey, fieldLabel, oldWhen, newWhen}] }
- */
-const updateConditionalsInJson = (obj, oldKey, newKey, patches = []) => {
-  if (!obj || typeof obj !== "object") return { updated: obj, patches };
-
-  if (Array.isArray(obj)) {
-    const updatedArr = obj.map((item) => {
-      const res = updateConditionalsInJson(item, oldKey, newKey, patches);
-      return res.updated;
-    });
-    return { updated: updatedArr, patches };
-  }
-
-  const result = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (k === "conditional" && v && typeof v === "object" && v.when === oldKey) {
-      result[k] = { ...v, when: newKey };
-      patches.push({
-        fieldKey:   obj.key   || "unknown",
-        fieldLabel: obj.label || obj.title || "Unnamed",
-        oldWhen:    oldKey,
-        newWhen:    newKey,
-      });
-    } else if (v && typeof v === "object") {
-      const res = updateConditionalsInJson(v, oldKey, newKey, patches);
-      result[k] = res.updated;
-    } else {
-      result[k] = v;
-    }
-  }
-  return { updated: result, patches };
+const updateConditionalsInJson = (obj, oldValue, newValue, fields = ["when"], patches = [], options = {}) => {
+  return updateConditionReferencesInJson(obj, oldValue, newValue, fields, patches, options);
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -324,7 +295,8 @@ export default function JSONExtractor() {
       addStep("JSON syntax validation", true, "Valid JSON format");
 
       addStep("Locating form configuration");
-      const formConfig = extractFormJson(jsonInput);
+      const parsedInput = JSON.parse(jsonInput);
+      const formConfig = extractFormJson(parsedInput);
 
       if (!formConfig) {
         throw new Error(
@@ -378,11 +350,11 @@ export default function JSONExtractor() {
       addStep("Label extraction", true, `${labels.length} fields extracted`);
 
       addStep("Parsing full JSON for analysis");
-      const parsedFull = deepParse(JSON.parse(jsonInput));
+      const parsedFull = parsedInput;
       setFullParsedJson(parsedFull);
       const depth = Math.max(1, ...Object.values(parsedFull).map((v) => calculateDepth(v, 1)));
 
-      // Record formConfig and its path inside parsedFull so edits stay in sync
+      // Keep the form config tied to the same object instance as the live JSON tree
       formConfigRef.current     = formConfig;
       formConfigPathRef.current = findPathToFormConfig(parsedFull, formConfig);
 
@@ -549,7 +521,7 @@ export default function JSONExtractor() {
     if (field === "key") {
       const oldKey = getByPath(base, [...path, "key"]);
       if (oldKey && oldKey !== newValue) {
-        const res = updateConditionalsInJson(updated, oldKey, newValue);
+        const res = updateConditionalsInJson(updated, oldKey, newValue, ["when"], [], { referenceKey: oldKey });
         updated = res.updated;
         patches = res.patches;
       }
@@ -574,8 +546,9 @@ export default function JSONExtractor() {
 
     if (field === "value") {
       const oldValue = getByPath(base, [...path, ...valuesKey, optIdx, "value"]);
+      const sourceComponent = getByPath(base, path);
       if (oldValue && oldValue !== newValue) {
-        const res = updateConditionalsInJson(updated, oldValue, newValue);
+        const res = updateConditionalsInJson(updated, oldValue, newValue, ["eq"], [], { referenceKey: sourceComponent?.key });
         updated = res.updated;
         patches = res.patches;
       }
