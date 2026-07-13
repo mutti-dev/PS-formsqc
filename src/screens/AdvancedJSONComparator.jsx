@@ -9,6 +9,7 @@ import {
   Container,
   Alert,
   Spinner,
+  Table,
 } from "react-bootstrap";
 import {
   deepDiffObjects,
@@ -32,6 +33,8 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // const [hoveredPath, setHoveredPath] = useState(null);
   const [diffs, setDiffs] = useState([]);
   const [keyComparison, setKeyComparison] = useState(null);
+  const [copyFeedback, setCopyFeedback] = useState("");
+  const [selectedKeyTypes, setSelectedKeyTypes] = useState([]);
 
   useEffect(() => {
     try {
@@ -73,6 +76,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     setTargetJson("");
     setDiffs([]);
     setKeyComparison(null);
+    setSelectedKeyTypes([]);
     setError("");
     try {
       localStorage.removeItem(STORAGE_KEYS.source);
@@ -89,6 +93,7 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
     setError("");
     setDiffs([]);
     setKeyComparison(null);
+    setSelectedKeyTypes([]);
 
     if (!sourceJson.trim() || !targetJson.trim()) {
       setError("Please fill both JSON inputs (Source and Target)");
@@ -126,6 +131,17 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
       );
       setKeyComparison(keyComparationResult);
 
+      const initialTypes = [
+        ...new Set(
+          [
+            ...(keyComparationResult?.removedKeys || []).map((item) => item.oldType || item.type || "unknown"),
+            ...(keyComparationResult?.addedKeys || []).map((item) => item.oldType || item.type || "unknown"),
+            ...(keyComparationResult?.changedKeys || []).map((item) => item.oldType || item.type || "unknown"),
+          ].filter(Boolean)
+        ),
+      ].sort((a, b) => a.localeCompare(b));
+      setSelectedKeyTypes(initialTypes);
+
       setDiffs(differences);
       // setExpandedPaths(new Set(["root"]));
     } catch (err) {
@@ -137,197 +153,135 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
 
 
   // ---------------------------------------------------------------------------
-  // Option diff renderer — shown inside Modified items for select/radio fields
-  // ---------------------------------------------------------------------------
-  const renderOptionDiff = (optionDiff) => {
-    if (!optionDiff) return null;
-    const { removedOptions = [], addedOptions = [], changedOptions = [] } = optionDiff;
-    if (!removedOptions.length && !addedOptions.length && !changedOptions.length) return null;
-
-    return (
-      <div
-        className="mt-2 ps-3 border-start border-secondary"
-        style={{ fontSize: "0.8rem" }}
-      >
-        <div className="text-muted fw-semibold mb-1">Options</div>
-
-        {removedOptions.map((o, i) => (
-          <div key={`rem-${i}`} className="d-flex gap-2 align-items-center mb-1">
-            <Badge bg="danger" style={{ fontSize: "0.7rem" }}>Removed</Badge>
-            <code className="text-danger">{o.value}</code>
-            <span className="text-muted">"{o.oldLabel}"</span>
-          </div>
-        ))}
-
-        {addedOptions.map((o, i) => (
-          <div key={`add-${i}`} className="d-flex gap-2 align-items-center mb-1">
-            <Badge bg="success" style={{ fontSize: "0.7rem" }}>Added</Badge>
-            <code className="text-success">{o.value}</code>
-            <span className="text-muted">"{o.newLabel}"</span>
-          </div>
-        ))}
-
-        {changedOptions.map((o, i) => (
-          <div key={`chg-${i}`} className="d-flex gap-2 align-items-center mb-1">
-            <Badge bg="warning" text="dark" style={{ fontSize: "0.7rem" }}>Changed</Badge>
-            <code className="text-warning">{o.value}</code>
-            <span className="text-muted">"{o.oldLabel}" → "{o.newLabel}"</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // ---------------------------------------------------------------------------
-  // Group items by their field type and render each group with badges
-  // ---------------------------------------------------------------------------
-  const renderTypeGroup = (title, items, variant) => {
-    if (items.length === 0) return null;
-
-    const typeGroups = {};
-    items.forEach((item) => {
-      // For changed items use oldType (production type) as the group label
-      const type = item.oldType || item.type || "unknown";
-      if (!typeGroups[type]) typeGroups[type] = [];
-      typeGroups[type].push(item);
-    });
-
-    let alertMessage = "";
-    if (title === "Removed") {
-      alertMessage =
-        "DANGER: These fields were removed from sandbox but exist in production. This is a critical issue and must be resolved!";
-    } else if (title === "Added") {
-      alertMessage =
-        "SAFE: These are new fields added in sandbox. Safe to proceed with migration.";
-    } else if (title === "Modified") {
-      alertMessage =
-        "WARNING: These fields have label, type, or option changes. Review to ensure the changes are intentional.";
-    }
-
-    return (
-      <div key={title} className="mb-4">
-        <h6 className={`text-${variant} fw-bold mb-3`}>
-          {title} ({items.length})
-        </h6>
-
-        {alertMessage && (
-          <Alert
-            variant={
-              title === "Removed"
-                ? "danger"
-                : title === "Added"
-                ? "success"
-                : "warning"
-            }
-            className="mb-3 py-2"
-          >
-            {alertMessage}
-          </Alert>
-        )}
-
-        {Object.entries(typeGroups).map(([type, typeItems]) => (
-          <div key={type} className="mb-3">
-            <div className="small text-muted mb-2" style={{ fontSize: "0.85rem" }}>
-              {type}
-            </div>
-            <div className="list-group">
-              {typeItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className={`list-group-item bg-${variant} bg-opacity-10 py-2`}
-                >
-                  <div className="d-flex justify-content-between align-items-start gap-2">
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      {/* Field key */}
-                      <code
-                        className={`text-${variant} fw-bold`}
-                        style={{ wordBreak: "break-word" }}
-                      >
-                        {item.key}
-                      </code>
-
-                      {/* Label line */}
-                      <div
-                        className="small text-muted mt-1"
-                        style={{ wordBreak: "break-word" }}
-                      >
-                        {title === "Removed" &&
-                          `"${item.oldLabel || "(no label)"}"`}
-                        {title === "Added" &&
-                          `"${item.newLabel || "(no label)"}"`}
-                        {title === "Modified" &&
-                          (item.oldLabel !== item.newLabel
-                            ? `"${item.oldLabel || "(no label)"}" → "${item.newLabel || "(no label)"}"`
-                            : `"${item.oldLabel || "(no label)"}" (label unchanged)`)}
-                      </div>
-
-                      {/* Type change — shown when field type changed between prod and sandbox */}
-                      {title === "Modified" && item.hasTypeChange && (
-                        <div
-                          className="mt-2 ps-3 border-start border-danger"
-                          style={{ fontSize: "0.8rem" }}
-                        >
-                          <div className="text-muted fw-semibold mb-1">Field Type</div>
-                          <div className="d-flex gap-2 align-items-center">
-                            <Badge bg="danger" style={{ fontSize: "0.7rem" }}>Type Changed</Badge>
-                            <code className="text-danger">{item.oldType}</code>
-                            <span className="text-muted">→</span>
-                            <code className="text-success">{item.newType}</code>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Option diff — only for Modified items that have select/radio options */}
-                      {title === "Modified" &&
-                        item.optionDiff &&
-                        renderOptionDiff(item.optionDiff)}
-                    </div>
-
-                    {/* Right-side badges */}
-                    <div className="d-flex flex-column align-items-end gap-1">
-                      <Badge bg={variant}>
-                        {title === "Removed"
-                          ? "Removed"
-                          : title === "Added"
-                          ? "Added"
-                          : "Changed"}
-                      </Badge>
-                      {/* Show specific issue type only when it adds information beyond the section title */}
-                      {item.issue &&
-                        item.issue !== "Label changed" &&
-                        item.issue !== "Field removed from sandbox" &&
-                        item.issue !== "New field added" && (
-                          <span
-                            className="text-muted"
-                            style={{ fontSize: "0.7rem", whiteSpace: "nowrap" }}
-                          >
-                            {item.issue}
-                          </span>
-                        )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-        <hr className="my-3" />
-      </div>
-    );
-  };
-
-  // ---------------------------------------------------------------------------
   // Key Analysis section
   // ---------------------------------------------------------------------------
+  const buildKeyAnalysisRows = (comparisonData = keyComparison) => {
+    if (!comparisonData) return [];
+
+    const rows = [];
+
+    const getOptionDetails = (optionDiff) => {
+      if (!optionDiff) return [];
+
+      const { removedOptions = [], addedOptions = [], changedOptions = [] } = optionDiff;
+      const detailParts = [];
+
+      if (removedOptions.length) {
+        detailParts.push(
+          `removed: ${removedOptions
+            .map((option) => `${option.value} (${option.oldLabel || "(no label)"})`)
+            .join(", ")}`
+        );
+      }
+
+      if (addedOptions.length) {
+        detailParts.push(
+          `added: ${addedOptions
+            .map((option) => `${option.value} (${option.newLabel || "(no label)"})`)
+            .join(", ")}`
+        );
+      }
+
+      if (changedOptions.length) {
+        detailParts.push(
+          `changed: ${changedOptions
+            .map(
+              (option) =>
+                `${option.value} (${option.oldLabel || "(no label)"} → ${option.newLabel || "(no label)"})`
+            )
+            .join(", ")}`
+        );
+      }
+
+      return detailParts;
+    };
+
+    const pushRows = (status, items) => {
+      items.forEach((item) => {
+        let label = "";
+
+        if (status === "Removed") {
+          label = item.oldLabel || "(no label)";
+        } else if (status === "Added") {
+          label = item.newLabel || "(no label)";
+        } else {
+          label =
+            item.oldLabel !== item.newLabel
+              ? `${item.oldLabel || "(no label)"} → ${item.newLabel || "(no label)"}`
+              : item.oldLabel || "(no label)";
+        }
+
+        const detailParts = [];
+        if (item.issue) detailParts.push(item.issue);
+        if (item.hasTypeChange) {
+          detailParts.push(
+            `Type: ${item.oldType || "unknown"} → ${item.newType || "unknown"}`
+          );
+        }
+
+        const optionDetails = getOptionDetails(item.optionDiff);
+        if (optionDetails.length) detailParts.push(...optionDetails);
+
+        rows.push({
+          status,
+          label,
+          key: item.key,
+          type: item.oldType || item.type || "unknown",
+          details: detailParts.join(" • "),
+        });
+      });
+    };
+
+    pushRows("Removed", comparisonData.removedKeys || []);
+    pushRows("Added", comparisonData.addedKeys || []);
+    pushRows("Modified", comparisonData.changedKeys || []);
+
+    return rows;
+  };
+
+  const copyKeyAnalysisRows = async () => {
+    const rows = buildKeyAnalysisRows();
+    const filteredRows =
+      selectedKeyTypes.length === 0
+        ? []
+        : rows.filter((row) => selectedKeyTypes.includes(row.type));
+
+    if (!filteredRows.length) return;
+
+    const content = [
+      ["Status", "Label", "Key", "Type"].join("\t"),
+      ...filteredRows.map(({ status, label, key, type, details }) => {
+        const labelWithDetails = details ? `${label} | ${details}` : label;
+        return [status, labelWithDetails, key, type].join("\t");
+      }),
+    ].join("\n");
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content);
+        setCopyFeedback("Copied to clipboard");
+      } else {
+        throw new Error("Clipboard unavailable");
+      }
+    } catch (err) {
+      console.warn("Unable to copy key analysis", err);
+      setCopyFeedback("Copy failed");
+    }
+
+    window.setTimeout(() => setCopyFeedback(""), 1600);
+  };
+
   const renderKeyComparisonSection = () => {
     if (!keyComparison) return null;
 
-    const totalIssues =
-      keyComparison.removedKeys.length +
-      keyComparison.changedKeys.length +
-      keyComparison.addedKeys.length;
+    const rows = buildKeyAnalysisRows();
+    const filteredRows =
+      selectedKeyTypes.length === 0
+        ? []
+        : rows.filter((row) => selectedKeyTypes.includes(row.type));
+    const totalIssues = filteredRows.length;
 
-    if (totalIssues === 0) {
+    if (!rows.length) {
       return (
         <Alert variant="success" className="mb-4">
           All keys are safe - no removed or renamed keys detected
@@ -335,15 +289,116 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
       );
     }
 
+    if (totalIssues === 0) {
+      return (
+        <Alert variant="secondary" className="mb-4">
+          No rows match the selected types.
+        </Alert>
+      );
+    }
+
     return (
       <Card className="mb-4 border border-warning">
-        <Card.Header className="bg-warning bg-opacity-10">
+        <Card.Header className="bg-warning bg-opacity-10 d-flex justify-content-between align-items-center">
           <Card.Title className="mb-0">Key Analysis</Card.Title>
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            <span className="small text-muted">{filteredRows.length} rows</span>
+            <Button size="sm" variant="outline-secondary" onClick={copyKeyAnalysisRows}>
+              {copyFeedback || "Copy to Excel"}
+            </Button>
+          </div>
         </Card.Header>
         <Card.Body>
-          {renderTypeGroup("Removed", keyComparison.removedKeys, "danger")}
-          {renderTypeGroup("Added", keyComparison.addedKeys, "success")}
-          {renderTypeGroup("Modified", keyComparison.changedKeys, "warning")}
+          <Alert variant="warning" className="small mb-3">
+            Copy the table below into Excel or Sheets. The values are tab-separated and ready to paste.
+          </Alert>
+          <div className="d-flex flex-wrap gap-3 mb-3">
+            <Form.Check
+              type="checkbox"
+              id="key-type-all"
+              label="All types"
+              checked={selectedKeyTypes.length > 0 && selectedKeyTypes.length === [...new Set(rows.map((row) => row.type).filter(Boolean))].length}
+              onChange={(e) => {
+                const allTypes = [...new Set(rows.map((row) => row.type).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+                setSelectedKeyTypes(e.target.checked ? allTypes : []);
+              }}
+              inline
+            />
+            {[...new Set(rows.map((row) => row.type).filter(Boolean))]
+              .sort((a, b) => a.localeCompare(b))
+              .map((type) => (
+                <Form.Check
+                  key={type}
+                  type="checkbox"
+                  id={`key-type-${type}`}
+                  label={type}
+                  checked={selectedKeyTypes.includes(type)}
+                  onChange={(e) => {
+                    setSelectedKeyTypes((current) => {
+                      if (e.target.checked) {
+                        return [...new Set([...current, type])].sort((a, b) => a.localeCompare(b));
+                      }
+                      return current.filter((item) => item !== type);
+                    });
+                  }}
+                  inline
+                />
+              ))}
+          </div>
+          {filteredRows.length === 0 ? (
+            <Alert variant="secondary" className="mb-0">
+              No rows match the selected type.
+            </Alert>
+          ) : (
+            <div className="table-responsive">
+            <Table striped bordered hover size="sm" className="mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th style={{ width: "110px" }}>Status</th>
+                  <th>Label</th>
+                  <th>Key</th>
+                  <th style={{ width: "120px" }}>Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRows.map((row, idx) => (
+                  <tr key={`${row.status}-${row.key}-${idx}`}>
+                    <td>
+                      <Badge
+                        bg={
+                          row.status === "Removed"
+                            ? "danger"
+                            : row.status === "Added"
+                            ? "success"
+                            : "warning"
+                        }
+                        text={row.status === "Modified" ? "dark" : undefined}
+                      >
+                        {row.status}
+                      </Badge>
+                    </td>
+                    <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+                      <div>{row.label}</div>
+                      {row.details && (
+                        <div className="text-muted small mt-1">{row.details}</div>
+                      )}
+                    </td>
+                    <td
+                      style={{
+                        fontFamily: "var(--bs-font-monospace), monospace",
+                        whiteSpace: "normal",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {row.key}
+                    </td>
+                    <td className="text-muted small">{row.type}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          )}
         </Card.Body>
       </Card>
     );

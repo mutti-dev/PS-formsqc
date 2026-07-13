@@ -13,12 +13,17 @@ export const extractKeysAndLabels = (formObj) => {
           };
 
           // Capture options for select, radio, selectboxes
+          const optionValues =
+            item.type === "radio"
+              ? item.values || item.data?.values
+              : item.data?.values;
+
           if (
             ["select", "radio", "selectboxes"].includes(item.type) &&
-            item.data?.values &&
-            Array.isArray(item.data.values)
+            optionValues &&
+            Array.isArray(optionValues)
           ) {
-            entry.options = item.data.values.map((v) => ({
+            entry.options = optionValues.map((v) => ({
               label: v.label || "",
               value: v.value || "",
             }));
@@ -41,12 +46,17 @@ export const extractKeysAndLabels = (formObj) => {
           type: obj.type || "unknown",
         };
 
+        const optionValues =
+          obj.type === "radio"
+            ? obj.values || obj.data?.values
+            : obj.data?.values;
+
         if (
           ["select", "radio", "selectboxes"].includes(obj.type) &&
-          obj.data?.values &&
-          Array.isArray(obj.data.values)
+          optionValues &&
+          Array.isArray(optionValues)
         ) {
-          entry.options = obj.data.values.map((v) => ({
+          entry.options = optionValues.map((v) => ({
             label: v.label || "",
             value: v.value || "",
           }));
