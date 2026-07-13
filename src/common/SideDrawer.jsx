@@ -27,6 +27,11 @@ export default function SideDrawer({
       icon: <FileEarmarkText />,
     },
     {
+      path: "/BulkJSONExtractor",
+      name: "Bulk JSON",
+      icon: <FileEarmarkText />,
+    },
+    {
       path: "/AdvancedJSONComparator",
       name: "Compare Json",
       icon: <BarChart />,
