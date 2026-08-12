@@ -189,17 +189,34 @@ export const searchKeysInObject = (obj, keysToFind) => {
 };
 
 /**
- * Strips the trailing submit button from a components array.
- * Matches any component where type === "button" and key === "submit"
- * at the END of the array (only removes it if it's the last item).
+ * Strips submit buttons that are outside of a container from a components array.
  */
-const stripTrailingSubmitButton = (components) => {
+export const removeSubmitButtonsOutsideContainer = (components) => {
   if (!Array.isArray(components) || components.length === 0) return components;
+
+  const hasContainer = components.some(
+    (c) => c && typeof c === "object" && c.type === "container"
+  );
+  if (hasContainer) {
+    return components.filter(
+      (c) =>
+        !(
+          c &&
+          typeof c === "object" &&
+          c.type === "button" &&
+          (c.key === "submit" || c.action === "submit")
+        )
+    );
+  }
+
   const last = components[components.length - 1];
-  if (last && last.type === "button" && last.key === "submit") {
+  if (
+    last &&
+    last.type === "button" &&
+    (last.key === "submit" || last.action === "submit")
+  ) {
     return components.slice(0, -1);
   }
-  return components;
 };
 
 /**
@@ -232,7 +249,7 @@ const unwrapConfigShell = (obj) => {
 
   if (!configObj) return obj; // no wrapper detected
 
-  return stripTrailingSubmitButton(configObj.components);
+  return removeSubmitButtonsOutsideContainer(configObj.components);
 };
 
 export const formatJsonString = (jsonObj) => {

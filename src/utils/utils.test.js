@@ -1,5 +1,5 @@
-import { updateConditionReferencesInJson } from './utils';
-import { extractFormJson } from './jsonUtils';
+import { updateConditionReferencesInJson, extractLabelsFromJSON } from './utils';
+import { extractFormJson, removeSubmitButtonsOutsideContainer } from './jsonUtils';
 
 describe('extractFormJson', () => {
   it('returns the same object instance when the input is already parsed', () => {
@@ -113,3 +113,35 @@ describe('updateConditionReferencesInJson', () => {
     ]);
   });
 });
+
+describe('Multiselect vs Single Select support', () => {
+  it('extractLabelsFromJSON includes multiple property for select components', () => {
+    const json = {
+      components: [
+        { label: 'Multi Dropdown', key: 'multiDrop', type: 'select', multiple: true },
+        { label: 'Single Dropdown', key: 'singleDrop', type: 'select', multiple: false },
+        { label: 'Default Dropdown', key: 'defaultDrop', type: 'select' },
+      ],
+    };
+
+    const labels = extractLabelsFromJSON(json);
+    expect(labels).toHaveLength(3);
+    expect(labels[0].multiple).toBe(true);
+    expect(labels[1].multiple).toBe(false);
+    expect(labels[2].multiple).toBeUndefined();
+  });
+});
+
+describe('removeSubmitButtonsOutsideContainer', () => {
+  it('removes submit buttons located outside of a container', () => {
+    const components = [
+      { label: 'Container', key: 'Container', type: 'container', components: [] },
+      { label: 'Submit', key: 'submit', type: 'button', action: 'submit' },
+    ];
+
+    const cleaned = removeSubmitButtonsOutsideContainer(components);
+    expect(cleaned).toHaveLength(1);
+    expect(cleaned[0].type).toBe('container');
+  });
+});
+

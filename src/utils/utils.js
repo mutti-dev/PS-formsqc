@@ -21,6 +21,9 @@ export function extractLabelsFromJSON(json, currentPath = [], results = []) {
         type: json.type,
         path: [...currentPath],
       };
+      if (json.multiple !== undefined) {
+        entry.multiple = json.multiple;
+      }
       if (json.type === "datetime" && json.format) {
         entry.format = json.format;
       }
