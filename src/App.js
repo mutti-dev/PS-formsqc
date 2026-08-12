@@ -12,24 +12,31 @@ import AIPrompt from './screens/AIPrompt';
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const THEME_STORAGE_KEY = 'appTheme';
 
+  const [theme, setTheme] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        return savedTheme;
+      }
+    } catch (err) {
+      console.warn('Unable to load saved theme', err);
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
-  
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
-  // Detect system theme
+
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    setTheme(mediaQuery.matches ? 'dark' : 'light');
-
-    const handler = (e) => setTheme(e.matches ? 'dark' : 'light');
-    mediaQuery.addEventListener('change', handler);
-
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch (err) {
+      console.warn('Unable to save theme', err);
+    }
+  }, [theme]);
 
   return (
     <div data-bs-theme={theme} className="app-root">
