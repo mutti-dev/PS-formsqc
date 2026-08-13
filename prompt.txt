@@ -7,10 +7,10 @@ Column rules:
 Label — the human-readable field name as it appears on the form (e.g. "Date of Birth")
 Key — a programmatic key derived from the Label: replace spaces with underscores, remove all special characters except letters/numbers/underscores (e.g. "Date_of_Birth")
 KeyLength — the character count of the Key (e.g. 13)
-Type — the Form.io field type. Use only these values: textfield, textarea, number, checkbox, datetime, select, radio, email, phoneNumber, currency, signature, content, panel, button
+Type — the Form.io field type. Use only these values: textfield, textarea, number, checkbox, datetime, select, multiselect, radio, email, phoneNumber, currency, signature, content, panel, button
 Format — only fill this for datetime fields (e.g. MM/dd/yyyy), leave blank for all other types
-Option Labels — for select and radio fields only: the display options separated by || (e.g. Yes || No || Maybe). Leave blank for all other types.
-Option Values — for select and radio fields only: the data values separated by || (e.g. yes || no || maybe). If values are the same as labels, repeat them. Leave blank for all other types.
+Option Labels — for select, multiselect, and radio fields only: the display options separated by || (e.g. Yes || No || Maybe). Leave blank for all other types.
+Option Values — for select, multiselect, and radio fields only: the data values separated by || (e.g. yes || no || maybe). If values are the same as labels, repeat them. Leave blank for all other types.
 
 Type mapping guide:
 
@@ -19,7 +19,8 @@ Multi-line / paragraph text → textarea
 Numeric input → number
 Yes/No tick box (single) → checkbox
 Date or date+time picker → datetime
-Dropdown with multiple choices → select
+Dropdown with single choices → select
+Dropdown with multiple choices → multiselect
 Multiple choice (pick one, shown as buttons/dots) → radio
 Email address field → email
 Phone number field → phoneNumber

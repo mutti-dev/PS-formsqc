@@ -50,6 +50,8 @@ import {
   ConditionsSection,
 } from "../common/sections";
 
+import { checkReservedColumnMatch } from "../config/reservedColumns";
+
 import {
   flexRender,
   getCoreRowModel,
@@ -57,22 +59,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
-const RESERVED_COLUMNS = [
-  "ProgramDesire","CallTrackId","Comments","RawComments","hdnSaveAsTemplates",
-  "Caption","VictimId","FirstName","MiddleName","LastName","DOB","HiddenSSN",
-  "SSN","Street_Address","Apartment","City","ZipCode","County","State",
-  "StateShortName","Country","Mobile","PhoneNo","AlternateContactNo","Email",
-  "AlternateEmail","EmergencyContactName","EmergencyContactNo",
-  "EmergencyContactRelationship","EducationLevel","Veteran","Disabled",
-  "strHouseholdMarketRent","strHouseholdResidentRent","strBalanceDue",
-  "HouseholdLeasestart","HouseholdLeaseEnd","CareStartDate","CareEndDate",
-  "CareAmount","CaseNumber","ProjectPhaseId","StartDate","ProjectTemplateId",
-  "cmbProjectCaseLead","coLocation","PublishedFlag","CustomerId","IsHouseHold",
-  "RawStartDate","ResourceId","cmbProjectCategories","cmbProjectTeams",
-  "cmbProjectOwners","cmbProgramsTemplates","CaseId","ProjectId",
-  "IntakeStatusId","CreationTime","Creator",
-];
 
 const validateFormStructure = (labels = [], selectValues = [], radioValues = [], formConfig = {}, formType = "Form") => {
   const issues = [];
@@ -109,13 +95,14 @@ const validateFormStructure = (labels = [], selectValues = [], radioValues = [],
       }
     }
 
-    if (formType === "Intake" && RESERVED_COLUMNS.includes(fieldKey)) {
+    const reservedMatch = checkReservedColumnMatch(fieldKey, formType);
+    if (reservedMatch) {
       issues.push({
         type: "reserved_column",
         severity: "error",
         field: fieldLabel,
         key: fieldKey,
-        message: `Field key "${fieldKey}" conflicts with reserved database column`,
+        message: `Field key "${fieldKey}" conflicts with reserved database column "${reservedMatch}"`,
       });
     }
   });
