@@ -29,6 +29,7 @@ import {
   countJsonElements,
   searchKeysInObject,
   formatJsonString,
+  removeSubmitButtonsOutsideContainer,
 } from "../utils/jsonUtils";
 
 import { exportToExcel } from "../utils/exportUtils";
@@ -91,6 +92,19 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig, fo
           key: fieldKey,
           expected: expectedKey,
           message: `Label and Key mismatch: "${fieldLabel}" should have key "${expectedKey}", not "${fieldKey}"`,
+        });
+      }
+    }
+
+    if (entry.type === "datagrid" || entry.type === "editgrid") {
+      const hasGridKeyword = fieldKey && (fieldKey.includes("Data_Grid") || fieldKey.includes("Grid") || fieldKey.toLowerCase().includes("data_grid") || fieldKey.toLowerCase().includes("grid"));
+      if (!hasGridKeyword) {
+        issues.push({
+          type: "grid_key_missing_keyword",
+          severity: "error",
+          field: fieldLabel,
+          key: fieldKey,
+          message: `${entry.type === "datagrid" ? "Datagrid" : "Editgrid"} field key "${fieldKey}" must contain the keyword "Data_Grid" or "Grid"`,
         });
       }
     }
@@ -309,6 +323,14 @@ export default function JSONExtractor() {
       if (!formConfig.components || !Array.isArray(formConfig.components)) {
         throw new Error("Form configuration found but missing 'components' array.");
       }
+
+      const initialCompCount = formConfig.components.length;
+      formConfig.components = removeSubmitButtonsOutsideContainer(formConfig.components);
+      const removedSubmitCount = initialCompCount - formConfig.components.length;
+      if (removedSubmitCount > 0) {
+        addStep("Submit button cleanup", true, `Removed ${removedSubmitCount} submit button(s) outside of container`);
+      }
+
       addStep("Form configuration located", true, `${formConfig.components.length} top-level components found`);
 
       addStep("Validating container structure");
@@ -348,6 +370,32 @@ export default function JSONExtractor() {
       addStep("Extracting field labels and keys");
       const labels = extractLabelsFromJSON(formConfig, [], []);
       addStep("Label extraction", true, `${labels.length} fields extracted`);
+
+      addStep("Checking Datagrid and Editgrid keys for keyword");
+      const gridFields = labels.filter((l) => l.type === "datagrid" || l.type === "editgrid");
+      const invalidGridFields = gridFields.filter(
+        (g) =>
+          !g.key ||
+          (!g.key.includes("Data_Grid") &&
+            !g.key.includes("Grid") &&
+            !g.key.toLowerCase().includes("data_grid") &&
+            !g.key.toLowerCase().includes("grid"))
+      );
+      if (invalidGridFields.length > 0) {
+        addStep(
+          "Datagrid/Editgrid key keyword check",
+          false,
+          `Found ${invalidGridFields.length} grid(s) missing 'Data_Grid' or 'Grid' in key`
+        );
+      } else {
+        addStep(
+          "Datagrid/Editgrid key keyword check",
+          true,
+          gridFields.length > 0
+            ? `All ${gridFields.length} grid key(s) valid`
+            : "No datagrid/editgrid components found"
+        );
+      }
 
       addStep("Parsing full JSON for analysis");
       const parsedFull = parsedInput;
@@ -398,7 +446,11 @@ export default function JSONExtractor() {
       );
       setValidationIssues(issues);
 
-      addStep("Extraction completed!", true, "Results ready below");
+      if (errorIssues.length > 0) {
+        addStep("Extraction completed with errors", false, `Found ${errorIssues.length} critical issue(s)`);
+      } else {
+        addStep("Extraction completed!", true, "Results ready below");
+      }
 
       setExtractedData({
         labels,
@@ -714,7 +766,12 @@ export default function JSONExtractor() {
         size: 100,
       },
       {
-        accessorKey: "type",
+        accessorFn: (row) =>
+          row.type === "select"
+            ? row.multiple === true
+              ? "multiselect"
+              : "select"
+            : row.type,
         id: "type",
         header: "Type",
         enableSorting: true,
@@ -910,9 +967,17 @@ export default function JSONExtractor() {
                   <Card.Body>
                     <ProgressBar
                       now={
-                        (parsingSteps.filter((s) => s.success).length / parsingSteps.length) * 100
+                        parsingSteps.length > 0
+                          ? (parsingSteps.filter((s) => s.success).length / parsingSteps.length) * 100
+                          : 0
                       }
-                      variant={parsingSteps.at(-1)?.success ? "success" : "danger"}
+                      variant={
+                        validationIssues.some((i) => i.severity === "error") || parsingSteps.some((s) => !s.success)
+                          ? "danger"
+                          : validationIssues.some((i) => i.severity === "warning")
+                          ? "warning"
+                          : "success"
+                      }
                       className="mb-3"
                     />
 
@@ -1074,11 +1139,17 @@ export default function JSONExtractor() {
                                 .getSelectedRowModel()
                                 .rows.map((r) => r.original);
                               const json = JSON.stringify(
-                                selected.map((r) => ({
-                                  label: r.type === "panel" ? r.title : r.label,
-                                  key: r.key,
-                                  type: r.type,
-                                })),
+                                selected.map((r) => {
+                                  const item = {
+                                    label: r.type === "panel" ? r.title : r.label,
+                                    key: r.key,
+                                    type: r.type,
+                                  };
+                                  if (r.type === "select") {
+                                    item.multiple = r.multiple === true;
+                                  }
+                                  return item;
+                                }),
                                 null,
                                 2
                               );
@@ -1280,7 +1351,7 @@ export default function JSONExtractor() {
                                             " ⚠️"}
                                         </Badge>
                                       ) : cell.column.id === "type" ? (
-                                        <Badge bg="info">{row.original.type}</Badge>
+                                        <Badge bg="info">{cell.getValue()}</Badge>
                                       ) : (
                                         flexRender(
                                           cell.column.columnDef.cell,

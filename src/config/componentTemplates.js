@@ -132,7 +132,7 @@ const TEMPLATES = {
   },
 }),
 
-  select: ({ label, key, optionLabels, optionValues }) => ({
+  select: ({ label, key, optionLabels, optionValues, multiple }) => ({
     label,
     widget: "choicesjs",
     tableView: true,
@@ -141,6 +141,7 @@ const TEMPLATES = {
     },
     key,
     type: "select",
+    multiple: multiple === true,
     input: true,
   }),
 

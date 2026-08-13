@@ -64,10 +64,23 @@ const rowToField = (rawRow) => {
     row[normaliseHeader(k)] = v ?? "";
   });
 
+  const rawType = String(row.type || "textfield").trim().toLowerCase();
+  let type = rawType;
+  let multiple = false;
+
+  if (["multiselect", "multi select", "multi-select", "multi"].includes(rawType)) {
+    type = "select";
+    multiple = true;
+  } else if (["single select", "single-select", "single", "select"].includes(rawType)) {
+    type = "select";
+    multiple = false;
+  }
+
   return {
     label:        String(row.label        || "").trim(),
     key:          String(row.key          || "").trim(),
-    type:         String(row.type         || "textfield").trim().toLowerCase(),
+    type,
+    multiple,
     format:       String(row.format       || "").trim(),
     optionLabels: String(row.optionLabels || "").trim(),
     optionValues: String(row.optionValues || "").trim(),
@@ -86,6 +99,13 @@ const validateField = (field, rowIndex) => {
   if (!field.label) errors.push(`${prefix}: "Label" column is empty`);
   if (!field.key)   errors.push(`${prefix}: "Key" column is empty`);
   if (!field.type)  errors.push(`${prefix}: "Type" column is empty`);
+
+  if (field.type === "datagrid" || field.type === "editgrid") {
+    const hasGridKeyword = field.key && (field.key.includes("Data_Grid") || field.key.includes("Grid") || field.key.toLowerCase().includes("data_grid") || field.key.toLowerCase().includes("grid"));
+    if (!hasGridKeyword) {
+      errors.push(`${prefix}: Key "${field.key}" for ${field.type} must contain keyword "Data_Grid" or "Grid"`);
+    }
+  }
 
   return errors;
 };

@@ -45,11 +45,16 @@ export const exportToExcel = (data, hiddenTypes, selectValues = [], radioValues 
         }
       }
 
+      let displayType = entry.type;
+      if (entry.type === "select") {
+        displayType = entry.multiple === true ? "multiselect" : "select";
+      }
+
       return {
         Label: entry.type === "panel" ? entry.title : entry.label,
         Key: entry.key || "",
         KeyLength: entry.key ? entry.key.length : 0,
-        Type: entry.type,
+        Type: displayType,
         Format: entry.format || "",
         "Option Labels": optionLabels, // Human-readable
         "Option Values": optionValues, // Data values
