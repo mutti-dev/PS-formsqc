@@ -430,9 +430,9 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
                   placeholder='{"key": "value"}'
                   rows={8}
                   style={{
-                    backgroundColor: theme === "dark" ? "#1e1e1e" : "#f8f9fa",
-                    color: theme === "dark" ? "#e0e0e0" : "#000",
-                    borderColor: theme === "dark" ? "#333" : "#ddd",
+                    backgroundColor: theme === "dark" ? "var(--bs-tertiary-bg)" : "#f8f9fa",
+                    color: theme === "dark" ? "var(--bs-body-color)" : "#000",
+                    borderColor: theme === "dark" ? "var(--bs-border-color)" : "#ddd",
                   }}
                 />
               </Form.Group>
@@ -448,9 +448,9 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
                   placeholder='{"key": "value"}'
                   rows={8}
                   style={{
-                    backgroundColor: theme === "dark" ? "#1e1e1e" : "#f8f9fa",
-                    color: theme === "dark" ? "#e0e0e0" : "#000",
-                    borderColor: theme === "dark" ? "#333" : "#ddd",
+                    backgroundColor: theme === "dark" ? "var(--bs-tertiary-bg)" : "#f8f9fa",
+                    color: theme === "dark" ? "var(--bs-body-color)" : "#000",
+                    borderColor: theme === "dark" ? "var(--bs-border-color)" : "#ddd",
                   }}
                 />
               </Form.Group>

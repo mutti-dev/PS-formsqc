@@ -53,11 +53,17 @@ const TextConverter = () => {
 
   return (
     <Container fluid className="min-vh-100">
-      <Card className="shadow-sm border-0">
-        <Card.Header className=" border-0 py-3">
-         <h1 className="display-5 fw-bold text-primary mb-2 text-center">API Key</h1>
+      {/* Header Card */}
+      <Card className="shadow-sm border-0 mb-4">
+        <Card.Header className="py-4">
+          <h1 className="display-5 fw-bold text-center text-primary mb-0">
+            API Key Converter
+          </h1>
         </Card.Header>
-        <Card.Body>
+      </Card>
+
+      <Card className="shadow-sm border-0">
+        <Card.Body className="p-4">
           {showAlert && (
             <Alert variant="success" onClose={() => setShowAlert(false)} dismissible>
               {alertMessage}

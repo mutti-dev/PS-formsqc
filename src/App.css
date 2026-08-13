@@ -3,23 +3,26 @@ body,
 #root {
   height: 100%;
   margin: 0;
-  background-color: #121212;
+  background-color: var(--bs-body-bg, #212529);
 }
 
 /* App wrapper */
 .app-root {
   min-height: 100vh;
-  background-color: #121212;
+  background-color: var(--bs-body-bg, #212529);
 }
 
 /* Main layout */
 .app-layout {
   display: flex;
   min-height: 100vh;
+  background-color: var(--bs-body-bg, #212529);
 }
 
 /* Main content */
 .app-main {
-  background-color: #121212;
-  color: #e0e0e0;
+  background-color: var(--bs-body-bg, #212529);
+  color: var(--bs-body-color, #e0e0e0);
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
 }

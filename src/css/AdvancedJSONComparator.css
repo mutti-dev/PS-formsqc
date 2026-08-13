@@ -1,9 +1,9 @@
 .advanced-json-comparator {
-  padding: 20px 0;
+  padding: 2px 2;
 }
 
 .summary-dashboard {
-  margin-bottom: 24px;
+  margin-bottom: 2px;
   padding-top: 0;
 }
 
@@ -112,7 +112,7 @@
 
 .tree-view.theme-dark {
   color: #e0e0e0;
-  background-color: #1e1e1e;
+  background-color: var(--bs-tertiary-bg, #212529);
   border-radius: 6px;
   padding: 12px;
 }
@@ -668,8 +668,8 @@
 }
 
 .theme-dark .sync-scroll-pane {
-  background-color: #1e1e1e;
-  border-color: #333;
+  background-color: var(--bs-tertiary-bg, #212529);
+  border-color: var(--bs-border-color, #333);
   color: #e0e0e0;
 }
 

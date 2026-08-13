@@ -50,8 +50,8 @@ function App() {
             style={{
               marginLeft: drawerOpen ? '280px' : '55px',
               transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              backgroundColor: theme === 'dark' ? '#121212' : '#f5f5f5',
-              color: theme === 'dark' ? '#fff' : '#000',
+              backgroundColor: theme === 'dark' ? 'var(--bs-body-bg)' : '#f5f5f5',
+              color: theme === 'dark' ? 'var(--bs-body-color)' : '#000',
             }}
           >
             <Routes>

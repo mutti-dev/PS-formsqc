@@ -60,8 +60,7 @@ export default function AIPrompt() {
   };
 
   return (
-    <Container fluid className="min-vh-100 py-4">
-
+    <Container fluid className="min-vh-100">
       {/* Page header */}
       <Card className="shadow-sm border-0 mb-4">
         <Card.Header className="py-4">

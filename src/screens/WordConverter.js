@@ -53,12 +53,16 @@ export default function WordConverter() {
     <Container fluid className="min-vh-100">
       <Row className="justify-content-center">
         <Col>
-          <Card className="shadow-sm border-0">
-            <Card.Header className="text-primary text-center py-4">
-              <h1 className="display-6 fw-bold mb-0">Word to Dropdown Converter</h1>
-
+          {/* Header Card */}
+          <Card className="shadow-sm border-0 mb-4">
+            <Card.Header className="py-4">
+              <h1 className="display-5 fw-bold text-center text-primary mb-0">
+                Word to Dropdown Converter
+              </h1>
             </Card.Header>
+          </Card>
 
+          <Card className="shadow-sm border-0">
             <Card.Body className="p-4">
               {/* Input */}
               <Form.Group className="mb-4">
