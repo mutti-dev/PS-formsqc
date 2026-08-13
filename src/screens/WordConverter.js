@@ -60,9 +60,7 @@ export default function WordConverter() {
                 Word to Dropdown Converter
               </h1>
             </Card.Header>
-          </Card>
 
-          <Card className="shadow-sm border-0">
             <Card.Body className="p-4">
               {/* Input */}
               <Form.Group className="mb-4">

@@ -415,9 +415,9 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
             Advanced JSON Comparator
           </h1>
         </Card.Header>
-      </Card>
+      
 
-      <Card className="mb-4 border">
+    
         <Card.Body>
           <Row className="g-3">
             <Col lg={6}>
