@@ -73,7 +73,32 @@ export const INTAKE_RESERVED_COLUMNS = [
 
 // Reserved columns specific to General Forms (add reserved column names here if needed)
 export const FORM_RESERVED_COLUMNS = [
-  "Status",
+  "Id",
+"FormFilledId",
+"FormLinkId",
+"ProjectId",
+"TaskId",
+"ActivityName",
+"ResourceId",
+"FormName",
+"FormFilled_Name",
+"FormFilled_Email",
+"FormFilled_ContactNo",
+"Name",
+"Email",
+"ContactNo",
+"IsSubmitted",
+"FileId",
+"IsFormWorkFlow",
+"FormStatusId",
+"submit",
+"CreationTime",
+"UpdationTime",
+"DeletionTime",
+"Creator",
+"Updater",
+"RemoteHost",
+"Status"
 ];
 
 /**
