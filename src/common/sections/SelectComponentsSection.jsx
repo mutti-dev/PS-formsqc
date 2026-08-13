@@ -15,16 +15,17 @@ function SelectComponentsSection({ selectValues, onUpdateOption, onFixOptionKey 
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredSelectValues = useMemo(() => {
+    if (!selectValues || !Array.isArray(selectValues)) return [];
     if (!searchTerm) return selectValues;
     const lower = searchTerm.toLowerCase();
     return selectValues.filter(
       (select) =>
-        select.label.toLowerCase().includes(lower) ||
-        select.key.toLowerCase().includes(lower) ||
-        select.values.some(
+        (select.label || "").toLowerCase().includes(lower) ||
+        (select.key || "").toLowerCase().includes(lower) ||
+        (select.values || []).some(
           (opt) =>
-            opt.label.toLowerCase().includes(lower) ||
-            String(opt.value).toLowerCase().includes(lower)
+            (opt.label || "").toLowerCase().includes(lower) ||
+            String(opt.value || "").toLowerCase().includes(lower)
         )
     );
   }, [selectValues, searchTerm]);
@@ -78,7 +79,7 @@ function SelectComponentsSection({ selectValues, onUpdateOption, onFixOptionKey 
                 {/* Options — inline editable */}
                 <td>
                   <div className="d-flex flex-column gap-2">
-                    {select.values.map((option, optIdx) => {
+                    {(select.values || []).map((option, optIdx) => {
                       const expectedValue = option.label
                         ? option.label.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "")
                         : "";
@@ -97,7 +98,7 @@ function SelectComponentsSection({ selectValues, onUpdateOption, onFixOptionKey 
                               <Form.Label className="mb-1 text-muted small">Label</Form.Label>
                               <Form.Control
                                 size="sm"
-                                value={option.label}
+                                value={option.label || ""}
                                 onChange={(e) =>
                                   onUpdateOption?.(select.path, optIdx, "label", e.target.value)
                                 }
@@ -117,7 +118,7 @@ function SelectComponentsSection({ selectValues, onUpdateOption, onFixOptionKey 
                               </Form.Label>
                               <Form.Control
                                 size="sm"
-                                value={option.value}
+                                value={option.value || ""}
                                 onChange={(e) =>
                                   onUpdateOption?.(select.path, optIdx, "value", e.target.value)
                                 }
@@ -149,7 +150,7 @@ function SelectComponentsSection({ selectValues, onUpdateOption, onFixOptionKey 
                   </div>
 
                   <div className="mt-2 text-end">
-                    <Badge bg="info">{select.values.length} options</Badge>
+                    <Badge bg="info">{(select.values || []).length} options</Badge>
                   </div>
                 </td>
               </tr>

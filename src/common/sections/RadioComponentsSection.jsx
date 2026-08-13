@@ -15,16 +15,17 @@ function RadioComponentsSection({ radioValues, onUpdateOption, onFixOptionKey })
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredRadioValues = useMemo(() => {
+    if (!radioValues || !Array.isArray(radioValues)) return [];
     if (!searchTerm) return radioValues;
     const lower = searchTerm.toLowerCase();
     return radioValues.filter(
       (radio) =>
-        radio.label.toLowerCase().includes(lower) ||
-        radio.key.toLowerCase().includes(lower) ||
-        radio.values.some(
+        (radio.label || "").toLowerCase().includes(lower) ||
+        (radio.key || "").toLowerCase().includes(lower) ||
+        (radio.values || []).some(
           (opt) =>
-            opt.label.toLowerCase().includes(lower) ||
-            String(opt.value).toLowerCase().includes(lower)
+            (opt.label || "").toLowerCase().includes(lower) ||
+            String(opt.value || "").toLowerCase().includes(lower)
         )
     );
   }, [radioValues, searchTerm]);
@@ -78,7 +79,7 @@ function RadioComponentsSection({ radioValues, onUpdateOption, onFixOptionKey })
                 {/* Options — inline editable */}
                 <td>
                   <div className="d-flex flex-column gap-2">
-                    {radio.values.map((option, optIdx) => {
+                    {(radio.values || []).map((option, optIdx) => {
                       const expectedValue = option.label
                         ? option.label.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "")
                         : "";
@@ -97,7 +98,7 @@ function RadioComponentsSection({ radioValues, onUpdateOption, onFixOptionKey })
                               <Form.Label className="mb-1 text-muted small">Label</Form.Label>
                               <Form.Control
                                 size="sm"
-                                value={option.label}
+                                value={option.label || ""}
                                 onChange={(e) =>
                                   onUpdateOption?.(radio.path, optIdx, "label", e.target.value)
                                 }
@@ -117,7 +118,7 @@ function RadioComponentsSection({ radioValues, onUpdateOption, onFixOptionKey })
                               </Form.Label>
                               <Form.Control
                                 size="sm"
-                                value={option.value}
+                                value={option.value || ""}
                                 onChange={(e) =>
                                   onUpdateOption?.(radio.path, optIdx, "value", e.target.value)
                                 }
@@ -149,7 +150,7 @@ function RadioComponentsSection({ radioValues, onUpdateOption, onFixOptionKey })
                   </div>
 
                   <div className="mt-2 text-end">
-                    <Badge bg="info">{radio.values.length} options</Badge>
+                    <Badge bg="info">{(radio.values || []).length} options</Badge>
                   </div>
                 </td>
               </tr>

@@ -74,15 +74,15 @@ const RESERVED_COLUMNS = [
   "IntakeStatusId","CreationTime","Creator",
 ];
 
-const validateFormStructure = (labels, selectValues, radioValues, formConfig, formType = "Form") => {
+const validateFormStructure = (labels = [], selectValues = [], radioValues = [], formConfig = {}, formType = "Form") => {
   const issues = [];
 
-  labels.forEach((entry) => {
+  (labels || []).forEach((entry) => {
     if (entry.type === "content" || entry.type === "columns") return;
     const fieldLabel = entry.type === "panel" ? entry.title : entry.label;
     const fieldKey = entry.key;
 
-    if (fieldLabel && fieldKey) {
+    if (fieldLabel && fieldKey && typeof fieldKey === "string") {
       const expectedKey = convertLabelToKey(fieldLabel);
       if (expectedKey && fieldKey !== expectedKey) {
         issues.push({
@@ -97,7 +97,7 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig, fo
     }
 
     if (entry.type === "datagrid" || entry.type === "editgrid") {
-      const hasGridKeyword = fieldKey && (fieldKey.includes("Data_Grid") || fieldKey.includes("Grid") || fieldKey.toLowerCase().includes("data_grid") || fieldKey.toLowerCase().includes("grid"));
+      const hasGridKeyword = fieldKey && typeof fieldKey === "string" && (fieldKey.includes("Data_Grid") || fieldKey.includes("Grid") || fieldKey.toLowerCase().includes("data_grid") || fieldKey.toLowerCase().includes("grid"));
       if (!hasGridKeyword) {
         issues.push({
           type: "grid_key_missing_keyword",
@@ -120,10 +120,11 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig, fo
     }
   });
 
-  selectValues.forEach((entry) => {
-    if (!entry.options || !Array.isArray(entry.options)) return;
+  (selectValues || []).forEach((entry) => {
+    const opts = entry.values || entry.options;
+    if (!opts || !Array.isArray(opts)) return;
     const duplicateOptions = {};
-    entry.options.forEach((option) => {
+    opts.forEach((option) => {
       const key = `${option.label}|${option.value}`;
       duplicateOptions[key] = duplicateOptions[key]
         ? { ...duplicateOptions[key], count: duplicateOptions[key].count + 1 }
@@ -141,10 +142,11 @@ const validateFormStructure = (labels, selectValues, radioValues, formConfig, fo
     });
   });
 
-  radioValues.forEach((entry) => {
-    if (!entry.values || !Array.isArray(entry.values)) return;
+  (radioValues || []).forEach((entry) => {
+    const opts = entry.values || entry.options;
+    if (!opts || !Array.isArray(opts)) return;
     const duplicateOptions = {};
-    entry.values.forEach((option) => {
+    opts.forEach((option) => {
       const key = `${option.label}|${option.value}`;
       duplicateOptions[key] = duplicateOptions[key]
         ? { ...duplicateOptions[key], count: duplicateOptions[key].count + 1 }
@@ -325,7 +327,7 @@ export default function JSONExtractor() {
       }
 
       const initialCompCount = formConfig.components.length;
-      formConfig.components = removeSubmitButtonsOutsideContainer(formConfig.components);
+      formConfig.components = removeSubmitButtonsOutsideContainer(formConfig.components) || [];
       const removedSubmitCount = initialCompCount - formConfig.components.length;
       if (removedSubmitCount > 0) {
         addStep("Submit button cleanup", true, `Removed ${removedSubmitCount} submit button(s) outside of container`);

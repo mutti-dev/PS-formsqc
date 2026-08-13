@@ -14,13 +14,14 @@ function DuplicateAPISection({ duplicateKeys }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredDuplicateKeys = useMemo(() => {
+    if (!duplicateKeys || !Array.isArray(duplicateKeys)) return [];
     if (!searchTerm) return duplicateKeys;
     return duplicateKeys.filter(({ key }) =>
-      key.toLowerCase().includes(searchTerm.toLowerCase())
+      (key || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [duplicateKeys, searchTerm]);
 
-  if (duplicateKeys.length === 0) return null;
+  if (!duplicateKeys || duplicateKeys.length === 0) return null;
 
   return (
     <CollapsibleSection

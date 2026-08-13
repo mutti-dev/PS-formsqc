@@ -5,16 +5,16 @@ import {
 import CollapsibleSection from "../CollapsibleSection";
 
 
-function TypeFilterSection({ uniqueTypes, hiddenTypes, onToggle }) {
+function TypeFilterSection({ uniqueTypes = [], hiddenTypes = [], onToggle }) {
   return (
     <CollapsibleSection
       title="Filter by Type"
-      count={`${hiddenTypes.length} hidden`}
+      count={`${(hiddenTypes || []).length} hidden`}
       defaultOpen={false}
     >
       <div className="d-flex flex-wrap gap-2">
-        {uniqueTypes.map((type) => {
-          const isHidden = hiddenTypes.includes(type);
+        {(uniqueTypes || []).map((type) => {
+          const isHidden = (hiddenTypes || []).includes(type);
           return (
             <Button
               key={type}

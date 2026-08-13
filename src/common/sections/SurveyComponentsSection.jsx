@@ -7,21 +7,22 @@ function SurveyComponentsSection({ surveyValues }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredSurveyValues = useMemo(() => {
+    if (!surveyValues || !Array.isArray(surveyValues)) return [];
     if (!searchTerm) return surveyValues;
     const term = searchTerm.toLowerCase();
     return surveyValues.filter(
       (survey) =>
-        survey.label.toLowerCase().includes(term) ||
-        survey.key.toLowerCase().includes(term) ||
-        survey.questions.some(
+        (survey.label || "").toLowerCase().includes(term) ||
+        (survey.key || "").toLowerCase().includes(term) ||
+        (survey.questions || []).some(
           (q) =>
-            q.label.toLowerCase().includes(term) ||
-            String(q.value).toLowerCase().includes(term)
+            (q.label || "").toLowerCase().includes(term) ||
+            String(q.value || "").toLowerCase().includes(term)
         ) ||
         (survey.values || []).some(
           (v) =>
-            v.label.toLowerCase().includes(term) ||
-            String(v.value).toLowerCase().includes(term)
+            (v.label || "").toLowerCase().includes(term) ||
+            String(v.value || "").toLowerCase().includes(term)
         )
     );
   }, [surveyValues, searchTerm]);
@@ -75,11 +76,11 @@ function SurveyComponentsSection({ surveyValues }) {
                 {/* QUESTIONS — the row items */}
                 <td>
                   <div className="p-2 rounded bg-body-secondary">
-                    {survey.questions.length === 0 ? (
+                    {!survey.questions || survey.questions.length === 0 ? (
                       <span className="text-muted small fst-italic">No questions</span>
                     ) : (
                       <div className="d-flex flex-column gap-1">
-                        {survey.questions.map((q, qIdx) => (
+                        {(survey.questions || []).map((q, qIdx) => (
                           <div
                             key={qIdx}
                             className="px-2 py-1 rounded border bg-body d-flex justify-content-between align-items-center gap-2"
@@ -97,8 +98,8 @@ function SurveyComponentsSection({ surveyValues }) {
                     )}
                     <div className="mt-2 text-end">
                       <Badge bg="primary" pill>
-                        {survey.questions.length}{" "}
-                        {survey.questions.length === 1 ? "question" : "questions"}
+                        {(survey.questions || []).length}{" "}
+                        {(survey.questions || []).length === 1 ? "question" : "questions"}
                       </Badge>
                     </div>
                   </div>
@@ -111,7 +112,7 @@ function SurveyComponentsSection({ surveyValues }) {
                       <span className="text-muted small fst-italic">No rating options</span>
                     ) : (
                       <div className="d-flex flex-wrap gap-1">
-                        {survey.values.map((v, vIdx) => (
+                        {(survey.values || []).map((v, vIdx) => (
                           <span
                             key={vIdx}
                             className="px-2 py-1 rounded border bg-body small d-inline-flex align-items-center gap-1"

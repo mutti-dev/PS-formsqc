@@ -66,7 +66,7 @@ export const exportToExcel = (data, hiddenTypes, selectValues = [], radioValues 
   XLSX.utils.book_append_sheet(wb, ws, "Labels");
   
   // Auto-size columns slightly for better readability
-  const max_width = exportData.reduce((w, r) => Math.max(w, r.Label.length), 10);
+  const max_width = exportData.reduce((w, r) => Math.max(w, r.Label ? String(r.Label).length : 0), 10);
   ws["!cols"] = [{ wch: max_width }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 40 }, { wch: 40 }];
 
   XLSX.writeFile(wb, `form-mapping-${new Date().toISOString().split("T")[0]}.xlsx`);

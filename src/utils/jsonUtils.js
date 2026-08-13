@@ -217,6 +217,8 @@ export const removeSubmitButtonsOutsideContainer = (components) => {
   ) {
     return components.slice(0, -1);
   }
+
+  return components;
 };
 
 /**

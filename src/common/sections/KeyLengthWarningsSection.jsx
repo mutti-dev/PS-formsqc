@@ -14,14 +14,16 @@ function KeyLengthWarningsSection({ longKeys, threshold }) {
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredLongKeys = useMemo(() => {
+        if (!longKeys || !Array.isArray(longKeys)) return [];
         if (!searchTerm) return longKeys;
+        const lower = searchTerm.toLowerCase();
         return longKeys.filter(entry =>
-            entry.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            entry.key.toLowerCase().includes(searchTerm.toLowerCase())
+            (entry.label || "").toLowerCase().includes(lower) ||
+            (entry.key || "").toLowerCase().includes(lower)
         );
     }, [longKeys, searchTerm]);
 
-    if (longKeys.length === 0) return null;
+    if (!longKeys || longKeys.length === 0) return null;
 
     return (
         <CollapsibleSection
@@ -42,10 +44,10 @@ function KeyLengthWarningsSection({ longKeys, threshold }) {
                     <ListGroupItem key={idx} className="border-0">
                         <div className="d-flex justify-content-between align-items-center mb-1">
                             <strong>{entry.label}</strong>
-                            <Badge bg="danger">{entry.key.length} characters</Badge>
+                            <Badge bg="danger">{entry.key ? String(entry.key).length : 0} characters</Badge>
                         </div>
                         <code className="text-muted font-monospace  p-1 rounded d-block text-truncate">
-                            {entry.key.substring(0, threshold)}...
+                            {entry.key ? String(entry.key).substring(0, threshold) : ""}...
                         </code>
                     </ListGroupItem>
                 ))}

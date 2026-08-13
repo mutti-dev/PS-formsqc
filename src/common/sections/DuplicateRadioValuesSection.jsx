@@ -7,21 +7,23 @@ function DuplicateRadioValuesSection({ radioValues }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const itemsWithDuplicates = useMemo(() => {
+    if (!radioValues || !Array.isArray(radioValues)) return [];
     const duplicates = radioValues.filter(
-      (item) => item.duplicateValues?.length > 0
+      (item) => item && item.duplicateValues?.length > 0
     );
     if (!searchTerm) return duplicates;
+    const lowerSearch = searchTerm.toLowerCase();
     return duplicates.filter(item =>
-      item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.duplicateValues.some(dup =>
-        dup.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dup.labels.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()))
+      (item.label || "").toLowerCase().includes(lowerSearch) ||
+      (item.key || "").toLowerCase().includes(lowerSearch) ||
+      (item.duplicateValues || []).some(dup =>
+        (dup.value || "").toLowerCase().includes(lowerSearch) ||
+        (dup.labels || []).some(label => (label || "").toLowerCase().includes(lowerSearch))
       )
     );
   }, [radioValues, searchTerm]);
 
-  if (itemsWithDuplicates.length === 0) return null;
+  if (!itemsWithDuplicates || itemsWithDuplicates.length === 0) return null;
 
   return (
     <CollapsibleSection

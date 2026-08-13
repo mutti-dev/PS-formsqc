@@ -14,13 +14,14 @@ function DuplicateLabelsSection({ duplicateLabels }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredDuplicateLabels = useMemo(() => {
+    if (!duplicateLabels || !Array.isArray(duplicateLabels)) return [];
     if (!searchTerm) return duplicateLabels;
     return duplicateLabels.filter(({ label }) =>
-      label.toLowerCase().includes(searchTerm.toLowerCase())
+      (label || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [duplicateLabels, searchTerm]);
 
-  if (duplicateLabels.length === 0) return null;
+  if (!duplicateLabels || duplicateLabels.length === 0) return null;
 
   return (
     <CollapsibleSection
