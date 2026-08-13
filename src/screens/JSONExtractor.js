@@ -1075,6 +1075,7 @@ export default function JSONExtractor() {
                 <Col>
                   <JsonStatsSection
                     jsonStats={jsonStats}
+                    labels={labels}
                     searchResults={searchResults.length > 0 ? searchResults : null}
                   />
 
