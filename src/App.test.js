@@ -1,8 +1,9 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import WordConverter from './screens/WordConverter';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('renders text & word tools page header', () => {
+  render(<WordConverter theme="dark" />);
+  const headerElement = screen.getByText(/Text & Option Tools/i);
+  expect(headerElement).toBeInTheDocument();
 });

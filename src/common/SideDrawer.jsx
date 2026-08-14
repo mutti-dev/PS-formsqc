@@ -7,8 +7,8 @@ import {
   JustifyRight,
   FileEarmarkText,
   FileWord,
-  CodeSlash,
   BarChart,
+  Database,
 } from "react-bootstrap-icons";
 
 export default function SideDrawer({
@@ -32,13 +32,13 @@ export default function SideDrawer({
     },
     {
       path: "/Converter",
-      name: "Word Converter",
+      name: "Text & Word Converter",
       icon: <FileWord />,
     },
     {
-      path: "/TextConverter",
-      name: "API Maker",
-      icon: <CodeSlash />,
+      path: "/DataAnalyzer",
+      name: "Data Analyzer",
+      icon: <Database />,
     },
   ];
 

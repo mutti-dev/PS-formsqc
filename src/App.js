@@ -8,6 +8,7 @@ import WordConverter from './screens/WordConverter';
 import TextConverter from './screens/TextConverter';
 
 import AdvancedJSONComparator from './screens/AdvancedJSONComparator';
+import DataAnalyzer from './screens/DataAnalyzer';
 import AIPrompt from './screens/AIPrompt';
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
           >
             <Routes>
               <Route path="/JsonExtractor" element={<JSONExtractor theme={theme} />} />
+              <Route path="/DataAnalyzer" element={<DataAnalyzer theme={theme} />} />
               <Route path="/Converter" element={<WordConverter />} />
 
               <Route path="/AdvancedJSONComparator" element={<AdvancedJSONComparator theme={theme} />} />

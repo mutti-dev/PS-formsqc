@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import JsonStatsSection from './JsonStatsSection';
 
 describe('JsonStatsSection', () => {
@@ -28,9 +28,11 @@ describe('JsonStatsSection', () => {
   it('renders statistics and component usage excluding content, column, columns, panel', () => {
     render(<JsonStatsSection jsonStats={sampleJsonStats} labels={sampleLabels} />);
 
-    // Check main JSON stats
-    expect(screen.getByText('15')).toBeInTheDocument();
-    expect(screen.getByText('Total Elements')).toBeInTheDocument();
+    // Check main JSON stats badge
+    expect(screen.getByText(/15 elements/i)).toBeInTheDocument();
+
+    // Expand accordion card
+    fireEvent.click(screen.getByText('JSON Statistics'));
 
     // Check component usage section
     expect(screen.getByText('Component Usage Statistics')).toBeInTheDocument();
