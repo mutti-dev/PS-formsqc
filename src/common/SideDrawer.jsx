@@ -9,7 +9,6 @@ import {
   FileWord,
   CodeSlash,
   BarChart,
-  Robot,
 } from "react-bootstrap-icons";
 
 export default function SideDrawer({
@@ -40,11 +39,6 @@ export default function SideDrawer({
       path: "/TextConverter",
       name: "API Maker",
       icon: <CodeSlash />,
-    },
-    {
-      path: "/AIPrompt",
-      name: "AI Prompt",
-      icon: <Robot />,
     },
   ];
 

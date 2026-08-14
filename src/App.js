@@ -55,7 +55,7 @@ function App() {
             }}
           >
             <Routes>
-              <Route path="/JsonExtractor" element={<JSONExtractor />} />
+              <Route path="/JsonExtractor" element={<JSONExtractor theme={theme} />} />
               <Route path="/Converter" element={<WordConverter />} />
 
               <Route path="/AdvancedJSONComparator" element={<AdvancedJSONComparator theme={theme} />} />

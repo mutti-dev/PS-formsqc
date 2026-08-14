@@ -17,10 +17,12 @@ import {
   Form,
   Alert,
   Spinner,
-  ProgressBar,
   Badge,
   InputGroup,
+  Modal,
 } from "react-bootstrap";
+import { Robot, Clipboard, ClipboardCheck } from "react-bootstrap-icons";
+import { AI_PROMPT_TEXT } from "../config/aiPrompt";
 import {
   extractFormJson,
   deepParse,
@@ -48,6 +50,7 @@ import {
   RadioComponentsSection,
   DuplicateRadioValuesSection,
   ConditionsSection,
+  ValidationSection,
 } from "../common/sections";
 
 import { checkReservedColumnMatch } from "../config/reservedColumns";
@@ -60,7 +63,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-const validateFormStructure = (labels = [], selectValues = [], radioValues = [], formConfig = {}, formType = "Form") => {
+const validateFormStructure = (labels = [], selectValues = [], radioValues = [], formConfig = {}, formType = "Form", keyLengthThreshold = 110) => {
   const issues = [];
 
   (labels || []).forEach((entry) => {
@@ -77,9 +80,27 @@ const validateFormStructure = (labels = [], selectValues = [], radioValues = [],
           field: fieldLabel,
           key: fieldKey,
           expected: expectedKey,
+          path: entry.path,
+          labelField: entry.type === "panel" ? "title" : "label",
           message: `Label and Key mismatch: "${fieldLabel}" should have key "${expectedKey}", not "${fieldKey}"`,
         });
       }
+    }
+
+    if (fieldKey && typeof fieldKey === "string" && keyLengthThreshold && fieldKey.length > keyLengthThreshold) {
+      let expectedKey = convertLabelToKey(fieldLabel) || fieldKey;
+      if (expectedKey.length > keyLengthThreshold) {
+        expectedKey = expectedKey.substring(0, keyLengthThreshold);
+      }
+      issues.push({
+        type: "key_length_exceeded",
+        severity: "error",
+        field: fieldLabel,
+        key: fieldKey,
+        expected: expectedKey,
+        path: entry.path,
+        message: `Field key "${fieldKey}" length (${fieldKey.length}) exceeds maximum limit of ${keyLengthThreshold} characters`,
+      });
     }
 
     if (entry.type === "datagrid" || entry.type === "editgrid") {
@@ -193,7 +214,7 @@ const updateConditionalsInJson = (obj, oldValue, newValue, fields = ["when"], pa
 // Component
 // ─────────────────────────────────────────────────────────────
 
-export default function JSONExtractor() {
+export default function JSONExtractor({ theme = "dark" }) {
   const [jsonInput, setJsonInput] = useState("");
   const [searchKeys, setSearchKeys] = useState("");
   const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
@@ -227,11 +248,18 @@ export default function JSONExtractor() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [parsingSteps, setParsingSteps] = useState([]);
-  const [showDebug, setShowDebug] = useState(false);
-  const [showValidationIssues, setShowValidationIssues] = useState(true);
 
   const [importWarnings, setImportWarnings] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [showAiPromptModal, setShowAiPromptModal] = useState(false);
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(AI_PROMPT_TEXT).then(() => {
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 2500);
+    });
+  };
   const importFileRef    = React.useRef(null);
   // Stores the extracted formConfig object so all path-based edits
   // are relative to it, not to the raw fullParsedJson wrapper.
@@ -422,7 +450,7 @@ export default function JSONExtractor() {
       }
 
       addStep("Validating form structure and field integrity");
-      const issues = validateFormStructure(labels, selectValues, radioValues, formConfig, formType);
+      const issues = validateFormStructure(labels, selectValues, radioValues, formConfig, formType, keyLengthThreshold);
       const errorIssues = issues.filter((i) => i.severity === "error");
       addStep(
         "Form structure validation",
@@ -541,6 +569,9 @@ export default function JSONExtractor() {
     const newRadio      = extractRadioValues(updatedFormConfig);
     const newSurvey     = extractSurveyValues(updatedFormConfig);
     const newConditions = extractConditions(updatedFormConfig);
+    const newIssues     = validateFormStructure(newLabels, newSelect, newRadio, updatedFormConfig, formType, keyLengthThreshold);
+
+    setValidationIssues(newIssues);
 
     setExtractedData((prev) => ({
       ...prev,
@@ -616,6 +647,51 @@ export default function JSONExtractor() {
     const fixedValue = convertLabelToKey(option.label);
     if (!fixedValue) return;
     updateOptionField(path, optIdx, "value", fixedValue, kind);
+  };
+
+  // ── Fix issue from ValidationSection ────────────────────
+  const handleFixIssue = (issue) => {
+    if (
+      (issue.type === "label_key_mismatch" || issue.type === "key_length_exceeded") &&
+      issue.path &&
+      issue.expected
+    ) {
+      updateJsonField(issue.path, "key", issue.expected);
+    }
+  };
+
+  const handleFixAllIssues = () => {
+    const fixable = validationIssues.filter(
+      (i) =>
+        (i.type === "label_key_mismatch" || i.type === "key_length_exceeded") &&
+        i.path &&
+        i.expected
+    );
+    if (fixable.length === 0) return;
+
+    let currentFormConfig = formConfigRef.current;
+    let allPatches = [];
+
+    fixable.forEach((issue) => {
+      const oldKey = getByPath(currentFormConfig, [...issue.path, "key"]);
+      let updated = setByPath(currentFormConfig, [...issue.path, "key"], issue.expected);
+
+      if (oldKey && oldKey !== issue.expected) {
+        const res = updateConditionalsInJson(
+          updated,
+          oldKey,
+          issue.expected,
+          ["when"],
+          allPatches,
+          { referenceKey: oldKey }
+        );
+        updated = res.updated;
+        allPatches = res.patches;
+      }
+      currentFormConfig = updated;
+    });
+
+    applyJsonUpdate(currentFormConfig, allPatches);
   };
 
   // ── Format / clear ───────────────────────────────────────
@@ -900,6 +976,19 @@ export default function JSONExtractor() {
                   )}
                 </Button>
 
+                <Button
+                  variant="primary"
+                  className="d-flex align-items-center gap-2 fw-semibold shadow-sm text-white"
+                  style={{
+                    background: "linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%)",
+                    border: "none",
+                    borderRadius: "6px",
+                  }}
+                  onClick={() => setShowAiPromptModal(true)}
+                >
+                  <Robot className="fs-5" /> AI Excel Prompt
+                </Button>
+
                 <Form.Control
                   type="number"
                   min="50"
@@ -912,133 +1001,15 @@ export default function JSONExtractor() {
                 <Form.Label className="mb-0 text-nowrap">Key Limit</Form.Label>
               </div>
 
-              {/* Parsing steps */}
+              {/* Parsing steps & Validation Section */}
               {parsingSteps.length > 0 && (
-                <Card className="mb-3 border">
-                  <Card.Header className="d-flex justify-content-between align-items-center">
-                    <div className="d-flex align-items-center gap-2">
-                      <span className="fw-semibold">Validation Steps</span>
-                      {validationIssues.length > 0 && (
-                        <Badge
-                          bg={
-                            validationIssues.filter((i) => i.severity === "error").length > 0
-                              ? "danger"
-                              : "warning"
-                          }
-                        >
-                          {validationIssues.filter((i) => i.severity === "error").length > 0
-                            ? `${validationIssues.filter((i) => i.severity === "error").length} Error(s)`
-                            : `${validationIssues.length} Warning(s)`}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="d-flex gap-2">
-                      {validationIssues.length > 0 && (
-                        <Button
-                          variant="link"
-                          
-                          size="sm"
-                          onClick={() => setShowValidationIssues(!showValidationIssues)}
-                        >
-                          {showValidationIssues ? "Hide" : "Show"} Issues
-                        </Button>
-                      )}
-                      <Button
-                        variant="link"
-                        
-                        size="sm"
-                        onClick={() => setShowDebug(!showDebug)}
-                      >
-                        {showDebug ? "Hide" : "Show"} Details
-                      </Button>
-                    </div>
-                  </Card.Header>
-                  <Card.Body>
-                    <ProgressBar
-                      now={
-                        parsingSteps.length > 0
-                          ? (parsingSteps.filter((s) => s.success).length / parsingSteps.length) * 100
-                          : 0
-                      }
-                      variant={
-                        validationIssues.some((i) => i.severity === "error") || parsingSteps.some((s) => !s.success)
-                          ? "danger"
-                          : validationIssues.some((i) => i.severity === "warning")
-                          ? "warning"
-                          : "success"
-                      }
-                      className="mb-3"
-                    />
-
-                    {showValidationIssues && validationIssues.length > 0 && (
-                      <div className="mb-3 pb-3 border-bottom">
-                        {validationIssues.filter((i) => i.severity === "error").length > 0 && (
-                          <div className="mb-3">
-                            <h6 className="text-danger fw-bold mb-2">
-                              Errors ({validationIssues.filter((i) => i.severity === "error").length})
-                            </h6>
-                            <div className="list-group">
-                              {validationIssues
-                                .filter((i) => i.severity === "error")
-                                .map((issue, idx) => (
-                                  <div key={idx} className="list-group-item bg-danger bg-opacity-10 py-2">
-                                    <div className="fw-bold text-danger small">{issue.message}</div>
-                                    {issue.field && (
-                                      <div className="small text-muted mt-1">Field: {issue.field}</div>
-                                    )}
-                                    {issue.key && (
-                                      <div className="small text-muted">
-                                        Key: <code>{issue.key}</code>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        )}
-                        {validationIssues.filter((i) => i.severity === "warning").length > 0 && (
-                          <div>
-                            <h6 className="text-warning fw-bold mb-2">
-                              Warnings ({validationIssues.filter((i) => i.severity === "warning").length})
-                            </h6>
-                            <div className="list-group">
-                              {validationIssues
-                                .filter((i) => i.severity === "warning")
-                                .map((issue, idx) => (
-                                  <div key={idx} className="list-group-item bg-warning bg-opacity-10 py-2">
-                                    <div className="fw-bold text-warning small">{issue.message}</div>
-                                    {issue.field && (
-                                      <div className="small text-muted mt-1">Field: {issue.field}</div>
-                                    )}
-                                    {issue.expected && (
-                                      <div className="small text-muted">
-                                        Expected: <code>{issue.expected}</code>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {showDebug &&
-                      parsingSteps.map((step, i) => (
-                        <div
-                          key={i}
-                          className={`small ${step.success ? "text-success" : "text-danger"}`}
-                        >
-                          <strong>
-                            {step.success ? "✓" : "✗"} {step.step}
-                          </strong>
-                          {step.details && (
-                            <span className="ms-2 text-muted">— {step.details}</span>
-                          )}
-                        </div>
-                      ))}
-                  </Card.Body>
-                </Card>
+                <ValidationSection
+                  validationIssues={validationIssues}
+                  parsingSteps={parsingSteps}
+                  onFixIssue={handleFixIssue}
+                  onFixAll={handleFixAllIssues}
+                  theme={theme}
+                />
               )}
 
               {importWarnings.length > 0 && (
@@ -1364,6 +1335,70 @@ export default function JSONExtractor() {
           )}
         </Col>
       </Row>
+
+      {/* ── AI Prompt Modal ── */}
+      <Modal
+        show={showAiPromptModal}
+        onHide={() => setShowAiPromptModal(false)}
+        size="lg"
+        centered
+        data-bs-theme={theme}
+      >
+        <Modal.Header closeButton className="bg-body-tertiary border-bottom py-3">
+          <Modal.Title className="d-flex align-items-center gap-2 fw-bold text-primary">
+            <Robot className="fs-4" style={{ color: "#6f42c1" }} />
+            AI Prompt — Excel Generator
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body className="p-4">
+          <div className="p-3 mb-3 rounded bg-body-tertiary border">
+            <h6 className="fw-bold mb-2 text-body">How to use this AI Prompt:</h6>
+            <ol className="mb-0 small text-body-secondary" style={{ lineHeight: "1.8" }}>
+              <li>Click <strong>Copy Prompt</strong> below.</li>
+              <li>Open ChatGPT, Claude, or your preferred AI assistant.</li>
+              <li>Attach your <strong>Excel sheet.</strong></li>
+              <li>Paste the prompt and send.</li>
+              <li>Download the generated <code>.xlsx</code> file and click <strong>Import from Excel</strong> in this tool!</li>
+            </ol>
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="fw-semibold small text-body-secondary">Prompt Template</span>
+          
+          </div>
+
+          <pre
+            className="p-3 bg-dark text-light rounded font-monospace small border border-secondary border-opacity-50"
+            style={{
+              maxHeight: "350px",
+              overflowY: "auto",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              fontSize: "0.82rem",
+            }}
+          >
+            {AI_PROMPT_TEXT}
+          </pre>
+        </Modal.Body>
+
+        <Modal.Footer className="bg-body-tertiary border-top py-2">
+          <Button
+            variant={promptCopied ? "success" : "primary"}
+            onClick={handleCopyPrompt}
+            className="d-flex align-items-center gap-2"
+          >
+            {promptCopied ? (
+              <><ClipboardCheck size={18} /> Copied!</>
+            ) : (
+              <><Clipboard size={18} /> Copy Prompt</>
+            )}
+          </Button>
+          <Button variant="secondary" onClick={() => setShowAiPromptModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }

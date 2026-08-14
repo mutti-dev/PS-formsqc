@@ -11,3 +11,4 @@ export { default as JsonStatsSection } from './JsonStatsSection';
 export { default as DuplicateRadioValuesSection } from './DuplicateRadioValuesSection';
 export { default as RadioComponentsSection } from './RadioComponentsSection';
 export { default as ConditionsSection } from './ConditionsSection';
+export { default as ValidationSection } from './ValidationSection';
