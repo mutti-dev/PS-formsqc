@@ -1,0 +1,341 @@
+/* =========================================================
+   Data Analyzer - Modern & Advanced UI Styling
+   ========================================================= */
+
+.data-analyzer-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 3rem 1.5rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ── Top Header & Action Bar ── */
+.analyzer-header {
+  background: var(--bs-body-bg);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.analyzer-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.analyzer-icon-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+.analyzer-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: 20px;
+  background: rgba(128, 128, 128, 0.12);
+  color: var(--bs-body-color);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+/* ── Drag & Drop Zone ── */
+.dropzone-card {
+  border: 2px dashed rgba(59, 130, 246, 0.35);
+  border-radius: 20px;
+  background: rgba(59, 130, 246, 0.02);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropzone-card:hover,
+.dropzone-card.drag-active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+}
+
+.dropzone-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.2));
+  color: #3b82f6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Executive Quality Scorecard ── */
+.scorecard-row {
+  display: grid;
+  grid-template-columns: 280px repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 992px) {
+  .scorecard-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.score-main-card {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.score-circle-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.75rem 0;
+}
+
+.radial-score-val {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.grade-pill {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: 30px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-card {
+  background: var(--bs-body-bg);
+  border: 1px solid rgba(128, 128, 128, 0.18);
+  border-radius: 16px;
+  padding: 1.15rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.metric-card.active-filter {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.04);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bs-secondary-color);
+}
+
+.metric-value {
+  font-size: 1.85rem;
+  font-weight: 700;
+  margin: 0.35rem 0;
+}
+
+/* ── Smart Insights Strip ── */
+.insights-strip {
+  background: rgba(128, 128, 128, 0.07);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.insight-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  background: var(--bs-body-bg);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  font-weight: 500;
+}
+
+/* ── Custom Tab Navigation ── */
+.analyzer-tabs .nav-link {
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.7rem 1.25rem;
+  color: var(--bs-secondary-color);
+  border: none;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analyzer-tabs .nav-link:hover {
+  color: #3b82f6;
+}
+
+.analyzer-tabs .nav-link.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: transparent;
+}
+
+/* ── Data Grid Table & Highlights ── */
+.data-grid-table {
+  font-size: 0.88rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.data-grid-table thead th {
+  background: rgba(128, 128, 128, 0.08);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 2px solid rgba(128, 128, 128, 0.2);
+}
+
+.data-grid-table tbody td {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.12);
+  vertical-align: middle;
+}
+
+.cell-has-error {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+  color: #dc2626 !important;
+  font-weight: 600;
+  border-left: 2px solid #ef4444;
+}
+
+.cell-has-warning {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+  color: #d97706 !important;
+  border-left: 2px solid #f59e0b;
+}
+
+.cell-null-pill {
+  font-size: 0.72rem;
+  font-family: monospace;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(128, 128, 128, 0.2);
+  color: var(--bs-secondary-color);
+}
+
+/* ── Column Profiling Grid Cards ── */
+.profiling-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.profile-card {
+  background: var(--bs-body-bg);
+  border: 1px solid rgba(128, 128, 128, 0.18);
+  border-radius: 14px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s;
+}
+
+.profile-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Clean & Remediation Studio ── */
+.remediation-option-card {
+  background: var(--bs-body-bg);
+  border: 1px solid rgba(128, 128, 128, 0.18);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+.remediation-option-card:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.02);
+}
+
+/* ── Clean Scrollbars ── */
+.custom-table-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.custom-table-container::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.25);
+  border-radius: 4px;
+}
+
+.custom-table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.45);
+}

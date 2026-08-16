@@ -10,6 +10,7 @@ import TextConverter from './screens/TextConverter';
 import AdvancedJSONComparator from './screens/AdvancedJSONComparator';
 import DataAnalyzer from './screens/DataAnalyzer';
 import AIPrompt from './screens/AIPrompt';
+import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -69,6 +70,7 @@ function App() {
           </main>
         </div>
       </Router>
+      <Analytics />
     </div>
   );
 }

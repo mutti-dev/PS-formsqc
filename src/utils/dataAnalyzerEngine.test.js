@@ -2,6 +2,8 @@ import {
   detectColumnType,
   profileColumn,
   evaluateDataQuality,
+  parseRawText,
+  cleanDataset,
 } from "./dataAnalyzerEngine";
 
 describe("dataAnalyzerEngine", () => {
@@ -58,4 +60,36 @@ describe("dataAnalyzerEngine", () => {
     );
     expect(dupRowIssue).toBeDefined();
   });
+
+  it("parses raw CSV and JSON text accurately", () => {
+    const jsonText = JSON.stringify([{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }]);
+    const jsonParsed = parseRawText(jsonText, "json");
+    expect(jsonParsed.totalRows).toBe(2);
+    expect(jsonParsed.columns).toEqual(["id", "name"]);
+
+    const csvText = "id,name\n1,Alice\n2,Bob";
+    const csvParsed = parseRawText(csvText, "auto");
+    expect(csvParsed.totalRows).toBe(2);
+  });
+
+  it("cleans dataset by removing duplicates, trimming whitespace, and coercing numbers", () => {
+    const dirtyRows = [
+      { id: " 101 ", name: "  Alice  ", score: "88.5" },
+      { id: " 101 ", name: "  Alice  ", score: "88.5" }, // duplicate
+    ];
+    const columns = ["id", "name", "score"];
+
+    const cleanResult = cleanDataset(dirtyRows, columns, {
+      removeDuplicates: true,
+      trimWhitespace: true,
+      coerceNumbers: true,
+    });
+
+    expect(cleanResult.cleanedRows.length).toBe(1);
+    expect(cleanResult.cleanedRows[0].id).toBe(101); // coerced to number
+    expect(cleanResult.cleanedRows[0].name).toBe("Alice"); // trimmed
+    expect(cleanResult.cleanedRows[0].score).toBe(88.5); // coerced to number
+    expect(cleanResult.changes.duplicatesRemoved).toBe(1);
+  });
 });
+

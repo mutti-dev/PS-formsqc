@@ -412,3 +412,231 @@ export function exportIssueReport(issues, fileName = "data_quality_issues.csv") 
   XLSX.utils.book_append_sheet(workbook, worksheet, "Data Quality Issues");
   XLSX.writeFile(workbook, fileName);
 }
+
+/**
+ * Parse raw text (CSV or JSON string) directly
+ */
+export function parseRawText(rawText, formatHint = "auto") {
+  const trimmed = (rawText || "").trim();
+  if (!trimmed) {
+    throw new Error("Pasted text is empty.");
+  }
+
+  // Attempt JSON parsing if hint is json or starts with [ or {
+  if (formatHint === "json" || trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      const rows = Array.isArray(parsed)
+        ? parsed
+        : parsed.data && Array.isArray(parsed.data)
+        ? parsed.data
+        : [parsed];
+
+      if (rows.length === 0) throw new Error("JSON contains no rows");
+
+      const colSet = new Set();
+      rows.forEach((r) => {
+        if (r && typeof r === "object") {
+          Object.keys(r).forEach((k) => colSet.add(k));
+        }
+      });
+      const columns = Array.from(colSet);
+      return {
+        rows,
+        columns,
+        fileName: "Pasted_Dataset.json",
+        totalRows: rows.length,
+        totalCols: columns.length,
+      };
+    } catch (err) {
+      if (formatHint === "json") {
+        throw new Error("Invalid JSON format: " + err.message);
+      }
+    }
+  }
+
+  // Fallback to CSV parsing using XLSX
+  try {
+    const workbook = XLSX.read(trimmed, { type: "string" });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: null });
+
+    if (rows.length === 0) {
+      throw new Error("Parsed data contains no rows");
+    }
+    const columns = Object.keys(rows[0] || {});
+    return {
+      rows,
+      columns,
+      fileName: "Pasted_Dataset.csv",
+      totalRows: rows.length,
+      totalCols: columns.length,
+    };
+  } catch (err) {
+    throw new Error("Failed to parse text: " + err.message);
+  }
+}
+
+/**
+ * Perform safe automated data cleaning & remediation operations
+ */
+export function cleanDataset(rows, columns, options = {}) {
+  const {
+    removeDuplicates = true,
+    trimWhitespace = true,
+    coerceNumbers = true,
+    fillNulls = false,
+    fillNullValue = "N/A",
+    dropEmptyCols = false,
+    standardizeCasing = "none", // 'none' | 'lowercase' | 'uppercase' | 'titlecase'
+    keyColumns = [],
+  } = options;
+
+  let currentRows = rows.map((r) => ({ ...r }));
+  let currentCols = [...columns];
+  const changes = {
+    duplicatesRemoved: 0,
+    cellsTrimmed: 0,
+    numbersCoerced: 0,
+    nullsFilled: 0,
+    colsDropped: 0,
+  };
+
+  // 1. Remove Duplicate Rows
+  if (removeDuplicates) {
+    const seen = new Set();
+    const uniqueRows = [];
+    currentRows.forEach((r) => {
+      let key = "";
+      if (keyColumns.length > 0) {
+        key = keyColumns.map((k) => String(r[k] ?? "")).join("___");
+      } else {
+        key = JSON.stringify(r);
+      }
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueRows.push(r);
+      } else {
+        changes.duplicatesRemoved++;
+      }
+    });
+    currentRows = uniqueRows;
+  }
+
+  // 2. Cell transformations
+  currentRows = currentRows.map((row) => {
+    const newRow = { ...row };
+    currentCols.forEach((col) => {
+      let val = newRow[col];
+
+      // Trim whitespace
+      if (trimWhitespace && typeof val === "string") {
+        const trimmed = val.trim();
+        if (trimmed !== val) {
+          val = trimmed;
+          changes.cellsTrimmed++;
+        }
+      }
+
+      // Coerce Numbers
+      if (coerceNumbers && typeof val === "string" && val !== "") {
+        const num = Number(val);
+        if (!isNaN(num)) {
+          val = num;
+          changes.numbersCoerced++;
+        }
+      }
+
+      // Casing
+      if (typeof val === "string" && val.length > 0) {
+        if (standardizeCasing === "lowercase") {
+          val = val.toLowerCase();
+        } else if (standardizeCasing === "uppercase") {
+          val = val.toUpperCase();
+        } else if (standardizeCasing === "titlecase") {
+          val = val.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+        }
+      }
+
+      // Fill Nulls
+      if (
+        fillNulls &&
+        (val === null || val === undefined || (typeof val === "string" && val === ""))
+      ) {
+        val = fillNullValue;
+        changes.nullsFilled++;
+      }
+
+      newRow[col] = val;
+    });
+    return newRow;
+  });
+
+  // 3. Drop empty columns
+  if (dropEmptyCols) {
+    const retainedCols = currentCols.filter((col) => {
+      const allNull = currentRows.every(
+        (r) => r[col] === null || r[col] === undefined || String(r[col]).trim() === ""
+      );
+      if (allNull) {
+        changes.colsDropped++;
+        return false;
+      }
+      return true;
+    });
+
+    if (retainedCols.length > 0) {
+      currentCols = retainedCols;
+      currentRows = currentRows.map((r) => {
+        const trimmedRow = {};
+        currentCols.forEach((c) => {
+          trimmedRow[c] = r[c];
+        });
+        return trimmedRow;
+      });
+    }
+  }
+
+  return {
+    cleanedRows: currentRows,
+    cleanedColumns: currentCols,
+    changes,
+  };
+}
+
+/**
+ * Export cleaned dataset to CSV, Excel XLSX, or JSON
+ */
+export function exportCleanedData(rows, columns, format = "csv", fileName = "cleaned_data") {
+  if (!rows || rows.length === 0) return;
+
+  const baseName = fileName.replace(/\.[^/.]+$/, "");
+
+  if (format === "json") {
+    const jsonStr = JSON.stringify(rows, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${baseName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  // CSV or XLSX
+  const worksheet = XLSX.utils.json_to_sheet(rows, { header: columns });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Cleaned Data");
+
+  if (format === "xlsx" || format === "xls") {
+    XLSX.writeFile(workbook, `${baseName}.xlsx`);
+  } else {
+    XLSX.writeFile(workbook, `${baseName}.csv`);
+  }
+}
+
