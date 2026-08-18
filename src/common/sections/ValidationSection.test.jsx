@@ -116,6 +116,37 @@ describe('ValidationSection', () => {
     expect(handleFixIssue).toHaveBeenCalledWith(keyLengthIssue[0]);
   });
 
+  it('renders and supports quick-fixing for container_key_invalid critical error issues', () => {
+    const containerIssue = [
+      {
+        type: 'container_key_invalid',
+        severity: 'error',
+        field: 'Container',
+        key: 'container',
+        expected: 'Container',
+        path: ['components', 0],
+        message: 'Container field key must be "Container", not "container"',
+      },
+    ];
+    const handleFixIssue = jest.fn();
+    render(
+      <ValidationSection
+        validationIssues={containerIssue}
+        parsingSteps={sampleSteps}
+        onFixIssue={handleFixIssue}
+      />
+    );
+
+    expect(screen.getByText(/Container Key Rule/i)).toBeInTheDocument();
+    expect(screen.getByText('ERROR')).toBeInTheDocument();
+    expect(screen.getByText(/Container field key must be "Container", not "container"/i)).toBeInTheDocument();
+
+    const quickFixButton = screen.getByRole('button', { name: /Quick Fix/i });
+    fireEvent.click(quickFixButton);
+
+    expect(handleFixIssue).toHaveBeenCalledWith(containerIssue[0]);
+  });
+
   it('toggles system execution trace log', () => {
     render(<ValidationSection validationIssues={sampleIssues} parsingSteps={sampleSteps} />);
 

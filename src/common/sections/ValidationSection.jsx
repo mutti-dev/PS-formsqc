@@ -52,7 +52,9 @@ function ValidationSection({
     () =>
       validationIssues.filter(
         (i) =>
-          (i.type === "label_key_mismatch" || i.type === "key_length_exceeded") &&
+          (i.type === "label_key_mismatch" ||
+            i.type === "key_length_exceeded" ||
+            i.type === "container_key_invalid") &&
           i.expected &&
           i.path
       ).length,
@@ -80,6 +82,8 @@ function ValidationSection({
     switch (type) {
       case "label_key_mismatch":
         return "Label / Key Mismatch";
+      case "container_key_invalid":
+        return "Container Key Rule";
       case "key_length_exceeded":
         return "Key Length Exceeded";
       case "reserved_column":
@@ -346,7 +350,9 @@ function ValidationSection({
                 {filteredIssues.map((issue, idx) => {
                   const isError = issue.severity === "error";
                   const canFix =
-                    (issue.type === "label_key_mismatch" || issue.type === "key_length_exceeded") &&
+                    (issue.type === "label_key_mismatch" ||
+                      issue.type === "key_length_exceeded" ||
+                      issue.type === "container_key_invalid") &&
                     issue.expected &&
                     issue.path;
 

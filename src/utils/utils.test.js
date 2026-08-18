@@ -62,6 +62,29 @@ describe('updateConditionReferencesInJson', () => {
     ]);
   });
 
+  it('updates container prefix in conditional.when when container key changes', () => {
+    const json = {
+      components: [
+        {
+          key: 'Container',
+          label: 'Container',
+          type: 'container',
+          components: [
+            {
+              key: 'childField',
+              label: 'Child Field',
+              conditional: { when: 'container.triggerField', eq: 'yes' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = updateConditionReferencesInJson(json, 'container', 'Container', ['when'], [], { referenceKey: 'container' });
+
+    expect(result.updated.components[0].components[0].conditional.when).toBe('Container.triggerField');
+  });
+
   it('updates conditional.eq only for the matching parent field', () => {
     const json = {
       components: [

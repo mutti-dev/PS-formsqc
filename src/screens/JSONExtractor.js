@@ -71,6 +71,22 @@ const validateFormStructure = (labels = [], selectValues = [], radioValues = [],
     const fieldLabel = entry.type === "panel" ? entry.title : entry.label;
     const fieldKey = entry.key;
 
+    if (entry.type === "container" || (fieldLabel === "Container" && typeof fieldKey === "string" && fieldKey.toLowerCase() === "container")) {
+      if (fieldKey !== "Container") {
+        issues.push({
+          type: "container_key_invalid",
+          severity: "error",
+          field: fieldLabel || "Container",
+          key: fieldKey,
+          expected: "Container",
+          path: entry.path,
+          labelField: "label",
+          message: `Container field key must be "Container", not "${fieldKey}"`,
+        });
+      }
+      return;
+    }
+
     if (fieldLabel && fieldKey && typeof fieldKey === "string") {
       const expectedKey = convertLabelToKey(fieldLabel);
       if (expectedKey && fieldKey !== expectedKey) {
@@ -652,7 +668,9 @@ export default function JSONExtractor({ theme = "dark" }) {
   // ── Fix issue from ValidationSection ────────────────────
   const handleFixIssue = (issue) => {
     if (
-      (issue.type === "label_key_mismatch" || issue.type === "key_length_exceeded") &&
+      (issue.type === "label_key_mismatch" ||
+        issue.type === "key_length_exceeded" ||
+        issue.type === "container_key_invalid") &&
       issue.path &&
       issue.expected
     ) {
@@ -663,7 +681,9 @@ export default function JSONExtractor({ theme = "dark" }) {
   const handleFixAllIssues = () => {
     const fixable = validationIssues.filter(
       (i) =>
-        (i.type === "label_key_mismatch" || i.type === "key_length_exceeded") &&
+        (i.type === "label_key_mismatch" ||
+          i.type === "key_length_exceeded" ||
+          i.type === "container_key_invalid") &&
         i.path &&
         i.expected
     );

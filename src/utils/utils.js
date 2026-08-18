@@ -110,7 +110,7 @@ const matchesConditionalReference = (value, referenceKey) => {
   const trimmed = value.trim();
   if (!trimmed) return false;
   const segments = trimmed.split(".");
-  return trimmed === referenceKey || segments[segments.length - 1] === referenceKey;
+  return trimmed === referenceKey || segments.includes(referenceKey);
 };
 
 export const updateConditionReferencesInJson = (
