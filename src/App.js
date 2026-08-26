@@ -10,6 +10,7 @@ import TextConverter from './screens/TextConverter';
 import AdvancedJSONComparator from './screens/AdvancedJSONComparator';
 import DataAnalyzer from './screens/DataAnalyzer';
 import AIPrompt from './screens/AIPrompt';
+import BulkJSONValidator from './screens/BulkJSONValidator';
 import { Analytics } from '@vercel/analytics/react';
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
           >
             <Routes>
               <Route path="/JsonExtractor" element={<JSONExtractor theme={theme} />} />
+              <Route path="/BulkValidator" element={<BulkJSONValidator theme={theme} />} />
               <Route path="/DataAnalyzer" element={<DataAnalyzer theme={theme} />} />
               <Route path="/Converter" element={<WordConverter />} />
 

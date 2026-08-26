@@ -9,6 +9,7 @@ import {
   FileWord,
   BarChart,
   Database,
+  Boxes,
 } from "react-bootstrap-icons";
 
 export default function SideDrawer({
@@ -24,6 +25,11 @@ export default function SideDrawer({
       path: "/JsonExtractor",
       name: "Form Review",
       icon: <FileEarmarkText />,
+    },
+    {
+      path: "/BulkValidator",
+      name: "Bulk Form Review",
+      icon: <Boxes />,
     },
     {
       path: "/AdvancedJSONComparator",

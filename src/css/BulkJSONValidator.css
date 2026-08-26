@@ -1,0 +1,67 @@
+.bulk-validator-container {
+  padding: 1.5rem 1rem;
+  color: var(--bs-body-color);
+  background-color: transparent;
+}
+
+.bulk-summary-card {
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bulk-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.bulk-stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.bulk-stat-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.bulk-form-row {
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.bulk-form-row:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Dark Theme Specifics */
+[data-bs-theme="dark"] .bulk-summary-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+[data-bs-theme="dark"] .table-dark {
+  --bs-table-bg: var(--bs-tertiary-bg);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+}
+
+/* Light Theme Specifics */
+[data-bs-theme="light"] .bulk-summary-card {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
