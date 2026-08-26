@@ -26,11 +26,11 @@ export default function SideDrawer({
       name: "Form Review",
       icon: <FileEarmarkText />,
     },
-    {
-      path: "/BulkValidator",
-      name: "Bulk Form Review",
-      icon: <Boxes />,
-    },
+    // {
+    //   path: "/BulkValidator",
+    //   name: "Bulk Form Review",
+    //   icon: <Boxes />,
+    // },
     {
       path: "/AdvancedJSONComparator",
       name: "Compare Json",
