@@ -9,7 +9,7 @@ import {
   FileWord,
   BarChart,
   Database,
-  Boxes,
+  // Boxes,
 } from "react-bootstrap-icons";
 
 export default function SideDrawer({
