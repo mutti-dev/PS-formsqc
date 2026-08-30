@@ -20,12 +20,16 @@ export default function BackToTop({ threshold = 250 }) {
   }, [threshold]);
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-    // Fallback for documentElement
-    if (document.documentElement) {
+    if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+    if (
+      document.documentElement &&
+      typeof document.documentElement.scrollTo === "function"
+    ) {
       document.documentElement.scrollTo({
         top: 0,
         behavior: "smooth",
