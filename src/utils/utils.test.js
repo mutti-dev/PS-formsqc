@@ -155,16 +155,82 @@ describe('Multiselect vs Single Select support', () => {
   });
 });
 
-describe('removeSubmitButtonsOutsideContainer', () => {
-  it('removes submit buttons located outside of a container', () => {
-    const components = [
-      { label: 'Container', key: 'Container', type: 'container', components: [] },
-      { label: 'Submit', key: 'submit', type: 'button', action: 'submit' },
-    ];
+describe('Datagrid internal fields extraction', () => {
+  it('extractLabelsFromJSON identifies fields inside datagrid and editgrid', () => {
+    const json = {
+      components: [
+        { label: 'Name', key: 'name', type: 'textfield' },
+        {
+          label: 'Family Members',
+          key: 'familyMembers_Grid',
+          type: 'datagrid',
+          components: [
+            { label: 'Member Name', key: 'memberName', type: 'textfield' },
+            { label: 'Age', key: 'age', type: 'number' },
+          ],
+        },
+      ],
+    };
 
-    const cleaned = removeSubmitButtonsOutsideContainer(components);
-    expect(cleaned).toHaveLength(1);
-    expect(cleaned[0].type).toBe('container');
+    const labels = extractLabelsFromJSON(json);
+    expect(labels).toHaveLength(4);
+
+    // Outer textfield
+    expect(labels[0].key).toBe('name');
+    expect(labels[0].insideGrid).toBe(false);
+
+    // Datagrid itself
+    expect(labels[1].key).toBe('familyMembers_Grid');
+    expect(labels[1].insideGrid).toBe(false);
+
+    // Inner textfield inside datagrid
+    expect(labels[2].key).toBe('memberName');
+    expect(labels[2].insideGrid).toBe(true);
+    expect(labels[2].gridKey).toBe('familyMembers_Grid');
+    expect(labels[2].gridLabel).toBe('Family Members');
+
+    // Inner number field inside datagrid
+    expect(labels[3].key).toBe('age');
+    expect(labels[3].insideGrid).toBe(true);
+  });
+});
+
+describe('Required field validation extraction', () => {
+  it('extractLabelsFromJSON identifies required fields via validate.required or required property', () => {
+    const json = {
+      components: [
+        {
+          label: 'Required via validate',
+          key: 'req1',
+          type: 'textfield',
+          validate: { required: true },
+        },
+        {
+          label: 'Required via root prop',
+          key: 'req2',
+          type: 'email',
+          required: true,
+        },
+        {
+          label: 'Optional Field',
+          key: 'opt1',
+          type: 'number',
+          validate: { required: false },
+        },
+        {
+          label: 'Default Field',
+          key: 'def1',
+          type: 'textfield',
+        },
+      ],
+    };
+
+    const labels = extractLabelsFromJSON(json);
+    expect(labels).toHaveLength(4);
+    expect(labels[0].required).toBe(true);
+    expect(labels[1].required).toBe(true);
+    expect(labels[2].required).toBe(false);
+    expect(labels[3].required).toBe(false);
   });
 });
 

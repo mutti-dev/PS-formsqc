@@ -55,7 +55,7 @@ export default function SideDrawer({
         variant="dark"
         className="position-fixed d-flex align-items-center justify-content-center"
         style={{
-          left: isOpen ? "258px" : "11px",
+          left: isOpen ? "258px" : "19px",
           top: "15px",
           zIndex: 1100,
           width: "42px",
@@ -83,14 +83,14 @@ export default function SideDrawer({
       <Navbar
         className="position-fixed vh-100"
         style={{
-          width: isOpen ? "280px" : "64px",
+          width: isOpen ? "280px" : "80px",
           backgroundColor:
             theme === "dark" ? "#0d1117" : "#ffffff",
           borderRight:
             theme === "dark"
               ? "1px solid #30363d"
               : "1px solid #e1e4e8",
-          padding: isOpen ? "1.25rem" : "0.5rem",
+          padding: isOpen ? "1.25rem" : "0.5rem 0.35rem",
           transition: "width 0.3s ease",
           zIndex: 1000,
           display: "block",
@@ -116,10 +116,11 @@ export default function SideDrawer({
                 src="/logo192.png"
                 alt="App logo"
                 style={{
-                  width: "80px",
-                  height: "80px",
+                  width: isOpen ? "80px" : "44px",
+                  height: isOpen ? "80px" : "44px",
                   borderRadius: "10px",
                   objectFit: "cover",
+                  transition: "all 0.3s ease",
                 }}
               />
 
@@ -162,15 +163,16 @@ export default function SideDrawer({
                   key={item.path}
                   to={item.path}
                   className="text-decoration-none"
+                  title={!isOpen ? item.name : undefined}
                 >
                   <div
-                    className="d-flex align-items-center rounded"
+                    className="d-flex rounded"
                     style={{
-                      padding: "10px 12px",
-                      gap: isOpen ? "12px" : "0",
-                      justifyContent: isOpen
-                        ? "flex-start"
-                        : "center",
+                      flexDirection: isOpen ? "row" : "column",
+                      padding: isOpen ? "10px 14px" : "8px 4px",
+                      gap: isOpen ? "12px" : "4px",
+                      justifyContent: isOpen ? "flex-start" : "center",
+                      alignItems: "center",
                       backgroundColor: active
                         ? "#1f6feb"
                         : "transparent",
@@ -180,7 +182,8 @@ export default function SideDrawer({
                         ? "#8b949e"
                         : "#656d76",
                       transition: "all 0.2s ease",
-                      minHeight: "45px",
+                      minHeight: isOpen ? "45px" : "58px",
+                      width: "100%",
                     }}
                     onMouseEnter={(e) =>
                       !active &&
@@ -195,23 +198,36 @@ export default function SideDrawer({
                         "transparent")
                     }
                   >
-                    {/* Icon */}
+                    {/* Icon Container with fixed width for perfect vertical alignment */}
                     <span
-                      className="d-flex align-items-center fs-5"
+                      className="d-flex align-items-center justify-content-center fs-5"
                       style={{
+                        width: "24px",
+                        minWidth: "24px",
+                        height: "24px",
                         color: active
                           ? "#fff"
                           : "#0D6EFD",
+                        flexShrink: 0,
                       }}
                     >
                       {item.icon}
                     </span>
 
-                    {isOpen && (
-                      <span className="fw-medium text-nowrap">
-                        {item.name}
-                      </span>
-                    )}
+                    {/* Label */}
+                    <span
+                      className="fw-medium"
+                      style={{
+                        fontSize: isOpen ? "14px" : "10px",
+                        lineHeight: isOpen ? "1.4" : "1.15",
+                        textAlign: isOpen ? "left" : "center",
+                        whiteSpace: isOpen ? "nowrap" : "normal",
+                        wordBreak: "break-word",
+                        maxWidth: isOpen ? "none" : "72px",
+                      }}
+                    >
+                      {item.name}
+                    </span>
                   </div>
                 </Link>
               );

@@ -13,6 +13,7 @@ import {
 } from "react-bootstrap";
 import { copyToClipboard, convertText, limitText } from "../utils/utils";
 import { CodeSlash, FileWord } from "react-bootstrap-icons";
+import ScreenHeader from "../common/ScreenHeader";
 
 export default function WordConverter({ theme = "dark" }) {
   // ── Tab 1: API Key / Text Converter State ──
@@ -91,16 +92,10 @@ export default function WordConverter({ theme = "dark" }) {
       <Row className="justify-content-center">
         <Col>
           {/* Header Card */}
-          <Card className="shadow-sm border-0 mb-4">
-            <Card.Header className="py-4 text-center">
-              <h1 className="display-5 fw-bold text-primary mb-1">
-                Text & Option Tools
-              </h1>
-              <p className="text-body-secondary mb-0">
-                Convert raw text into Form.io API keys or formatted dropdown option JSON objects.
-              </p>
-            </Card.Header>
-          </Card>
+          <ScreenHeader
+            icon={<FileWord />}
+            title="Text & Word Converter"
+          />
 
           {/* Main Tabbed Card */}
           <Card className="shadow-sm border">

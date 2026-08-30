@@ -12,14 +12,31 @@ export const convertLabelToKey = (label) => {
 // ============================================================
 // extractLabelsFromJSON
 // ============================================================
-export function extractLabelsFromJSON(json, currentPath = [], results = []) {
+export function extractLabelsFromJSON(
+  json,
+  currentPath = [],
+  results = [],
+  parentGrid = null
+) {
   if (json && typeof json === "object") {
+    const rawType = (json.type || "").toLowerCase().trim();
+    const isGridContainer = rawType === "datagrid" || rawType === "editgrid";
+
     if (json.label && json.type) {
+      const isRequired = Boolean(
+        (json.validate && json.validate.required === true) || json.required === true
+      );
+
       const entry = {
         label: json.label,
         key: json.key,
         type: json.type,
         path: [...currentPath],
+        insideGrid: Boolean(parentGrid),
+        gridKey: parentGrid?.key || null,
+        gridLabel: parentGrid?.label || parentGrid?.key || null,
+        gridType: parentGrid?.type || null,
+        required: isRequired,
       };
       if (json.multiple !== undefined) {
         entry.multiple = json.multiple;
@@ -33,14 +50,22 @@ export function extractLabelsFromJSON(json, currentPath = [], results = []) {
       results.push(entry);
     }
 
+    const nextParentGrid = isGridContainer
+      ? {
+          key: json.key,
+          label: json.label || json.title || json.key || (rawType === "editgrid" ? "Editgrid" : "Datagrid"),
+          type: json.type,
+        }
+      : parentGrid;
+
     Object.keys(json).forEach((key) => {
       const prop = json[key];
       if (Array.isArray(prop)) {
         prop.forEach((item, idx) => {
-          extractLabelsFromJSON(item, [...currentPath, key, idx], results);
+          extractLabelsFromJSON(item, [...currentPath, key, idx], results, nextParentGrid);
         });
       } else if (typeof prop === "object") {
-        extractLabelsFromJSON(prop, [...currentPath, key], results);
+        extractLabelsFromJSON(prop, [...currentPath, key], results, nextParentGrid);
       }
     });
   }

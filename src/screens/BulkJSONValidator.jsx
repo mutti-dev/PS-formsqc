@@ -39,6 +39,7 @@ import {
   exportBulkResultsToTSV,
 } from "../utils/bulkQcEngine";
 import { exportBulkQcToExcel } from "../utils/exportUtils";
+import ScreenHeader from "../common/ScreenHeader";
 import "../css/BulkJSONValidator.css";
 
 const STORAGE_KEY = "BulkJSONValidatorDraft";
@@ -235,19 +236,11 @@ export default function BulkJSONValidator({ theme = "dark" }) {
   return (
     <Container fluid data-bs-theme={theme} className={`bulk-validator-container theme-${theme}`}>
       {/* ── Header Bar ── */}
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
-        <div>
-          <h4 className="fw-bold mb-1 d-flex align-items-center gap-2 text-body">
-            <Boxes className="text-primary" />
-            Bulk Form QC Review
-          </h4>
-          <p className="text-body-secondary small mb-0">
-            Paste multi-form datasets (TSV with FormId, Caption, and Description JSON) to perform automated QC validation across all forms at once.
-          </p>
-        </div>
-
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          {bulkData && (
+      <ScreenHeader
+        icon={<Boxes />}
+        title="Bulk Form QC Review"
+        actions={
+          bulkData ? (
             <>
               <Button
                 variant="outline-success"
@@ -280,9 +273,9 @@ export default function BulkJSONValidator({ theme = "dark" }) {
                 {copySuccess ? "Copied!" : "Copy TSV"}
               </Button>
             </>
-          )}
-        </div>
-      </div>
+          ) : null
+        }
+      />
 
       {/* ── Input Section ── */}
       <Card className="mb-4 shadow-sm border">

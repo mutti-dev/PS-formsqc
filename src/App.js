@@ -11,6 +11,7 @@ import AdvancedJSONComparator from './screens/AdvancedJSONComparator';
 import DataAnalyzer from './screens/DataAnalyzer';
 import AIPrompt from './screens/AIPrompt';
 import BulkJSONValidator from './screens/BulkJSONValidator';
+import BackToTop from './common/BackToTop';
 import { Analytics } from '@vercel/analytics/react';
 
 function App() {
@@ -51,7 +52,7 @@ function App() {
           <main
             className="app-main"
             style={{
-              marginLeft: drawerOpen ? '280px' : '55px',
+              marginLeft: drawerOpen ? '280px' : '80px',
               transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               backgroundColor: theme === 'dark' ? 'var(--bs-body-bg)' : '#f5f5f5',
               color: theme === 'dark' ? 'var(--bs-body-color)' : '#000',
@@ -69,6 +70,7 @@ function App() {
               <Route path="/AIPrompt" element={<AIPrompt />} />
               <Route path="*" element={<Navigate to="/JsonExtractor" replace />} />
             </Routes>
+            <BackToTop />
           </main>
         </div>
       </Router>

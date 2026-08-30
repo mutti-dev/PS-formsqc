@@ -15,9 +15,9 @@ import {
   deepDiffObjects,
   parseJSONSafe,
 } from "../utils/jsonDiffEngine";
-import {
-  compareFormKeys,
-} from "../utils/keyComparisonUtil";
+import { compareFormKeys } from "../utils/keyComparisonUtil";
+import { BarChart } from "react-bootstrap-icons";
+import ScreenHeader from "../common/ScreenHeader";
 import "../css/AdvancedJSONComparator.css";
 
 const STORAGE_KEYS = {
@@ -409,15 +409,12 @@ export default function AdvancedJSONComparator({ theme = "dark" }) {
   // ---------------------------------------------------------------------------
   return (
     <Container fluid className={`advanced-json-comparator theme-${theme}`}>
-      <Card className="shadow-sm border-0 mb-4">
-        <Card.Header className="py-4">
-          <h1 className="display-5 fw-bold text-center text-primary mb-0">
-            Advanced JSON Comparator
-          </h1>
-        </Card.Header>
-      
+      <ScreenHeader
+        icon={<BarChart />}
+        title="Compare Json"
+      />
 
-    
+      <Card className="shadow-sm border mb-4">
         <Card.Body>
           <Row className="g-3">
             <Col lg={6}>

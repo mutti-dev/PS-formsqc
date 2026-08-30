@@ -108,7 +108,7 @@ export const validateFormStructure = (
     }
 
     // Reserved Column Conflicts
-    const reservedMatch = checkReservedColumnMatch(fieldKey, formType);
+    const reservedMatch = checkReservedColumnMatch(fieldKey, formType, entry.insideGrid);
     if (reservedMatch) {
       issues.push({
         type: "reserved_column",

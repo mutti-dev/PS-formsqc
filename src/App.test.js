@@ -4,6 +4,6 @@ import WordConverter from './screens/WordConverter';
 
 test('renders text & word tools page header', () => {
   render(<WordConverter theme="dark" />);
-  const headerElement = screen.getByText(/Text & Option Tools/i);
+  const headerElement = screen.getByText(/Text & Word Converter/i);
   expect(headerElement).toBeInTheDocument();
 });

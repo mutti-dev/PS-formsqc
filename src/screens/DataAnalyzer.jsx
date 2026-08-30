@@ -22,7 +22,6 @@ import {
   BarChartFill,
   Download,
   Search,
-  FileEarmarkSpreadsheet,
   ArrowRepeat,
   InfoCircle,
   CheckCircleFill,
@@ -40,6 +39,7 @@ import {
   Sliders,
   ShieldCheck,
   ArrowDownUp,
+  Database,
 } from "react-bootstrap-icons";
 import {
   parseDataFile,
@@ -49,6 +49,7 @@ import {
   cleanDataset,
   exportCleanedData,
 } from "../utils/dataAnalyzerEngine";
+import ScreenHeader from "../common/ScreenHeader";
 import "../css/DataAnalyzer.css";
 
 export default function DataAnalyzer({ theme = "dark" }) {
@@ -409,92 +410,64 @@ export default function DataAnalyzer({ theme = "dark" }) {
   return (
     <Container fluid className="data-analyzer-container">
       {/* ── Top Header & Global Action Bar ── */}
-      <div className="analyzer-header">
-        <div className="analyzer-title-group">
-          <div className="analyzer-icon-badge">
-            <BarChartFill />
-          </div>
-          <div>
-            <h4 className="fw-bold mb-0 text-body d-flex align-items-center gap-2">
-              Data Analyzer
-            </h4>
-            {dataState ? (
-              <div className="analyzer-meta-chips">
-                <span className="meta-chip">
-                  <FileEarmarkSpreadsheet size={13} className="text-primary" />
-                  {dataState.fileName}
-                </span>
-                <span className="meta-chip">
-                  <strong>{dataState.totalRows.toLocaleString()}</strong> rows
-                </span>
-                <span className="meta-chip">
-                  <strong>{dataState.totalCols}</strong> columns
-                </span>
-                <span className={`meta-chip text-${scoreInfo.variant} fw-bold`}>
-                  {scoreInfo.grade} ({scoreInfo.overall}%)
-                </span>
+      <ScreenHeader
+        icon={<Database />}
+        title="Data Analyzer"
+        actions={
+          <div className="d-flex align-items-center gap-2">
+            {dataState && (
+              <>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  className="d-inline-flex align-items-center gap-1"
+                  onClick={handleReset}
+                >
+                  <ArrowRepeat size={14} /> New Analysis
+                </Button>
+
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  className="d-inline-flex align-items-center gap-1"
+                  onClick={handleExportIssues}
+                  disabled={!qualityResult || qualityResult.issues.length === 0}
+                >
+                  <Download size={14} /> Export Audit
+                </Button>
+
+                <Button
+                  variant="success"
+                  size="sm"
+                  className="d-inline-flex align-items-center gap-1 shadow-sm"
+                  onClick={() => handleExportCleaned("csv")}
+                >
+                  <Download size={14} /> Download Cleaned
+                </Button>
+              </>
+            )}
+
+            {!dataState && (
+              <div className="d-flex gap-2">
+                <Button
+                  variant={inputMode === "upload" ? "primary" : "outline-secondary"}
+                  size="sm"
+                  onClick={() => setInputMode("upload")}
+                >
+                  <Upload className="me-1" size={13} /> Upload File
+                </Button>
+                <Button
+                  variant={inputMode === "paste" ? "primary" : "outline-secondary"}
+                  size="sm"
+                  onClick={() => setInputMode("paste")}
+                >
+                  <Clipboard className="me-1" size={13} /> Paste Data
+                </Button>
               </div>
-            ) : (
-              <small className="text-secondary">
-              </small>
             )}
           </div>
-        </div>
-
-        {/* Global Toolbar Actions */}
-        <div className="d-flex align-items-center gap-2">
-          {dataState && (
-            <>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                className="d-inline-flex align-items-center gap-1"
-                onClick={handleReset}
-              >
-                <ArrowRepeat size={14} /> New Analysis
-              </Button>
-
-              <Button
-                variant="outline-danger"
-                size="sm"
-                className="d-inline-flex align-items-center gap-1"
-                onClick={handleExportIssues}
-                disabled={!qualityResult || qualityResult.issues.length === 0}
-              >
-                <Download size={14} /> Export Audit
-              </Button>
-
-              <Button
-                variant="success"
-                size="sm"
-                className="d-inline-flex align-items-center gap-1 shadow-sm"
-                onClick={() => handleExportCleaned("csv")}
-              >
-                <Download size={14} /> Download Cleaned
-              </Button>
-            </>
-          )}
-
-          {!dataState && (
-            <div className="d-flex gap-2">
-              <Button
-                variant={inputMode === "upload" ? "primary" : "outline-secondary"}
-                size="sm"
-                onClick={() => setInputMode("upload")}
-              >
-                <Upload className="me-1" size={13} /> Upload File
-              </Button>
-              <Button
-                variant={inputMode === "paste" ? "primary" : "outline-secondary"}
-                size="sm"
-                onClick={() => setInputMode("paste")}
-              >
-                <Clipboard className="me-1" size={13} /> Paste Data
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+        }
+      />
 
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")} className="mb-4 shadow-sm">

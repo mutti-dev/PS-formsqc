@@ -21,7 +21,8 @@ import {
   InputGroup,
   Modal,
 } from "react-bootstrap";
-import { Robot, Clipboard, ClipboardCheck } from "react-bootstrap-icons";
+import { Robot, Clipboard, ClipboardCheck, FileEarmarkText } from "react-bootstrap-icons";
+import ScreenHeader from "../common/ScreenHeader";
 import { AI_PROMPT_TEXT } from "../config/aiPrompt";
 import {
   extractFormJson,
@@ -51,8 +52,10 @@ import {
   DuplicateRadioValuesSection,
   ConditionsSection,
   ValidationSection,
+  FormComplexitySection,
 } from "../common/sections";
 
+import { calculateFormComplexity } from "../utils/formEstimationEngine";
 import { checkReservedColumnMatch } from "../config/reservedColumns";
 
 import {
@@ -132,7 +135,7 @@ const validateFormStructure = (labels = [], selectValues = [], radioValues = [],
       }
     }
 
-    const reservedMatch = checkReservedColumnMatch(fieldKey, formType);
+    const reservedMatch = checkReservedColumnMatch(fieldKey, formType, entry.insideGrid);
     if (reservedMatch) {
       issues.push({
         type: "reserved_column",
@@ -485,6 +488,8 @@ export default function JSONExtractor({ theme = "dark" }) {
         addStep("Extraction completed!", true, "Results ready below");
       }
 
+      const formComplexity = calculateFormComplexity(formConfig);
+
       setExtractedData({
         labels,
         selectValues,
@@ -492,6 +497,7 @@ export default function JSONExtractor({ theme = "dark" }) {
         surveyValues,
         conditions,
         searchResults,
+        formComplexity,
         jsonStats: {
           totalElements: countJsonElements(parsedFull),
           uniqueKeys: extractJsonKeys(parsedFull).length,
@@ -589,6 +595,8 @@ export default function JSONExtractor({ theme = "dark" }) {
 
     setValidationIssues(newIssues);
 
+    const newComplexity = calculateFormComplexity(updatedFormConfig);
+
     setExtractedData((prev) => ({
       ...prev,
       labels:       newLabels,
@@ -596,6 +604,7 @@ export default function JSONExtractor({ theme = "dark" }) {
       radioValues:  newRadio,
       surveyValues: newSurvey,
       conditions:   newConditions,
+      formComplexity: newComplexity,
     }));
   };
 
@@ -754,6 +763,7 @@ export default function JSONExtractor({ theme = "dark" }) {
     conditions   = [],
     searchResults = [],
     jsonStats    = {},
+    formComplexity = null,
   } = extractedData || {};
 
   const filteredLabels = useMemo(() => {
@@ -925,13 +935,14 @@ export default function JSONExtractor({ theme = "dark" }) {
     <Container fluid className="min-vh-100">
       <Row className="justify-content-center">
         <Col>
+          {/* ── Screen Header ── */}
+          <ScreenHeader
+            icon={<FileEarmarkText />}
+            title="Form Review"
+          />
+
           {/* ── Input card ── */}
-          <Card className="shadow-sm border-0 mb-4">
-            <Card.Header className="py-4">
-              <h1 className="display-5 fw-bold text-center text-primary mb-0">
-                Analyze Form JSON
-              </h1>
-            </Card.Header>
+          <Card className="shadow-sm border mb-4">
 
             <Card.Body className="p-4">
               <Form.Group className="mb-3">
@@ -1055,7 +1066,7 @@ export default function JSONExtractor({ theme = "dark" }) {
                   variant="success"
                   size="sm"
                   onClick={() =>
-                    exportToExcel(labels, hiddenTypes, selectValues, radioValues)
+                    exportToExcel(labels, hiddenTypes, selectValues, radioValues, formComplexity)
                   }
                 >
                   Export to Excel
@@ -1064,6 +1075,11 @@ export default function JSONExtractor({ theme = "dark" }) {
 
               <Row>
                 <Col>
+                  <FormComplexitySection
+                    formComplexity={formComplexity}
+                    theme={theme}
+                  />
+
                   <JsonStatsSection
                     jsonStats={jsonStats}
                     labels={labels}
@@ -1261,7 +1277,18 @@ export default function JSONExtractor({ theme = "dark" }) {
                               table.getRowModel().rows.map((row) => (
                                 <tr
                                   key={row.id}
-                                  className={row.getIsSelected() ? "table-primary" : ""}
+                                  className={
+                                    row.getIsSelected()
+                                      ? "table-primary"
+                                      : row.original.insideGrid
+                                      ? "table-warning bg-opacity-25"
+                                      : ""
+                                  }
+                                  style={
+                                    row.original.insideGrid
+                                      ? { borderLeft: "4px solid #ffc107" }
+                                      : undefined
+                                  }
                                 >
                                   {row.getVisibleCells().map((cell) => (
                                     <td
@@ -1291,21 +1318,34 @@ export default function JSONExtractor({ theme = "dark" }) {
                                       }
                                     >
                                       {cell.column.id === "label" ? (
-                                        <Form.Control
-                                          value={
-                                            row.original.type === "panel"
-                                              ? row.original.title
-                                              : row.original.label
-                                          }
-                                          onChange={(e) =>
-                                            updateJsonField(
-                                              row.original.path,
-                                              row.original.type === "panel" ? "title" : "label",
-                                              e.target.value
-                                            )
-                                          }
-                                          onClick={(e) => e.stopPropagation()}
-                                        />
+                                        <div className="d-flex align-items-center gap-2">
+                                          {row.original.insideGrid && (
+                                            <Badge
+                                              bg="warning"
+                                              text="dark"
+                                              className="px-1 py-1 font-monospace"
+                                              style={{ fontSize: "0.68rem", whiteSpace: "nowrap" }}
+                                              title={`Nested inside: ${row.original.gridLabel || row.original.gridKey}`}
+                                            >
+                                              GRID
+                                            </Badge>
+                                          )}
+                                          <Form.Control
+                                            value={
+                                              row.original.type === "panel"
+                                                ? row.original.title
+                                                : row.original.label
+                                            }
+                                            onChange={(e) =>
+                                              updateJsonField(
+                                                row.original.path,
+                                                row.original.type === "panel" ? "title" : "label",
+                                                e.target.value
+                                              )
+                                            }
+                                            onClick={(e) => e.stopPropagation()}
+                                          />
+                                        </div>
                                       ) : cell.column.id === "key" ? (
                                         <Form.Control
                                           value={row.original.key || ""}
@@ -1332,7 +1372,20 @@ export default function JSONExtractor({ theme = "dark" }) {
                                             " ⚠️"}
                                         </Badge>
                                       ) : cell.column.id === "type" ? (
-                                        <Badge bg="info">{cell.getValue()}</Badge>
+                                        <div className="d-flex flex-column gap-1">
+                                          <Badge bg={row.original.insideGrid ? "warning" : "info"} text={row.original.insideGrid ? "dark" : undefined}>
+                                            {cell.getValue()}
+                                          </Badge>
+                                          {row.original.insideGrid && (
+                                            <span
+                                              className="small text-muted font-monospace"
+                                              style={{ fontSize: "0.72rem" }}
+                                              title={`Parent: ${row.original.gridLabel || row.original.gridKey}`}
+                                            >
+                                              ↳ {row.original.gridLabel || "Grid Field"}
+                                            </span>
+                                          )}
+                                        </div>
                                       ) : (
                                         flexRender(
                                           cell.column.columnDef.cell,

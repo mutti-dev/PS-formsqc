@@ -101,6 +101,16 @@ export const FORM_RESERVED_COLUMNS = [
 "Status"
 ];
 
+// Reserved columns that apply specifically to fields inside datagrids / editgrids
+export const DATAGRID_RESERVED_COLUMNS = [
+  "Status",
+  "Id",
+  "StatusId",
+  "ParentId",
+  "CreationTime",
+  "UpdationTime",
+];
+
 /**
  * Returns the list of reserved columns for a given form type ("Intake" or "Form").
  *
@@ -118,15 +128,27 @@ export const getReservedColumnsForFormType = (formType) => {
 };
 
 /**
- * Checks if a given field key matches any reserved column for the specified formType.
+ * Checks if a given field key matches any reserved column.
+ * For datagrid fields (insideGrid = true), only Status, Id, StatusId, ParentId, CreationTime, UpdationTime are reserved.
  * Comparison is case-insensitive.
  *
  * @param {string} fieldKey - The field key to validate
  * @param {string} formType - "Intake" or "Form"
+ * @param {boolean} insideGrid - Whether the field is nested inside a datagrid/editgrid
  * @returns {string|null} The matching reserved column name if matched, or null if no match.
  */
-export const checkReservedColumnMatch = (fieldKey, formType = "Form") => {
+export const checkReservedColumnMatch = (fieldKey, formType = "Form", insideGrid = false) => {
   if (!fieldKey || typeof fieldKey !== "string") return null;
+
+  if (insideGrid) {
+    const cleanKey = fieldKey.trim().toLowerCase().replace(/[\s_]/g, "");
+    const match = DATAGRID_RESERVED_COLUMNS.find((col) => {
+      if (!col || typeof col !== "string") return false;
+      const cleanCol = col.trim().toLowerCase().replace(/[\s_]/g, "");
+      return cleanCol === cleanKey;
+    });
+    return match || null;
+  }
 
   const reservedList = getReservedColumnsForFormType(formType);
   if (!Array.isArray(reservedList) || reservedList.length === 0) return null;

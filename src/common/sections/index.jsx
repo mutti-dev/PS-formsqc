@@ -12,3 +12,4 @@ export { default as DuplicateRadioValuesSection } from './DuplicateRadioValuesSe
 export { default as RadioComponentsSection } from './RadioComponentsSection';
 export { default as ConditionsSection } from './ConditionsSection';
 export { default as ValidationSection } from './ValidationSection';
+export { default as FormComplexitySection } from './FormComplexitySection';
