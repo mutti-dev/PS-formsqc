@@ -26,3 +26,23 @@ body,
   min-height: 100vh;
   padding: 1.5rem 1rem;
 }
+
+/* Tooltip dark theme contrast enhancements */
+[data-bs-theme="dark"] .tooltip .tooltip-inner {
+  background-color: #21262d;
+  color: #f0f6fc;
+  border: 1px solid #484f58;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+[data-bs-theme="dark"] .tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #484f58;
+}
+[data-bs-theme="dark"] .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: #484f58;
+}
+[data-bs-theme="dark"] .tooltip.bs-tooltip-start .tooltip-arrow::before {
+  border-left-color: #484f58;
+}
+[data-bs-theme="dark"] .tooltip.bs-tooltip-end .tooltip-arrow::before {
+  border-right-color: #484f58;
+}

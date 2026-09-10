@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Nav, Navbar, Container, Button } from "react-bootstrap";
+import { Nav, Navbar, Container, Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import {
   JustifyLeft,
   JustifyRight,
@@ -155,22 +155,19 @@ export default function SideDrawer({
           {/* Navigation */}
           <Nav className="flex-column gap-2 mt-2">
             {menuItems.map((item) => {
-              const active =
-                location.pathname === item.path;
+              const active = location.pathname === item.path;
 
-              return (
+              const linkContent = (
                 <Link
-                  key={item.path}
                   to={item.path}
                   className="text-decoration-none"
-                  title={!isOpen ? item.name : undefined}
                 >
                   <div
                     className="d-flex rounded"
                     style={{
-                      flexDirection: isOpen ? "row" : "column",
-                      padding: isOpen ? "10px 14px" : "8px 4px",
-                      gap: isOpen ? "12px" : "4px",
+                      flexDirection: "row",
+                      padding: isOpen ? "10px 14px" : "10px 0",
+                      gap: isOpen ? "12px" : "0",
                       justifyContent: isOpen ? "flex-start" : "center",
                       alignItems: "center",
                       backgroundColor: active
@@ -179,10 +176,10 @@ export default function SideDrawer({
                       color: active
                         ? "#fff"
                         : theme === "dark"
-                        ? "#8b949e"
-                        : "#656d76",
+                          ? "#8b949e"
+                          : "#656d76",
                       transition: "all 0.2s ease",
-                      minHeight: isOpen ? "45px" : "58px",
+                      minHeight: "44px",
                       width: "100%",
                     }}
                     onMouseEnter={(e) =>
@@ -214,23 +211,42 @@ export default function SideDrawer({
                       {item.icon}
                     </span>
 
-                    {/* Label */}
-                    <span
-                      className="fw-medium"
-                      style={{
-                        fontSize: isOpen ? "14px" : "10px",
-                        lineHeight: isOpen ? "1.4" : "1.15",
-                        textAlign: isOpen ? "left" : "center",
-                        whiteSpace: isOpen ? "nowrap" : "normal",
-                        wordBreak: "break-word",
-                        maxWidth: isOpen ? "none" : "72px",
-                      }}
-                    >
-                      {item.name}
-                    </span>
+                    {/* Label (shown when sidebar is open) */}
+                    {isOpen && (
+                      <span
+                        className="fw-medium"
+                        style={{
+                          fontSize: "14px",
+                          lineHeight: "1.4",
+                          textAlign: "left",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {item.name}
+                      </span>
+                    )}
                   </div>
                 </Link>
               );
+
+              if (!isOpen) {
+                return (
+                  <OverlayTrigger
+                    key={item.path}
+                    placement="right"
+                    delay={{ show: 100, hide: 50 }}
+                    overlay={
+                      <Tooltip id={`tooltip-${item.path.replace(/[^a-zA-Z0-9]/g, "")}`}>
+                        {item.name}
+                      </Tooltip>
+                    }
+                  >
+                    <div>{linkContent}</div>
+                  </OverlayTrigger>
+                );
+              }
+
+              return <React.Fragment key={item.path}>{linkContent}</React.Fragment>;
             })}
           </Nav>
 
@@ -239,49 +255,86 @@ export default function SideDrawer({
 
           {/* Theme Toggle Button */}
           <div className="pb-3">
-            <button
-              onClick={toggleTheme}
-              style={{
-                border:
-                  theme === "dark"
-                    ? "1px solid #30363d"
-                    : "1px solid #d1d9e0",
-                padding: "8px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                backgroundColor:
-                  theme === "dark"
-                    ? "#161b22"
-                    : "#f6f8fa",
-                color:
-                  theme === "dark" ? "#fff" : "#000",
-                fontWeight: "500",
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                transition: "all 0.2s ease",
-                fontSize: "14px",
-              }}
-              title={
-                theme === "dark"
-                  ? "Light Mode"
-                  : "Dark Mode"
-              }
-            >
-              <span>
-                {theme === "dark" ? "🌙" : "☀️"}
-              </span>
-
-              {isOpen && (
+            {!isOpen ? (
+              <OverlayTrigger
+                placement="right"
+                delay={{ show: 100, hide: 50 }}
+                overlay={
+                  <Tooltip id="tooltip-theme">
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                  </Tooltip>
+                }
+              >
+                <div>
+                  <button
+                    onClick={toggleTheme}
+                    style={{
+                      border:
+                        theme === "dark"
+                          ? "1px solid #30363d"
+                          : "1px solid #d1d9e0",
+                      padding: "8px",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      backgroundColor:
+                        theme === "dark"
+                          ? "#161b22"
+                          : "#f6f8fa",
+                      color:
+                        theme === "dark" ? "#fff" : "#000",
+                      fontWeight: "500",
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "10px",
+                      transition: "all 0.2s ease",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <span>
+                      {theme === "dark" ? "🌙" : "☀️"}
+                    </span>
+                  </button>
+                </div>
+              </OverlayTrigger>
+            ) : (
+              <button
+                onClick={toggleTheme}
+                style={{
+                  border:
+                    theme === "dark"
+                      ? "1px solid #30363d"
+                      : "1px solid #d1d9e0",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  backgroundColor:
+                    theme === "dark"
+                      ? "#161b22"
+                      : "#f6f8fa",
+                  color:
+                    theme === "dark" ? "#fff" : "#000",
+                  fontWeight: "500",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  transition: "all 0.2s ease",
+                  fontSize: "14px",
+                }}
+              >
+                <span>
+                  {theme === "dark" ? "🌙" : "☀️"}
+                </span>
                 <span>
                   {theme === "dark"
                     ? "Dark Mode"
                     : "Light Mode"}
                 </span>
-              )}
-            </button>
+              </button>
+            )}
           </div>
         </Container>
       </Navbar>

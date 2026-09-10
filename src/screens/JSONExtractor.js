@@ -20,8 +20,17 @@ import {
   Badge,
   InputGroup,
   Modal,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
-import { Robot, Clipboard, ClipboardCheck, FileEarmarkText } from "react-bootstrap-icons";
+import {
+  Robot,
+  Clipboard,
+  ClipboardCheck,
+  FileEarmarkText,
+  Trash,
+  FileEarmarkSpreadsheet,
+} from "react-bootstrap-icons";
 import ScreenHeader from "../common/ScreenHeader";
 import { AI_PROMPT_TEXT } from "../config/aiPrompt";
 import {
@@ -236,7 +245,7 @@ const updateConditionalsInJson = (obj, oldValue, newValue, fields = ["when"], pa
 export default function JSONExtractor({ theme = "dark" }) {
   const [jsonInput, setJsonInput] = useState("");
   const [searchKeys, setSearchKeys] = useState("");
-  const [keyLengthThreshold, setKeyLengthThreshold] = useState(110);
+  const [keyLengthThreshold, setKeyLengthThreshold] = useState(128);
   const [formType, setFormType] = useState("Form");
   const [hiddenTypes, setHiddenTypes] = useState([
     "columns","content","container","panel","button",
@@ -939,6 +948,97 @@ export default function JSONExtractor({ theme = "dark" }) {
           <ScreenHeader
             icon={<FileEarmarkText />}
             title="Form Review"
+            actions={
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  ref={importFileRef}
+                  style={{ display: "none" }}
+                  onChange={handleImportExcel}
+                />
+                <OverlayTrigger
+                  placement="bottom"
+                  overlay={<Tooltip id="tooltip-import-excel">Import from Excel</Tooltip>}
+                >
+                  <button
+                    type="button"
+                    className="d-flex align-items-center justify-content-center shadow-sm"
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "8px",
+                      backgroundColor:
+                        theme === "dark"
+                          ? "rgba(56, 139, 253, 0.18)"
+                          : "#e7f3ff",
+                      color:
+                        theme === "dark" ? "#79c0ff" : "#0969da",
+                      border:
+                        theme === "dark"
+                          ? "1px solid rgba(56, 139, 253, 0.5)"
+                          : "1px solid #b6d4fe",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        theme === "dark" ? "#1f6feb" : "#0d6efd";
+                      e.currentTarget.style.color = "#ffffff";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        theme === "dark"
+                          ? "rgba(56, 139, 253, 0.18)"
+                          : "#e7f3ff";
+                      e.currentTarget.style.color =
+                        theme === "dark" ? "#79c0ff" : "#0969da";
+                    }}
+                    onClick={() => importFileRef.current?.click()}
+                    disabled={isImporting}
+                    aria-label="Import from Excel"
+                  >
+                    {isImporting ? (
+                      <Spinner size="sm" />
+                    ) : (
+                      <FileEarmarkSpreadsheet size={18} />
+                    )}
+                  </button>
+                </OverlayTrigger>
+
+                <OverlayTrigger
+                  placement="bottom"
+                  overlay={<Tooltip id="tooltip-ai-prompt">AI Excel Prompt</Tooltip>}
+                >
+                  <button
+                    type="button"
+                    className="d-flex align-items-center justify-content-center shadow-sm text-white border-0"
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "8px",
+                      background: "linear-gradient(135deg, #7928ca 0%, #2563eb 100%)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "0.9";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(121, 40, 202, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                    onClick={() => setShowAiPromptModal(true)}
+                    aria-label="AI Excel Prompt"
+                  >
+                    <Robot size={19} />
+                  </button>
+                </OverlayTrigger>
+              </div>
+            }
           />
 
           {/* ── Input card ── */}
@@ -946,7 +1046,58 @@ export default function JSONExtractor({ theme = "dark" }) {
 
             <Card.Body className="p-4">
               <Form.Group className="mb-3">
-                <Form.Label className="fw-semibold">Paste Form JSON</Form.Label>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <Form.Label className="fw-semibold mb-0">Paste Form JSON</Form.Label>
+                  <OverlayTrigger
+                    placement="left"
+                    overlay={<Tooltip id="tooltip-clear-all">Clear All</Tooltip>}
+                  >
+                    <button
+                      type="button"
+                      className="d-flex align-items-center justify-content-center shadow-sm"
+                      style={{
+                        width: "34px",
+                        height: "34px",
+                        borderRadius: "8px",
+                        backgroundColor:
+                          theme === "dark"
+                            ? "rgba(239, 68, 68, 0.22)"
+                            : "#fee2e2",
+                        color:
+                          theme === "dark" ? "#fca5a5" : "#dc2626",
+                        border:
+                          theme === "dark"
+                            ? "1px solid rgba(239, 68, 68, 0.6)"
+                            : "1px solid #fca5a5",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          theme === "dark" ? "#ef4444" : "#dc2626";
+                        e.currentTarget.style.color = "#ffffff";
+                        e.currentTarget.style.borderColor =
+                          theme === "dark" ? "#ef4444" : "#dc2626";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          theme === "dark"
+                            ? "rgba(239, 68, 68, 0.22)"
+                            : "#fee2e2";
+                        e.currentTarget.style.color =
+                          theme === "dark" ? "#fca5a5" : "#dc2626";
+                        e.currentTarget.style.borderColor =
+                          theme === "dark"
+                            ? "1px solid rgba(239, 68, 68, 0.6)"
+                            : "1px solid #fca5a5";
+                      }}
+                      onClick={clearAll}
+                      aria-label="Clear All"
+                    >
+                      <Trash size={16} />
+                    </button>
+                  </OverlayTrigger>
+                </div>
                 <Form.Control
                   as="textarea"
                   rows={10}
@@ -982,42 +1133,6 @@ export default function JSONExtractor({ theme = "dark" }) {
 
                 <Button variant="outline-primary" onClick={handleFormat} disabled={!jsonInput.trim()}>
                   Format JSON
-                </Button>
-
-                <Button variant="outline-secondary" onClick={clearAll}>
-                  Clear All
-                </Button>
-
-                <input
-                  type="file"
-                  accept=".xlsx"
-                  ref={importFileRef}
-                  style={{ display: "none" }}
-                  onChange={handleImportExcel}
-                />
-                <Button
-                  variant="outline-info"
-                  onClick={() => importFileRef.current?.click()}
-                  disabled={isImporting}
-                >
-                  {isImporting ? (
-                    <><Spinner size="sm" className="me-2" />Importing...</>
-                  ) : (
-                    "Import from Excel"
-                  )}
-                </Button>
-
-                <Button
-                  variant="primary"
-                  className="d-flex align-items-center gap-2 fw-semibold shadow-sm text-white"
-                  style={{
-                    background: "linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%)",
-                    border: "none",
-                    borderRadius: "6px",
-                  }}
-                  onClick={() => setShowAiPromptModal(true)}
-                >
-                  <Robot className="fs-5" /> AI Excel Prompt
                 </Button>
 
                 <Form.Control
