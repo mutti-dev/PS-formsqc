@@ -24,7 +24,7 @@ import TextConverter from "../screens/TextConverter";
  * Manage what tools and features are enabled/visible across branches.
  * Simply change any boolean to `true` or `false` below.
  */
-
+//lite
 // ── 0. App & Branding Configuration ───────────────────────────────────
 export const APP_CONFIG = {
   siteTitle: "Mutti Tool Lite",      // Browser tab title (document.title)
