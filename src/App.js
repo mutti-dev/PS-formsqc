@@ -2,17 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import SideDrawer from './common/SideDrawer';
-import JSONExtractor from './screens/JSONExtractor';
-import WordConverter from './screens/WordConverter';
-
-import TextConverter from './screens/TextConverter';
-
-import AdvancedJSONComparator from './screens/AdvancedJSONComparator';
-import DataAnalyzer from './screens/DataAnalyzer';
-import AIPrompt from './screens/AIPrompt';
-import BulkJSONValidator from './screens/BulkJSONValidator';
 import BackToTop from './common/BackToTop';
 import { Analytics } from '@vercel/analytics/react';
+import { getEnabledTools, getDefaultRoute, APP_CONFIG } from './config/toolsConfig';
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -42,11 +34,19 @@ function App() {
     }
   }, [theme]);
 
+  useEffect(() => {
+    if (APP_CONFIG && APP_CONFIG.siteTitle) {
+      document.title = APP_CONFIG.siteTitle;
+    }
+  }, []);
+
+  const enabledTools = getEnabledTools();
+  const defaultRoute = getDefaultRoute();
+
   return (
     <div data-bs-theme={theme} className="app-root">
       <Router>
         <div className="app-layout">
-
           <SideDrawer isOpen={drawerOpen} setIsOpen={setDrawerOpen} theme={theme} toggleTheme={toggleTheme} />
 
           <main
@@ -59,16 +59,14 @@ function App() {
             }}
           >
             <Routes>
-              <Route path="/JsonExtractor" element={<JSONExtractor theme={theme} />} />
-              <Route path="/BulkValidator" element={<BulkJSONValidator theme={theme} />} />
-              <Route path="/DataAnalyzer" element={<DataAnalyzer theme={theme} />} />
-              <Route path="/Converter" element={<WordConverter />} />
-
-              <Route path="/AdvancedJSONComparator" element={<AdvancedJSONComparator theme={theme} />} />
-   
-              <Route path="/TextConverter" element={<TextConverter />} />
-              <Route path="/AIPrompt" element={<AIPrompt />} />
-              <Route path="*" element={<Navigate to="/JsonExtractor" replace />} />
+              {enabledTools.map((tool) => (
+                <Route
+                  key={tool.id}
+                  path={tool.path}
+                  element={tool.render(theme)}
+                />
+              ))}
+              <Route path="*" element={<Navigate to={defaultRoute} replace />} />
             </Routes>
             <BackToTop />
           </main>

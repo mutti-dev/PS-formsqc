@@ -66,6 +66,7 @@ import {
 
 import { calculateFormComplexity } from "../utils/formEstimationEngine";
 import { checkReservedColumnMatch } from "../config/reservedColumns";
+import { JSON_EXTRACTOR_CONFIG } from "../config/toolsConfig";
 
 import {
   flexRender,
@@ -144,15 +145,17 @@ const validateFormStructure = (labels = [], selectValues = [], radioValues = [],
       }
     }
 
-    const reservedMatch = checkReservedColumnMatch(fieldKey, formType, entry.insideGrid);
-    if (reservedMatch) {
-      issues.push({
-        type: "reserved_column",
-        severity: "error",
-        field: fieldLabel,
-        key: fieldKey,
-        message: `Field key "${fieldKey}" conflicts with reserved database column "${reservedMatch}"`,
-      });
+    if (JSON_EXTRACTOR_CONFIG.enableReservedColumnCheck) {
+      const reservedMatch = checkReservedColumnMatch(fieldKey, formType, entry.insideGrid);
+      if (reservedMatch) {
+        issues.push({
+          type: "reserved_column",
+          severity: "error",
+          field: fieldLabel,
+          key: fieldKey,
+          message: `Field key "${fieldKey}" conflicts with reserved database column "${reservedMatch}"`,
+        });
+      }
     }
   });
 
@@ -890,33 +893,37 @@ export default function JSONExtractor({ theme = "dark" }) {
         enableResizing: true,
         size: 100,
       },
-      {
-        id: "actions",
-        header: "Fix Key",
-        enableSorting: false,
-        enableResizing: false,
-        cell: ({ row }) => {
-          const entry     = row.original;
-          const labelField = entry.type === "panel" ? "title" : "label";
-          const label     = entry[labelField] || "";
-          const expected  = convertLabelToKey(label);
-          const isMismatch = expected && entry.key !== expected;
-          if (!isMismatch) return null;
-          return (
-            <Button
-              size="sm"
-              variant="outline-warning"
-              title={`Fix to: ${expected}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                fixFieldKey(entry.path, labelField);
-              }}
-            >
-              Fix → <code className="ms-1">{expected}</code>
-            </Button>
-          );
-        },
-      },
+      ...(JSON_EXTRACTOR_CONFIG.enableTableFixKeyColumn
+        ? [
+            {
+              id: "actions",
+              header: "Fix Key",
+              enableSorting: false,
+              enableResizing: false,
+              cell: ({ row }) => {
+                const entry     = row.original;
+                const labelField = entry.type === "panel" ? "title" : "label";
+                const label     = entry[labelField] || "";
+                const expected  = convertLabelToKey(label);
+                const isMismatch = expected && entry.key !== expected;
+                if (!isMismatch) return null;
+                return (
+                  <Button
+                    size="sm"
+                    variant="outline-warning"
+                    title={`Fix to: ${expected}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fixFieldKey(entry.path, labelField);
+                    }}
+                  >
+                    Fix → <code className="ms-1">{expected}</code>
+                  </Button>
+                );
+              },
+            },
+          ]
+        : []),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [fullParsedJson, keyLengthThreshold]
@@ -950,93 +957,99 @@ export default function JSONExtractor({ theme = "dark" }) {
             title="Form Review"
             actions={
               <div className="d-flex align-items-center gap-2">
-                <input
-                  type="file"
-                  accept=".xlsx"
-                  ref={importFileRef}
-                  style={{ display: "none" }}
-                  onChange={handleImportExcel}
-                />
-                <OverlayTrigger
-                  placement="bottom"
-                  overlay={<Tooltip id="tooltip-import-excel">Import from Excel</Tooltip>}
-                >
-                  <button
-                    type="button"
-                    className="d-flex align-items-center justify-content-center shadow-sm"
-                    style={{
-                      width: "38px",
-                      height: "38px",
-                      borderRadius: "8px",
-                      backgroundColor:
-                        theme === "dark"
-                          ? "rgba(56, 139, 253, 0.18)"
-                          : "#e7f3ff",
-                      color:
-                        theme === "dark" ? "#79c0ff" : "#0969da",
-                      border:
-                        theme === "dark"
-                          ? "1px solid rgba(56, 139, 253, 0.5)"
-                          : "1px solid #b6d4fe",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        theme === "dark" ? "#1f6feb" : "#0d6efd";
-                      e.currentTarget.style.color = "#ffffff";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        theme === "dark"
-                          ? "rgba(56, 139, 253, 0.18)"
-                          : "#e7f3ff";
-                      e.currentTarget.style.color =
-                        theme === "dark" ? "#79c0ff" : "#0969da";
-                    }}
-                    onClick={() => importFileRef.current?.click()}
-                    disabled={isImporting}
-                    aria-label="Import from Excel"
-                  >
-                    {isImporting ? (
-                      <Spinner size="sm" />
-                    ) : (
-                      <FileEarmarkSpreadsheet size={18} />
-                    )}
-                  </button>
-                </OverlayTrigger>
+                {JSON_EXTRACTOR_CONFIG.enableExcelImport && (
+                  <>
+                    <input
+                      type="file"
+                      accept=".xlsx"
+                      ref={importFileRef}
+                      style={{ display: "none" }}
+                      onChange={handleImportExcel}
+                    />
+                    <OverlayTrigger
+                      placement="bottom"
+                      overlay={<Tooltip id="tooltip-import-excel">Import from Excel</Tooltip>}
+                    >
+                      <button
+                        type="button"
+                        className="d-flex align-items-center justify-content-center shadow-sm"
+                        style={{
+                          width: "38px",
+                          height: "38px",
+                          borderRadius: "8px",
+                          backgroundColor:
+                            theme === "dark"
+                              ? "rgba(56, 139, 253, 0.18)"
+                              : "#e7f3ff",
+                          color:
+                            theme === "dark" ? "#79c0ff" : "#0969da",
+                          border:
+                            theme === "dark"
+                              ? "1px solid rgba(56, 139, 253, 0.5)"
+                              : "1px solid #b6d4fe",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            theme === "dark" ? "#1f6feb" : "#0d6efd";
+                          e.currentTarget.style.color = "#ffffff";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            theme === "dark"
+                              ? "rgba(56, 139, 253, 0.18)"
+                              : "#e7f3ff";
+                          e.currentTarget.style.color =
+                            theme === "dark" ? "#79c0ff" : "#0969da";
+                        }}
+                        onClick={() => importFileRef.current?.click()}
+                        disabled={isImporting}
+                        aria-label="Import from Excel"
+                      >
+                        {isImporting ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          <FileEarmarkSpreadsheet size={18} />
+                        )}
+                      </button>
+                    </OverlayTrigger>
+                  </>
+                )}
 
-                <OverlayTrigger
-                  placement="bottom"
-                  overlay={<Tooltip id="tooltip-ai-prompt">AI Excel Prompt</Tooltip>}
-                >
-                  <button
-                    type="button"
-                    className="d-flex align-items-center justify-content-center shadow-sm text-white border-0"
-                    style={{
-                      width: "38px",
-                      height: "38px",
-                      borderRadius: "8px",
-                      background: "linear-gradient(135deg, #7928ca 0%, #2563eb 100%)",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = "0.9";
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(121, 40, 202, 0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = "1";
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                    onClick={() => setShowAiPromptModal(true)}
-                    aria-label="AI Excel Prompt"
+                {JSON_EXTRACTOR_CONFIG.showAiPromptButton && (
+                  <OverlayTrigger
+                    placement="bottom"
+                    overlay={<Tooltip id="tooltip-ai-prompt">AI Excel Prompt</Tooltip>}
                   >
-                    <Robot size={19} />
-                  </button>
-                </OverlayTrigger>
+                    <button
+                      type="button"
+                      className="d-flex align-items-center justify-content-center shadow-sm text-white border-0"
+                      style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "8px",
+                        background: "linear-gradient(135deg, #7928ca 0%, #2563eb 100%)",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = "0.9";
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(121, 40, 202, 0.4)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                      onClick={() => setShowAiPromptModal(true)}
+                      aria-label="AI Excel Prompt"
+                    >
+                      <Robot size={19} />
+                    </button>
+                  </OverlayTrigger>
+                )}
               </div>
             }
           />
@@ -1048,55 +1061,57 @@ export default function JSONExtractor({ theme = "dark" }) {
               <Form.Group className="mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <Form.Label className="fw-semibold mb-0">Paste Form JSON</Form.Label>
-                  <OverlayTrigger
-                    placement="left"
-                    overlay={<Tooltip id="tooltip-clear-all">Clear All</Tooltip>}
-                  >
-                    <button
-                      type="button"
-                      className="d-flex align-items-center justify-content-center shadow-sm"
-                      style={{
-                        width: "34px",
-                        height: "34px",
-                        borderRadius: "8px",
-                        backgroundColor:
-                          theme === "dark"
-                            ? "rgba(239, 68, 68, 0.22)"
-                            : "#fee2e2",
-                        color:
-                          theme === "dark" ? "#fca5a5" : "#dc2626",
-                        border:
-                          theme === "dark"
-                            ? "1px solid rgba(239, 68, 68, 0.6)"
-                            : "1px solid #fca5a5",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          theme === "dark" ? "#ef4444" : "#dc2626";
-                        e.currentTarget.style.color = "#ffffff";
-                        e.currentTarget.style.borderColor =
-                          theme === "dark" ? "#ef4444" : "#dc2626";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          theme === "dark"
-                            ? "rgba(239, 68, 68, 0.22)"
-                            : "#fee2e2";
-                        e.currentTarget.style.color =
-                          theme === "dark" ? "#fca5a5" : "#dc2626";
-                        e.currentTarget.style.borderColor =
-                          theme === "dark"
-                            ? "1px solid rgba(239, 68, 68, 0.6)"
-                            : "1px solid #fca5a5";
-                      }}
-                      onClick={clearAll}
-                      aria-label="Clear All"
+                  {JSON_EXTRACTOR_CONFIG.showClearAllButton && (
+                    <OverlayTrigger
+                      placement="left"
+                      overlay={<Tooltip id="tooltip-clear-all">Clear All</Tooltip>}
                     >
-                      <Trash size={16} />
-                    </button>
-                  </OverlayTrigger>
+                      <button
+                        type="button"
+                        className="d-flex align-items-center justify-content-center shadow-sm"
+                        style={{
+                          width: "34px",
+                          height: "34px",
+                          borderRadius: "8px",
+                          backgroundColor:
+                            theme === "dark"
+                              ? "rgba(239, 68, 68, 0.22)"
+                              : "#fee2e2",
+                          color:
+                            theme === "dark" ? "#fca5a5" : "#dc2626",
+                          border:
+                            theme === "dark"
+                              ? "1px solid rgba(239, 68, 68, 0.6)"
+                              : "1px solid #fca5a5",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            theme === "dark" ? "#ef4444" : "#dc2626";
+                          e.currentTarget.style.color = "#ffffff";
+                          e.currentTarget.style.borderColor =
+                            theme === "dark" ? "#ef4444" : "#dc2626";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            theme === "dark"
+                              ? "rgba(239, 68, 68, 0.22)"
+                              : "#fee2e2";
+                          e.currentTarget.style.color =
+                            theme === "dark" ? "#fca5a5" : "#dc2626";
+                          e.currentTarget.style.borderColor =
+                            theme === "dark"
+                              ? "1px solid rgba(239, 68, 68, 0.6)"
+                              : "1px solid #fca5a5";
+                        }}
+                        onClick={clearAll}
+                        aria-label="Clear All"
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </OverlayTrigger>
+                  )}
                 </div>
                 <Form.Control
                   as="textarea"
@@ -1131,9 +1146,11 @@ export default function JSONExtractor({ theme = "dark" }) {
                   )}
                 </Button>
 
-                <Button variant="outline-primary" onClick={handleFormat} disabled={!jsonInput.trim()}>
-                  Format JSON
-                </Button>
+                {JSON_EXTRACTOR_CONFIG.showFormatJsonButton && (
+                  <Button variant="outline-primary" onClick={handleFormat} disabled={!jsonInput.trim()}>
+                    Format JSON
+                  </Button>
+                )}
 
                 <Form.Control
                   type="number"
@@ -1152,8 +1169,16 @@ export default function JSONExtractor({ theme = "dark" }) {
                 <ValidationSection
                   validationIssues={validationIssues}
                   parsingSteps={parsingSteps}
-                  onFixIssue={handleFixIssue}
-                  onFixAll={handleFixAllIssues}
+                  onFixIssue={
+                    JSON_EXTRACTOR_CONFIG.enableQuickFix
+                      ? handleFixIssue
+                      : null
+                  }
+                  onFixAll={
+                    JSON_EXTRACTOR_CONFIG.enableAutoFixAll
+                      ? handleFixAllIssues
+                      : null
+                  }
                   theme={theme}
                 />
               )}
@@ -1176,24 +1201,28 @@ export default function JSONExtractor({ theme = "dark" }) {
           {/* ── Results ── */}
           {extractedData && (
             <>
-              <div className="d-flex justify-content-end mb-3">
-                <Button
-                  variant="success"
-                  size="sm"
-                  onClick={() =>
-                    exportToExcel(labels, hiddenTypes, selectValues, radioValues, formComplexity)
-                  }
-                >
-                  Export to Excel
-                </Button>
-              </div>
+              {JSON_EXTRACTOR_CONFIG.enableExcelExport && (
+                <div className="d-flex justify-content-end mb-3">
+                  <Button
+                    variant="success"
+                    size="sm"
+                    onClick={() =>
+                      exportToExcel(labels, hiddenTypes, selectValues, radioValues, formComplexity)
+                    }
+                  >
+                    Export to Excel
+                  </Button>
+                </div>
+              )}
 
               <Row>
                 <Col>
-                  <FormComplexitySection
-                    formComplexity={formComplexity}
-                    theme={theme}
-                  />
+                  {JSON_EXTRACTOR_CONFIG.showFormComplexity && (
+                    <FormComplexitySection
+                      formComplexity={formComplexity}
+                      theme={theme}
+                    />
+                  )}
 
                   <JsonStatsSection
                     jsonStats={jsonStats}
@@ -1214,7 +1243,11 @@ export default function JSONExtractor({ theme = "dark" }) {
                     onUpdateOption={(path, optIdx, field, value) =>
                       updateOptionField(path, optIdx, field, value, "select")
                     }
-                    onFixOptionKey={(path, optIdx) => fixOptionKey(path, optIdx, "select")}
+                    onFixOptionKey={
+                      JSON_EXTRACTOR_CONFIG.enableOptionKeyFix
+                        ? (path, optIdx) => fixOptionKey(path, optIdx, "select")
+                        : undefined
+                    }
                   />
 
                   {/* Radio with inline editing + fix-key */}
@@ -1223,11 +1256,17 @@ export default function JSONExtractor({ theme = "dark" }) {
                     onUpdateOption={(path, optIdx, field, value) =>
                       updateOptionField(path, optIdx, field, value, "radio")
                     }
-                    onFixOptionKey={(path, optIdx) => fixOptionKey(path, optIdx, "radio")}
+                    onFixOptionKey={
+                      JSON_EXTRACTOR_CONFIG.enableOptionKeyFix
+                        ? (path, optIdx) => fixOptionKey(path, optIdx, "radio")
+                        : undefined
+                    }
                   />
 
                   <SurveyComponentsSection surveyValues={surveyValues} />
-                  <ConditionsSection conditions={conditions} conditionalPatches={conditionalPatches} />
+                  {JSON_EXTRACTOR_CONFIG.showConditionsAnalysis && (
+                    <ConditionsSection conditions={conditions} conditionalPatches={conditionalPatches} />
+                  )}
                   <TypeFilterSection
                     uniqueTypes={uniqueTypes}
                     hiddenTypes={hiddenTypes}
@@ -1242,7 +1281,7 @@ export default function JSONExtractor({ theme = "dark" }) {
                           Extracted Fields ({table.getRowModel().rows.length} shown /{" "}
                           {labels.length} total)
                         </span>
-                        {table.getSelectedRowModel().rows.length > 0 && (
+                        {JSON_EXTRACTOR_CONFIG.showCopySelectedButton && table.getSelectedRowModel().rows.length > 0 && (
                           <Button
                             size="sm"
                             variant="warning"
@@ -1322,7 +1361,8 @@ export default function JSONExtractor({ theme = "dark" }) {
                                         </span>
                                       )}
                                     </div>
-                                    {header.column.id !== "select" &&
+                                    {JSON_EXTRACTOR_CONFIG.showCopyColumnButtons &&
+                                      header.column.id !== "select" &&
                                       header.column.id !== "actions" && (
                                         <Button
                                           size="sm"

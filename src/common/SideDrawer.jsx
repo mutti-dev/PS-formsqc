@@ -5,12 +5,8 @@ import { Nav, Navbar, Container, Button, OverlayTrigger, Tooltip } from "react-b
 import {
   JustifyLeft,
   JustifyRight,
-  FileEarmarkText,
-  FileWord,
-  BarChart,
-  Database,
-  // Boxes,
 } from "react-bootstrap-icons";
+import { getEnabledTools, APP_CONFIG } from "../config/toolsConfig";
 
 export default function SideDrawer({
   isOpen,
@@ -20,33 +16,7 @@ export default function SideDrawer({
 }) {
   const location = useLocation();
 
-  const menuItems = [
-    {
-      path: "/JsonExtractor",
-      name: "Form Review",
-      icon: <FileEarmarkText />,
-    },
-    // {
-    //   path: "/BulkValidator",
-    //   name: "Bulk Form Review",
-    //   icon: <Boxes />,
-    // },
-    {
-      path: "/AdvancedJSONComparator",
-      name: "Compare Json",
-      icon: <BarChart />,
-    },
-    {
-      path: "/Converter",
-      name: "Text & Word Converter",
-      icon: <FileWord />,
-    },
-    {
-      path: "/DataAnalyzer",
-      name: "Data Analyzer",
-      icon: <Database />,
-    },
-  ];
+  const menuItems = getEnabledTools();
 
   return (
     <>
@@ -133,7 +103,7 @@ export default function SideDrawer({
                   }}
                 >
                   <h6 className="fw-bold mb-0">
-                    Form QC Tool V2
+                    {APP_CONFIG.sidebarTitle || "Form QC Tool V2"}
                   </h6>
                 </div>
               )}

@@ -40,6 +40,7 @@ import {
 } from "../utils/bulkQcEngine";
 import { exportBulkQcToExcel } from "../utils/exportUtils";
 import ScreenHeader from "../common/ScreenHeader";
+import { BULK_VALIDATOR_CONFIG } from "../config/toolsConfig";
 import "../css/BulkJSONValidator.css";
 
 const STORAGE_KEY = "BulkJSONValidatorDraft";
@@ -242,26 +243,30 @@ export default function BulkJSONValidator({ theme = "dark" }) {
         actions={
           bulkData ? (
             <>
-              <Button
-                variant="outline-success"
-                size="sm"
-                className="d-flex align-items-center gap-1 fw-medium"
-                onClick={handleAutoFixAll}
-                disabled={isProcessing}
-              >
-                <LightningChargeFill />
-                Auto-Fix All Forms
-              </Button>
+              {BULK_VALIDATOR_CONFIG.enableAutoFixAll && (
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  className="d-flex align-items-center gap-1 fw-medium"
+                  onClick={handleAutoFixAll}
+                  disabled={isProcessing}
+                >
+                  <LightningChargeFill />
+                  Auto-Fix All Forms
+                </Button>
+              )}
 
-              <Button
-                variant="outline-primary"
-                size="sm"
-                className="d-flex align-items-center gap-1"
-                onClick={handleExportExcel}
-              >
-                <FileEarmarkSpreadsheet />
-                Export Excel Report
-              </Button>
+              {BULK_VALIDATOR_CONFIG.enableExcelExport && (
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  className="d-flex align-items-center gap-1"
+                  onClick={handleExportExcel}
+                >
+                  <FileEarmarkSpreadsheet />
+                  Export Excel Report
+                </Button>
+              )}
 
               <Button
                 variant="outline-secondary"
@@ -749,15 +754,17 @@ export default function BulkJSONValidator({ theme = "dark" }) {
           </Modal.Body>
 
           <Modal.Footer className="bg-body-tertiary d-flex justify-content-between">
-            <Button
-              variant="outline-success"
-              size="sm"
-              className="d-flex align-items-center gap-1"
-              onClick={handleFixAllInSelectedForm}
-              disabled={!selectedForm.validationIssues?.some((i) => i.expected && i.path)}
-            >
-              <LightningChargeFill /> Auto-Fix This Form
-            </Button>
+            {BULK_VALIDATOR_CONFIG.enableAutoFixSingle && (
+              <Button
+                variant="outline-success"
+                size="sm"
+                className="d-flex align-items-center gap-1"
+                onClick={handleFixAllInSelectedForm}
+                disabled={!selectedForm.validationIssues?.some((i) => i.expected && i.path)}
+              >
+                <LightningChargeFill /> Auto-Fix This Form
+              </Button>
+            )}
 
             <Button variant="secondary" size="sm" onClick={() => setSelectedFormIndex(null)}>
               Close

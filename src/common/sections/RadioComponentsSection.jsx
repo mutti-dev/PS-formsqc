@@ -127,8 +127,8 @@ function RadioComponentsSection({ radioValues, onUpdateOption, onFixOptionKey })
                               />
                             </div>
 
-                            {/* Fix button — only shown on mismatch */}
-                            {isMismatch && (
+                            {/* Fix button — only shown on mismatch and when onFixOptionKey is provided */}
+                            {isMismatch && Boolean(onFixOptionKey) && (
                               <div className="align-self-end">
                                 <Button
                                   size="sm"
