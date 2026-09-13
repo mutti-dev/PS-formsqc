@@ -27,8 +27,8 @@ import TextConverter from "../screens/TextConverter";
 
 // ── 0. App & Branding Configuration ───────────────────────────────────
 export const APP_CONFIG = {
-  siteTitle: "Form QC Tool Lite",      // Browser tab title (document.title)
-  sidebarTitle: "Form QC Tool Lite",   // Sidebar header title when expanded
+  siteTitle: "Mutti Tool Lite",      // Browser tab title (document.title)
+  sidebarTitle: "Mutti Tool Lite",   // Sidebar header title when expanded
 };
 
 // ── 1. Top-Level Screen / Tool Visibility ──────────────────────────────
