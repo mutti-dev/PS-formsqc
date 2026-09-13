@@ -35,9 +35,9 @@ export const APP_CONFIG = {
 export const FEATURE_FLAGS = {
   FORM_REVIEW: true,          // /JsonExtractor (Single Form Review & QC)
   BULK_VALIDATOR: false,      // /BulkValidator (Bulk Form Review)
-  JSON_COMPARATOR: false,      // /AdvancedJSONComparator (Compare JSON Schemas)
+  JSON_COMPARATOR: true,      // /AdvancedJSONComparator (Compare JSON Schemas)
   WORD_CONVERTER: true,       // /Converter (Text & Word Converter)
-  DATA_ANALYZER: false,        // /DataAnalyzer (Data Profiler & Dataset Analyzer)
+  DATA_ANALYZER: true,        // /DataAnalyzer (Data Profiler & Dataset Analyzer)
   AI_PROMPT: false,           // /AIPrompt (AI System Prompt for Form Extraction)
   TEXT_CONVERTER: false,      // /TextConverter (Legacy Text Converter)
 };
@@ -45,28 +45,28 @@ export const FEATURE_FLAGS = {
 // ── 2. Form Review (JSONExtractor) Feature Toggles ────────────────────
 export const JSON_EXTRACTOR_CONFIG = {
   // Excel Integration Features
-  enableExcelImport: false,        // "Import from Excel" feature & header button
-  enableExcelExport: false,        // "Export to Excel" feature & action button
+  enableExcelImport: true,        // "Import from Excel" feature & header button
+  enableExcelExport: true,        // "Export to Excel" feature & action button
 
   // Reserved Column Checking (detects conflicts with reserved database/grid column names)
   enableReservedColumnCheck: true,
 
   // Auto-Fix Features
-  enableAutoFix: false,            // Master toggle for auto-fixing issues
-  enableAutoFixAll: false,         // Show "Auto-Fix All" batch button in QC
-  enableQuickFix: false,           // Show "Quick Fix" buttons next to individual issues
-  enableTableFixKeyColumn: false,  // Show "Fix Key" action column in Extracted Fields table
-  enableOptionKeyFix: false,       // Allow fixing option keys in Select / Radio sections
+  enableAutoFix: true,            // Master toggle for auto-fixing issues
+  enableAutoFixAll: true,         // Show "Auto-Fix All" batch button in QC
+  enableQuickFix: true,           // Show "Quick Fix" buttons next to individual issues
+  enableTableFixKeyColumn: true,  // Show "Fix Key" action column in Extracted Fields table
+  enableOptionKeyFix: true,       // Allow fixing option keys in Select / Radio sections
 
   // Toolbar & Header Buttons
-  showAiPromptButton: false,       // "AI Excel Prompt" button in header
+  showAiPromptButton: true,       // "AI Excel Prompt" button in header
   showClearAllButton: true,       // "Clear All" trash button
   showFormatJsonButton: true,     // "Format JSON" button
   showCopyColumnButtons: true,    // "Copy" column buttons in table headers
-  showCopySelectedButton: false,   // "Copy Selected" button in table header
+  showCopySelectedButton: true,   // "Copy Selected" button in table header
 
   // Panels & Analysis Sections
-  showFormComplexity: false,        // "Form Complexity & Page Estimation" panel
+  showFormComplexity: true,        // "Form Complexity & Page Estimation" panel
   showConditionsAnalysis: true,    // "Conditions & Logic Analysis" panel
 };
 
